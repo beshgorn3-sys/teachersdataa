@@ -1,0 +1,1818 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم المدير - سجل المعلمين</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@400;600;700&family=Amiri:wght@400;700&family=Almarai:wght@400;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #1a3a5c;
+            --secondary-color: #2d7dd2;
+            --accent: #27ae60;
+            --bg-color: #eef2f7;
+            --card-bg: #ffffff;
+            --text-color: #2c3e50;
+            --border-color: #d0d8e0;
+            --danger: #e74c3c;
+            --label-color: #1a5fa8;
+            --value-color: #000000;
+            --label-font-size: 10px;
+            --value-font-size: 11px;
+            --label-font-family: 'Tajawal';
+            --value-font-family: 'Tajawal';
+            --section-title-bg: #2d7dd2;
+            --section-title-color: #ffffff;
+            --section-title-font-size: 12px;
+            --letter-spacing: 0px;
+            --line-height: 1.4;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Tajawal', sans-serif; }
+        body { background-color: var(--bg-color); padding: 20px; color: var(--text-color); min-height: 100vh; }
+
+        .dashboard-container { max-width: 1400px; margin: 0 auto; background-color: var(--card-bg); border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.1); overflow: hidden; }
+        .dashboard-header { background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; padding: 25px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .dashboard-header h1 { font-size: 1.5rem; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        .btn { padding: 10px 18px; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; font-family: 'Tajawal', sans-serif; }
+        .btn:hover { opacity: 0.92; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.15); }
+        .btn:active { transform: translateY(0); }
+        .btn-excel { background-color: #217346; color: white; }
+        .btn-pdf { background-color: #c0392b; color: white; }
+        .btn-print { background-color: #2980b9; color: white; }
+        .btn-refresh { background-color: #8e44ad; color: white; }
+        .btn-view { background-color: #f39c12; color: white; padding: 6px 12px; font-size: 0.8rem; }
+        .btn-edit { background-color: #16a085; color: white; padding: 6px 12px; font-size: 0.8rem; }
+        .btn-delete { background-color: #e74c3c; color: white; padding: 6px 12px; font-size: 0.8rem; }
+        .btn-save { background-color: #27ae60; color: white; }
+        .btn-cancel { background-color: #95a5a6; color: white; }
+        .btn-reset { background-color: #95a5a6; color: white; }
+        .btn-columns { background-color: #8e44ad; color: white; }
+
+        .stats-container { padding: 15px 30px; display: flex; gap: 20px; flex-wrap: wrap; background: #e8eef5; }
+        .stat-card { background: white; padding: 12px 22px; border-radius: 10px; border-right: 4px solid var(--secondary-color); box-shadow: 0 2px 8px rgba(0,0,0,0.05); font-weight: 500; }
+        .stat-card span { font-weight: 800; color: var(--secondary-color); font-size: 1.3rem; margin-right: 5px; }
+
+        .search-container { padding: 20px 30px; background-color: #f9fafc; border-bottom: 1px solid var(--border-color); }
+        .search-container input { width: 100%; padding: 12px 20px; border: 1.5px solid var(--border-color); border-radius: 10px; font-size: 1rem; font-family: 'Tajawal', sans-serif; transition: all 0.3s; }
+        .search-container input:focus { outline: none; border-color: var(--secondary-color); box-shadow: 0 0 0 3px rgba(45,125,210,0.1); }
+
+        .table-container { padding: 20px 30px; overflow-x: auto; }
+        table.data-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        table.data-table th, table.data-table td { padding: 12px 15px; text-align: right; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; }
+        table.data-table th { background-color: var(--primary-color); color: white; position: sticky; top: 0; font-weight: 700; }
+        table.data-table tr:hover { background-color: #f1f5fa; }
+
+        .loading-spinner { text-align: center; padding: 40px; font-size: 1.1rem; color: var(--secondary-color); }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.75); z-index: 1000; justify-content: center; align-items: flex-start; padding: 20px; overflow-y: auto; }
+        .modal-content { background-color: white; width: 100%; max-width: 1400px; border-radius: 16px; padding: 25px; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+
+        .close-btn { position: absolute; top: 15px; left: 15px; background: var(--danger); color: white; border: none; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; font-weight: 700; transition: all 0.3s; display: flex; align-items: center; justify-content: center; z-index: 10; }
+        .close-btn:hover { background: #c0392b; transform: rotate(90deg); }
+
+        .preview-layout { display: grid; grid-template-columns: 320px 1fr; gap: 20px; align-items: flex-start; }
+
+        .settings-panel { background: #f9fafc; border-radius: 12px; padding: 20px; border: 1.5px solid var(--border-color); position: sticky; top: 20px; max-height: calc(100vh - 100px); overflow-y: auto; }
+        .settings-panel h3 { color: var(--primary-color); font-size: 1.1rem; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid var(--secondary-color); display: flex; align-items: center; gap: 8px; }
+        .settings-group { margin-bottom: 18px; padding-bottom: 15px; border-bottom: 1px dashed var(--border-color); }
+        .settings-group:last-child { border-bottom: none; }
+        .settings-group h4 { font-size: 0.9rem; color: var(--secondary-color); margin-bottom: 10px; font-weight: 700; }
+        .setting-item { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+        .setting-item label { font-size: 0.85rem; font-weight: 600; color: #444; }
+        .setting-item input[type="color"] { width: 100%; height: 38px; border: 1.5px solid var(--border-color); border-radius: 8px; cursor: pointer; background: white; padding: 3px; }
+        .setting-item input[type="range"] { width: 100%; cursor: pointer; accent-color: var(--secondary-color); }
+        .setting-item select, .setting-item input[type="number"], .setting-item input[type="text"] { padding: 8px 12px; border: 1.5px solid var(--border-color); border-radius: 8px; font-size: 0.9rem; font-family: 'Tajawal', sans-serif; background: white; cursor: pointer; }
+        .setting-item .range-value { font-size: 0.8rem; color: var(--secondary-color); font-weight: 700; text-align: left; }
+        .settings-toggle { display: none; width: 100%; padding: 12px; background: var(--secondary-color); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; margin-bottom: 15px; font-family: 'Tajawal', sans-serif; }
+
+        .record-area { background: #f0f2f5; padding: 20px; border-radius: 12px; overflow: auto; max-height: calc(100vh - 100px); }
+        .official-record { width: 100%; max-width: 210mm; margin: 0 auto; background: white; padding: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        .official-record h2 { text-align: center; background: var(--primary-color); color: white; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 1rem; font-weight: 700; }
+
+        .record-section-title { background-color: var(--section-title-bg); color: var(--section-title-color); padding: 6px 12px; font-weight: 700; margin: 12px 0 0 0; font-size: var(--section-title-font-size); border-radius: 4px 4px 0 0; text-align: center; letter-spacing: var(--letter-spacing); }
+        .record-section-title.green { background-color: #27ae60; }
+
+        table.record-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; table-layout: fixed; }
+        table.record-table td { border: 1px solid #888; padding: 6px 8px; vertical-align: middle; text-align: center; font-size: var(--value-font-size); line-height: var(--line-height); background: #fff; letter-spacing: var(--letter-spacing); }
+        table.record-table td .label { display: block; font-size: var(--label-font-size); color: var(--label-color); font-weight: 700; margin-bottom: 3px; text-align: center; font-family: var(--label-font-family), 'Tajawal', sans-serif; letter-spacing: var(--letter-spacing); }
+        table.record-table td .value { display: block; font-size: var(--value-font-size); color: var(--value-color); font-weight: 500; word-break: break-word; text-align: center; font-family: var(--value-font-family), 'Tajawal', sans-serif; letter-spacing: var(--letter-spacing); }
+
+        table.signatures-table { width: 100%; margin-top: 40px; border: none; }
+        table.signatures-table td { border: none; text-align: center; padding-top: 25px; vertical-align: bottom; }
+        table.signatures-table .sign-line { border-top: 1.5px solid #333; padding-top: 8px; font-size: 12px; font-weight: 700; width: 80%; margin: 0 auto; }
+
+        .page-break { page-break-before: always; break-before: page; height: 0; margin: 0; padding: 0; }
+        .record-section-title, table.record-table { page-break-inside: avoid; break-inside: avoid; }
+
+        .preview-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color); }
+
+        #editModal .modal-content { max-width: 1000px; max-height: 90vh; overflow-y: auto; }
+        .edit-section { margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px dashed var(--border-color); }
+        .edit-section:last-child { border-bottom: none; }
+        .edit-section h4 { color: var(--secondary-color); font-size: 1rem; margin-bottom: 15px; padding: 8px 12px; background: #eaf3fb; border-radius: 8px; }
+        .edit-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; }
+        .edit-item { display: flex; flex-direction: column; gap: 5px; }
+        .edit-item label { font-size: 0.85rem; font-weight: 600; color: #444; }
+        .edit-item input, .edit-item select, .edit-item textarea { padding: 9px 12px; border: 1.5px solid var(--border-color); border-radius: 8px; font-size: 0.9rem; font-family: 'Tajawal', sans-serif; background: white; transition: all 0.2s; }
+        .edit-item textarea { resize: vertical; min-height: 60px; }
+        .edit-item input:focus, .edit-item select:focus, .edit-item textarea:focus { outline: none; border-color: var(--secondary-color); box-shadow: 0 0 0 3px rgba(45,125,210,0.1); }
+
+        #columnsModal .modal-content { max-width: 800px; max-height: 90vh; overflow-y: auto; }
+        .column-item { display: grid; grid-template-columns: 180px 1fr; gap: 10px; align-items: center; padding: 8px 12px; border-bottom: 1px solid #eef2f7; }
+        .column-item:hover { background: #f9fafc; }
+        .column-item .original-name { font-size: 0.85rem; color: #666; font-weight: 600; }
+        .column-item input { padding: 8px 12px; border: 1.5px solid var(--border-color); border-radius: 8px; font-size: 0.9rem; font-family: 'Tajawal', sans-serif; }
+        .column-item input:focus { outline: none; border-color: var(--secondary-color); }
+
+        .info-box { background: #fff8e1; border-right: 4px solid #f39c12; padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9rem; color: #7d5b00; }
+        .success-box { background: #e8f8f0; border-right: 4px solid #27ae60; padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9rem; color: #145a32; }
+
+        #excelModal .modal-content { max-width: 750px; max-height: 90vh; overflow-y: auto; }
+        .excel-preview-box { background: #f9fafc; border: 1.5px dashed var(--border-color); border-radius: 8px; padding: 15px; margin: 15px 0; font-size: 0.85rem; text-align: center; color: #666; }
+        .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 600; color: #444; cursor: pointer; }
+        .checkbox-item input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--secondary-color); }
+
+        /* ============ مؤشر تحميل PDF ============ */
+        #pdfLoading {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 20px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+        #pdfLoading .pdf-spinner {
+            width: 60px; height: 60px;
+            border: 5px solid rgba(255,255,255,0.3);
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: pdfspin 1s linear infinite;
+        }
+        @keyframes pdfspin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 1024px) {
+            .preview-layout { grid-template-columns: 1fr; }
+            .settings-panel { position: static; max-height: none; display: none; }
+            .settings-panel.open { display: block; }
+            .settings-toggle { display: block; }
+        }
+        @media (max-width: 768px) {
+            .dashboard-header { flex-direction: column; align-items: flex-start; }
+            .dashboard-header h1 { font-size: 1.2rem; }
+            .modal-content { padding: 15px; }
+            .edit-grid { grid-template-columns: 1fr; }
+            .column-item { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 480px) {
+            body { padding: 10px; }
+            .stat-card { font-size: 0.85rem; padding: 8px 15px; }
+            .btn { font-size: 0.8rem; padding: 8px 12px; }
+            .table-container, .search-container { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ============ مؤشر تحميل PDF ============ -->
+<div id="pdfLoading">
+    <div class="pdf-spinner"></div>
+    <div>⏳ جاري إنشاء ملف PDF...</div>
+    <div style="font-size: 0.9rem; opacity: 0.8;">قد يستغرق هذا بضع ثوانٍ</div>
+</div>
+
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>📋 لوحة تحكم المدير - سجل المعلمين</h1>
+        <div class="header-actions">
+            <button class="btn btn-refresh" onclick="loadTeachers()">🔄 تحديث</button>
+            <button class="btn btn-columns" onclick="openColumnsModal()">🏷️ أسماء الحقول</button>
+            <button class="btn btn-excel" onclick="openExcelModal()">📊 تصدير Excel</button>
+            <button class="btn btn-pdf" onclick="exportCurrentToPDF()">📄 PDF</button>
+            <button class="btn btn-print" onclick="printCurrentRecord()">🖨️ طباعة</button>
+        </div>
+    </div>
+
+    <div class="stats-container">
+        <div class="stat-card">إجمالي المعلمين: <span id="totalCount">0</span></div>
+        <div class="stat-card">المعروض حالياً: <span id="filteredCount">0</span></div>
+    </div>
+
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="🔍 ابحث بالاسم، الرقم الذاتي، المدرسة، أو المنطقة..." onkeyup="filterTable()">
+    </div>
+
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>الاسم الثلاثي</th>
+                    <th>الرقم الذاتي</th>
+                    <th>المدرسة</th>
+                    <th>المنطقة</th>
+                    <th>الوضع الوظيفي</th>
+                    <th>الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <tr><td colspan="7" class="loading-spinner">⏳ جاري تحميل البيانات...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ============ نافذة المعاينة ============ -->
+<div class="modal" id="recordModal">
+    <div class="modal-content">
+        <button class="close-btn no-print" onclick="closeModal()">✕</button>
+        <button class="settings-toggle no-print" onclick="toggleSettings()">⚙️ إعدادات المعاينة</button>
+
+        <div class="preview-layout">
+            <div class="settings-panel no-print" id="settingsPanel">
+                <h3>⚙️ إعدادات المعاينة</h3>
+                <div class="settings-group">
+                    <h4>🔤 الخطوط</h4>
+                    <div class="setting-item">
+                        <label>خط عناوين الحقول</label>
+                        <select id="labelFontFamily" onchange="updateStyle()">
+                            <option value="Tajawal">Tajawal</option>
+                            <option value="Cairo">Cairo</option>
+                            <option value="Amiri">Amiri</option>
+                            <option value="Almarai">Almarai</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label>خط البيانات</label>
+                        <select id="valueFontFamily" onchange="updateStyle()">
+                            <option value="Tajawal">Tajawal</option>
+                            <option value="Cairo">Cairo</option>
+                            <option value="Amiri">Amiri</option>
+                            <option value="Almarai">Almarai</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="settings-group">
+                    <h4>📏 أحجام الخطوط</h4>
+                    <div class="setting-item">
+                        <label>حجم خط العناوين: <span class="range-value" id="labelFontSizeVal">10px</span></label>
+                        <input type="range" id="labelFontSize" min="6" max="20" value="10" oninput="updateStyle()">
+                    </div>
+                    <div class="setting-item">
+                        <label>حجم خط البيانات: <span class="range-value" id="valueFontSizeVal">11px</span></label>
+                        <input type="range" id="valueFontSize" min="6" max="20" value="11" oninput="updateStyle()">
+                    </div>
+                    <div class="setting-item">
+                        <label>حجم عنوان القسم: <span class="range-value" id="sectionFontSizeVal">12px</span></label>
+                        <input type="range" id="sectionFontSize" min="8" max="20" value="12" oninput="updateStyle()">
+                    </div>
+                </div>
+                <div class="settings-group">
+                    <h4>📐 تباعد النصوص</h4>
+                    <div class="setting-item">
+                        <label>تباعد الحروف: <span class="range-value" id="letterSpacingVal">0px</span></label>
+                        <input type="range" id="letterSpacing" min="-1" max="5" step="0.1" value="0" oninput="updateStyle()">
+                    </div>
+                    <div class="setting-item">
+                        <label>ارتفاع السطر: <span class="range-value" id="lineHeightVal">1.4</span></label>
+                        <input type="range" id="lineHeight" min="0.8" max="3" step="0.1" value="1.4" oninput="updateStyle()">
+                    </div>
+                </div>
+                <div class="settings-group">
+                    <h4>🎨 الألوان</h4>
+                    <div class="setting-item"><label>لون عناوين الحقول</label><input type="color" id="labelColor" value="#1a5fa8" onchange="updateStyle()"></div>
+                    <div class="setting-item"><label>لون البيانات</label><input type="color" id="valueColor" value="#000000" onchange="updateStyle()"></div>
+                    <div class="setting-item"><label>خلفية عنوان القسم</label><input type="color" id="sectionTitleBg" value="#2d7dd2" onchange="updateStyle()"></div>
+                    <div class="setting-item"><label>لون نص عنوان القسم</label><input type="color" id="sectionTitleColor" value="#ffffff" onchange="updateStyle()"></div>
+                </div>
+                <div class="settings-group">
+                    <button class="btn btn-reset" onclick="resetSettings()" style="width:100%;">🔄 إعادة تعيين</button>
+                </div>
+            </div>
+
+            <div class="record-area">
+                <div id="printArea">
+                    <div class="official-record" id="officialRecord"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="preview-actions no-print">
+            <button class="btn btn-print" onclick="printCurrentRecord()">🖨️ طباعة السجل</button>
+            <button class="btn btn-pdf" onclick="downloadPDF()">📄 تحميل PDF</button>
+            <button class="btn btn-excel" onclick="openExcelModal('current')">📊 Excel</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============ نافذة تعديل بيانات المعلم ============ -->
+<div class="modal" id="editModal">
+    <div class="modal-content">
+        <button class="close-btn" onclick="closeEditModal()">✕</button>
+        <h3 style="color: var(--primary-color); margin-bottom: 20px; font-size: 1.4rem;">
+            ✏️ تعديل بيانات المعلم
+        </h3>
+
+        <div class="info-box">
+            💡 سيتم حفظ التعديلات مباشرة في قاعدة البيانات، وستظهر التغييرات في صفحة الإدخال عند التحديث.
+        </div>
+
+        <form id="editForm">
+            <div class="edit-section">
+                <h4>📋 البيانات الإدارية</h4>
+                <div class="edit-grid">
+                    <div class="edit-item"><label>م</label><input type="text" name="serialNumber"></div>
+                    <div class="edit-item"><label>الرقم الذاتي</label><input type="text" name="selfNumber"></div>
+                    <div class="edit-item"><label>رقم شام كاش</label><input type="text" name="cashAccount"></div>
+                    <div class="edit-item"><label>الوزارة</label><input type="text" name="ministry"></div>
+                    <div class="edit-item"><label>الجهة العامة</label><input type="text" name="publicEntity"></div>
+                    <div class="edit-item"><label>الوحدة الرئيسية</label><input type="text" name="orgUnit"></div>
+                    <div class="edit-item"><label>الوحدة الفرعية</label><input type="text" name="subOrgUnit"></div>
+                    <div class="edit-item"><label>المنطقة</label><input type="text" name="region"></div>
+                    <div class="edit-item"><label>المدرسة</label><input type="text" name="school"></div>
+                    <div class="edit-item"><label>الفوج</label>
+                        <select name="shift">
+                            <option value="">اختر...</option>
+                            <option value="صباحي">صباحي</option>
+                            <option value="مسائي">مسائي</option>
+                        </select>
+                    </div>
+                    <div class="edit-item"><label>الهاتف</label><input type="tel" name="phone"></div>
+                </div>
+            </div>
+
+            <div class="edit-section">
+                <h4>👤 المعلومات الشخصية</h4>
+                <div class="edit-grid">
+                    <div class="edit-item"><label>الاسم</label><input type="text" name="firstName"></div>
+                    <div class="edit-item"><label>اسم الأب</label><input type="text" name="fatherName"></div>
+                    <div class="edit-item"><label>الكنية</label><input type="text" name="lastName"></div>
+                    <div class="edit-item"><label>الاسم الثلاثي</label><input type="text" name="fullName"></div>
+                    <div class="edit-item"><label>اسم الأم</label><input type="text" name="motherName"></div>
+                    <div class="edit-item"><label>مكان الولادة</label><input type="text" name="birthPlace"></div>
+                    <div class="edit-item"><label>يوم الولادة</label><input type="number" name="birthDay"></div>
+                    <div class="edit-item"><label>شهر الولادة</label><input type="number" name="birthMonth"></div>
+                    <div class="edit-item"><label>سنة الولادة</label><input type="number" name="birthYear"></div>
+                    <div class="edit-item"><label>زمرة الدم</label>
+                        <select name="bloodType">
+                            <option value="">اختر...</option>
+                            <option value="A+">A+</option><option value="A-">A-</option>
+                            <option value="B+">B+</option><option value="B-">B-</option>
+                            <option value="AB+">AB+</option><option value="AB-">AB-</option>
+                            <option value="O+">O+</option><option value="O-">O-</option>
+                        </select>
+                    </div>
+                    <div class="edit-item"><label>الجنس</label>
+                        <select name="gender">
+                            <option value="">اختر...</option>
+                            <option value="ذكر">ذكر</option>
+                            <option value="أنثى">أنثى</option>
+                        </select>
+                    </div>
+                    <div class="edit-item"><label>الوضع الاجتماعي</label>
+                        <select name="maritalStatus">
+                            <option value="">اختر...</option>
+                            <option value="عازب">عازب</option>
+                            <option value="متزوج">متزوج</option>
+                            <option value="مطلق">مطلق</option>
+                            <option value="أرمل">أرمل</option>
+                        </select>
+                    </div>
+                    <div class="edit-item"><label>القيد والخانة</label><input type="text" name="civilRegistry"></div>
+                    <div class="edit-item"><label>الأمانة</label><input type="text" name="trustee"></div>
+                    <div class="edit-item"><label>الرقم الوطني</label><input type="text" name="nationalId"></div>
+                    <div class="edit-item"><label>البطاقة الشخصية</label><input type="text" name="idCardBack"></div>
+                    <div class="edit-item"><label>دفتر العائلة</label><input type="text" name="familyRecord"></div>
+                    <div class="edit-item"><label>عدد الأولاد</label><input type="number" name="childrenCount"></div>
+                    <div class="edit-item" style="grid-column: span 2;"><label>أسماء الأبناء</label><textarea name="childrenNames"></textarea></div>
+                </div>
+            </div>
+
+            <div class="edit-section">
+                <h4>💍 بيانات الزوجة</h4>
+                <div class="edit-grid">
+                    <div class="edit-item"><label>عدد الزوجات</label><input type="number" name="wivesCount"></div>
+                    <div class="edit-item"><label>اسم الزوجة الثلاثي</label><input type="text" name="wifeName"></div>
+                    <div class="edit-item"><label>الرقم الوطني للزوجة</label><input type="text" name="wifeNationalId"></div>
+                    <div class="edit-item"><label>رقم هاتف الزوجة</label><input type="tel" name="wifePhone"></div>
+                    <div class="edit-item"><label>عمل الزوجة</label><input type="text" name="wifeJob"></div>
+                    <div class="edit-item"><label>هل تعمل بملاك التربية؟</label>
+                        <select name="wifeWorksInEducation">
+                            <option value="">اختر...</option>
+                            <option value="نعم">نعم</option>
+                            <option value="لا">لا</option>
+                        </select>
+                    </div>
+                    <div class="edit-item" style="grid-column: span 2;"><label>مدرسة الزوجة</label><input type="text" name="wifeSchool"></div>
+                </div>
+            </div>
+
+            <div class="edit-section">
+                <h4>💼 الوضع الوظيفي</h4>
+                <div class="edit-grid">
+                    <div class="edit-item"><label>الفئة</label><input type="text" name="category"></div>
+                    <div class="edit-item"><label>الصفة الوظيفية</label><input type="text" name="jobDescription"></div>
+                    <div class="edit-item"><label>المسمى الوظيفي</label><input type="text" name="currentJobTitle"></div>
+                    <div class="edit-item"><label>طبيعة العمل</label><input type="text" name="salaryNature"></div>
+                    <div class="edit-item"><label>العلاقة الوظيفية</label><input type="text" name="employmentRelation"></div>
+                    <div class="edit-item"><label>الوضع الوظيفي</label><input type="text" name="jobStatus"></div>
+                    <div class="edit-item" style="grid-column: span 2;"><label>العمل المكلف به</label><input type="text" name="assignedWork"></div>
+                    <div class="edit-item"><label>تاريخ المباشرة</label><input type="date" name="startDate"></div>
+                    <div class="edit-item"><label>القدم الوظيفي</label><input type="number" name="seniority"></div>
+                </div>
+            </div>
+
+            <div class="edit-section">
+                <h4>🎓 الوضع العلمي</h4>
+                <div class="edit-grid">
+                    <div class="edit-item"><label>الشهادة</label><input type="text" name="degree"></div>
+                    <div class="edit-item"><label>الاختصاص</label><input type="text" name="specialization"></div>
+                    <div class="edit-item"><label>تاريخ الشهادة</label><input type="date" name="degreeDate"></div>
+                    <div class="edit-item"><label>الشهادة بعد التعيين</label><input type="text" name="postDegree"></div>
+                    <div class="edit-item"><label>اختصاص بعد التعيين</label><input type="text" name="postSpecialization"></div>
+                    <div class="edit-item"><label>تاريخ الشهادة بعد التعيين</label><input type="date" name="postDegreeDate"></div>
+                    <div class="edit-item"><label>علم التعيين الأول</label><input type="date" name="firstAppointmentDate"></div>
+                    <div class="edit-item"><label>بداية الجهة الحالية</label><input type="date" name="currentEntityStartDate"></div>
+                </div>
+            </div>
+
+            <div class="edit-section">
+                <h4>🎯 التوجهات والملاحظات</h4>
+                <div class="edit-grid">
+                    <div class="edit-item"><label>يرغب بالتقاعد؟</label>
+                        <select name="wantsRetirement">
+                            <option value="">اختر...</option>
+                            <option value="نعم">نعم</option>
+                            <option value="لا">لا</option>
+                        </select>
+                    </div>
+                    <div class="edit-item"><label>سبب التقاعد</label><input type="text" name="retirementReason"></div>
+                    <div class="edit-item"><label>يرغب بالنقل؟</label>
+                        <select name="wantsTransfer">
+                            <option value="">اختر...</option>
+                            <option value="نعم">نعم</option>
+                            <option value="لا">لا</option>
+                        </select>
+                    </div>
+                    <div class="edit-item"><label>جهة النقل</label><input type="text" name="transferDestination"></div>
+                    <div class="edit-item"><label>استكمال التعليم؟</label>
+                        <select name="wantsContinueEducation">
+                            <option value="">اختر...</option>
+                            <option value="نعم">نعم</option>
+                            <option value="لا">لا</option>
+                        </select>
+                    </div>
+                    <div class="edit-item" style="grid-column: span 2;"><label>الملاحظات</label><textarea name="notes"></textarea></div>
+                </div>
+            </div>
+
+            <div class="preview-actions">
+                <button type="button" class="btn btn-cancel" onclick="closeEditModal()">إلغاء</button>
+                <button type="button" class="btn btn-save" onclick="saveEdit()">💾 حفظ التعديلات</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ============ نافذة أسماء الحقول ============ -->
+<div class="modal" id="columnsModal">
+    <div class="modal-content">
+        <button class="close-btn" onclick="closeColumnsModal()">✕</button>
+        <h3 style="color: var(--primary-color); margin-bottom: 20px; font-size: 1.4rem;">
+            🏷️ تخصيص أسماء الحقول
+        </h3>
+
+        <div class="info-box">
+            💡 هذه الأسماء ستُستخدم في صفحة إدخال بيانات المعلم، وفي السجل الرسمي، وفي ملف Excel. اترك الحقل فارغاً للعودة للاسم الافتراضي.
+        </div>
+
+        <div id="columnsList"></div>
+
+        <div class="preview-actions">
+            <button class="btn btn-reset" onclick="resetColumns()">🔄 إعادة تعيين الكل</button>
+            <button class="btn btn-save" onclick="saveColumns()">💾 حفظ الأسماء</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============ نافذة إعدادات Excel ============ -->
+<div class="modal" id="excelModal">
+    <div class="modal-content">
+        <button class="close-btn" onclick="closeExcelModal()">✕</button>
+
+        <h3 style="color: var(--primary-color); margin-bottom: 20px; font-size: 1.4rem;">
+            📊 إعدادات تصدير Excel
+        </h3>
+
+        <div class="excel-preview-box">
+            💡 ملف Excel يدعم اللغة العربية (RTL) بالكامل
+        </div>
+
+        <div class="settings-group">
+            <h4>📋 نطاق التصدير</h4>
+            <div class="setting-item">
+                <label>اختر البيانات المراد تصديرها</label>
+                <select id="excelScope">
+                    <option value="current">السجل الحالي فقط</option>
+                    <option value="filtered">البيانات المعروضة حالياً</option>
+                    <option value="all">جميع المعلمين</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="settings-group">
+            <h4>🎨 تنسيق رؤوس الأعمدة</h4>
+            <div class="setting-item">
+                <label>لون الخط</label>
+                <input type="color" id="excelHeaderFontColor" value="#ffffff">
+            </div>
+            <div class="setting-item">
+                <label>لون الخلفية</label>
+                <input type="color" id="excelHeaderBgColor" value="#1a5fa8">
+            </div>
+            <div class="setting-item">
+                <label>حجم الخط: <span class="range-value" id="excelHeaderFontSizeVal">12</span> pt</label>
+                <input type="range" id="excelHeaderFontSize" min="8" max="24" value="12" oninput="document.getElementById('excelHeaderFontSizeVal').textContent=this.value">
+            </div>
+            <div class="setting-item">
+                <label>نوع الخط</label>
+                <select id="excelHeaderFont">
+                    <option value="Tajawal">Tajawal</option>
+                    <option value="Cairo">Cairo</option>
+                    <option value="Amiri">Amiri</option>
+                    <option value="Almarai">Almarai</option>
+                    <option value="Arial">Arial</option>
+                </select>
+            </div>
+            <label class="checkbox-item">
+                <input type="checkbox" id="excelHeaderBold" checked>
+                خط عريض
+            </label>
+        </div>
+
+        <div class="settings-group">
+            <h4>📝 تنسيق البيانات</h4>
+            <div class="setting-item">
+                <label>لون الخط</label>
+                <input type="color" id="excelDataFontColor" value="#000000">
+            </div>
+            <div class="setting-item">
+                <label>لون خلفية الصفوف الفردية</label>
+                <input type="color" id="excelDataBgColor1" value="#ffffff">
+            </div>
+            <div class="setting-item">
+                <label>لون خلفية الصفوف الزوجية</label>
+                <input type="color" id="excelDataBgColor2" value="#eaf3fb">
+            </div>
+            <div class="setting-item">
+                <label>حجم الخط: <span class="range-value" id="excelDataFontSizeVal">11</span> pt</label>
+                <input type="range" id="excelDataFontSize" min="8" max="20" value="11" oninput="document.getElementById('excelDataFontSizeVal').textContent=this.value">
+            </div>
+            <div class="setting-item">
+                <label>نوع الخط</label>
+                <select id="excelDataFont">
+                    <option value="Tajawal">Tajawal</option>
+                    <option value="Cairo">Cairo</option>
+                    <option value="Amiri">Amiri</option>
+                    <option value="Almarai">Almarai</option>
+                    <option value="Arial">Arial</option>
+                </select>
+            </div>
+            <label class="checkbox-item">
+                <input type="checkbox" id="excelDataBold">
+                خط عريض للبيانات
+            </label>
+        </div>
+
+        <div class="settings-group">
+            <h4>⚙️ إعدادات إضافية</h4>
+            <div class="setting-item">
+                <label>ارتفاع الصف: <span class="range-value" id="excelRowHeightVal">22</span> pt</label>
+                <input type="range" id="excelRowHeight" min="15" max="50" value="22" oninput="document.getElementById('excelRowHeightVal').textContent=this.value">
+            </div>
+            <label class="checkbox-item" style="margin-top: 10px;">
+                <input type="checkbox" id="excelBorders" checked>
+                إضافة حدود للخلايا
+            </label>
+            <label class="checkbox-item" style="margin-top: 8px;">
+                <input type="checkbox" id="excelAltRows" checked>
+                تلوين الصفوف بالتبادل
+            </label>
+            <label class="checkbox-item" style="margin-top: 8px;">
+                <input type="checkbox" id="excelFreezeHeader" checked>
+                تثبيت رؤوس الأعمدة
+            </label>
+            <label class="checkbox-item" style="margin-top: 8px;">
+                <input type="checkbox" id="excelAutoWidth" checked>
+                ضبط عرض الأعمدة تلقائياً
+            </label>
+            <label class="checkbox-item" style="margin-top: 8px;">
+                <input type="checkbox" id="excelRTL" checked>
+                اتجاه من اليمين لليسار (RTL)
+            </label>
+        </div>
+
+        <div class="preview-actions">
+            <button class="btn btn-reset" onclick="resetExcelSettings()">🔄 إعادة تعيين</button>
+            <button class="btn btn-excel" onclick="confirmExcelExport()" style="font-size: 1rem; padding: 12px 28px;">
+                📊 تصدير Excel الآن
+            </button>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc, getDoc, setDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyC31P3GxbtuFEl34czIe0KFuuKNv3JDKBU",
+        authDomain: "khitmaty1.firebaseapp.com",
+        projectId: "khitmaty1",
+        storageBucket: "khitmaty1.firebasestorage.app",
+        messagingSenderId: "555189930690",
+        appId: "1:555189930690:web:8bbd5347b7a3596923095b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let teachersData = [];
+    let filteredData = [];
+    let currentTeacher = null;
+    let currentEditId = null;
+    let columnLabels = {};
+
+    const fieldList = [
+        { key: 'serialNumber', label: 'م' },
+        { key: 'selfNumber', label: 'الرقم الذاتي' },
+        { key: 'cashAccount', label: 'رقم حساب شام كاش' },
+        { key: 'ministry', label: 'الوزارة' },
+        { key: 'publicEntity', label: 'الجهة العامة' },
+        { key: 'orgUnit', label: 'الوحدة التنظيمية الرئيسية' },
+        { key: 'subOrgUnit', label: 'الوحدة التنظيمية الفرعية' },
+        { key: 'region', label: 'المنطقة' },
+        { key: 'school', label: 'المدرسة' },
+        { key: 'shift', label: 'الفوج' },
+        { key: 'phone', label: 'رقم الهاتف / الجوال' },
+        { key: 'firstName', label: 'الاسم' },
+        { key: 'fatherName', label: 'اسم الأب' },
+        { key: 'lastName', label: 'الكنية' },
+        { key: 'fullName', label: 'الاسم الثلاثي' },
+        { key: 'motherName', label: 'اسم الأم والكنية' },
+        { key: 'birthPlace', label: 'مكان الولادة' },
+        { key: 'birthDay', label: 'يوم الولادة' },
+        { key: 'birthMonth', label: 'شهر الولادة' },
+        { key: 'birthYear', label: 'سنة الولادة' },
+        { key: 'bloodType', label: 'زمرة الدم' },
+        { key: 'gender', label: 'الجنس' },
+        { key: 'maritalStatus', label: 'الوضع الاجتماعي' },
+        { key: 'civilRegistry', label: 'القيد والخانة' },
+        { key: 'trustee', label: 'الأمانة' },
+        { key: 'nationalId', label: 'الرقم الوطني' },
+        { key: 'idCardBack', label: 'رقم البطاقة الشخصية' },
+        { key: 'familyRecord', label: 'رقم دفتر العائلة' },
+        { key: 'childrenCount', label: 'عدد الأولاد' },
+        { key: 'childrenNames', label: 'أسماء الأبناء + تاريخ الولادة' },
+        { key: 'wivesCount', label: 'عدد الزوجات' },
+        { key: 'wifeName', label: 'اسم الزوجة الثلاثي' },
+        { key: 'wifeNationalId', label: 'الرقم الوطني للزوجة' },
+        { key: 'wifePhone', label: 'رقم هاتف الزوجة' },
+        { key: 'wifeJob', label: 'عمل الزوجة' },
+        { key: 'wifeWorksInEducation', label: 'هل تعمل بملاك التربية؟' },
+        { key: 'wifeSchool', label: 'اسم المدرسة التي تعمل بها الزوجة' },
+        { key: 'category', label: 'الفئة' },
+        { key: 'jobDescription', label: 'الصفة الوظيفية' },
+        { key: 'currentJobTitle', label: 'المسمى الوظيفي الحالي' },
+        { key: 'salaryNature', label: 'طبيعة العمل / الأجر' },
+        { key: 'employmentRelation', label: 'طبيعة العلاقة الوظيفية' },
+        { key: 'jobStatus', label: 'الوضع الوظيفي' },
+        { key: 'assignedWork', label: 'العمل المكلف به' },
+        { key: 'startDate', label: 'تاريخ المباشرة' },
+        { key: 'seniority', label: 'القدم الوظيفي' },
+        { key: 'degree', label: 'الشهادة المعين عليها' },
+        { key: 'specialization', label: 'الاختصاص' },
+        { key: 'degreeDate', label: 'تاريخ الحصول عليها' },
+        { key: 'postDegree', label: 'الشهادة بعد التعيين' },
+        { key: 'postSpecialization', label: 'اختصاص ما بعد التعيين' },
+        { key: 'postDegreeDate', label: 'تاريخ الشهادة بعد التعيين' },
+        { key: 'firstAppointmentDate', label: 'علم التعيين الأول في الدولة' },
+        { key: 'currentEntityStartDate', label: 'تاريخ المباشرة في الجهة العامة الحالية' },
+        { key: 'generalCourses', label: 'الدورات العامة' },
+        { key: 'specialCourses', label: 'الدورات الخاصة' },
+        { key: 'wantsRetirement', label: 'يرغب بالتقاعد؟' },
+        { key: 'retirementReason', label: 'سبب التقاعد' },
+        { key: 'wantsTransfer', label: 'يرغب بالنقل؟' },
+        { key: 'transferDestination', label: 'جهة النقل' },
+        { key: 'wantsContinueEducation', label: 'هل يرغب باستكمال التحصيل العلمي؟' },
+        { key: 'notes', label: 'الملاحظات' }
+    ];
+
+    function getLabel(key) {
+        const found = fieldList.find(f => f.key === key);
+        const defaultLabel = found ? found.label : key;
+        return columnLabels[key] || defaultLabel;
+    }
+
+    async function loadColumnLabels() {
+        try {
+            const docRef = doc(db, "settings", "columnLabels");
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                columnLabels = docSnap.data() || {};
+            } else {
+                columnLabels = {};
+            }
+        } catch (e) {
+            console.warn('فشل تحميل التسميات:', e);
+            columnLabels = {};
+        }
+    }
+
+    window.saveColumns = async function () {
+        const newLabels = {};
+        fieldList.forEach(field => {
+            const input = document.getElementById('col_' + field.key);
+            if (input) {
+                const val = input.value.trim();
+                if (val && val !== field.label) {
+                    newLabels[field.key] = val;
+                }
+            }
+        });
+
+        try {
+            await setDoc(doc(db, "settings", "columnLabels"), newLabels);
+            columnLabels = newLabels;
+            alert('✅ تم حفظ الأسماء بنجاح، ستظهر في صفحة الإدخال عند التحديث');
+            closeColumnsModal();
+            if (currentTeacher) viewRecord(currentTeacher.firebaseId);
+        } catch (e) {
+            alert('❌ فشل الحفظ: ' + e.message);
+        }
+    };
+
+    window.resetColumns = function () {
+        if (!confirm('سيتم حذف جميع التسميات المخصصة والعودة للأسماء الافتراضية. متابعة؟')) return;
+        fieldList.forEach(field => {
+            const input = document.getElementById('col_' + field.key);
+            if (input) input.value = '';
+        });
+    };
+
+    window.openColumnsModal = function () {
+        const list = document.getElementById('columnsList');
+        list.innerHTML = '';
+        fieldList.forEach(field => {
+            const currentVal = columnLabels[field.key] || '';
+            list.innerHTML += `
+                <div class="column-item">
+                    <div class="original-name">${field.label}</div>
+                    <input type="text" id="col_${field.key}" value="${currentVal}" placeholder="${field.label}">
+                </div>
+            `;
+        });
+        document.getElementById('columnsModal').style.display = 'flex';
+    };
+
+    window.closeColumnsModal = function () {
+        document.getElementById('columnsModal').style.display = 'none';
+    };
+
+    const defaultSettings = {
+        labelColor: '#1a5fa8',
+        valueColor: '#000000',
+        labelFontSize: 10,
+        valueFontSize: 11,
+        sectionFontSize: 12,
+        labelFontFamily: 'Tajawal',
+        valueFontFamily: 'Tajawal',
+        sectionTitleBg: '#2d7dd2',
+        sectionTitleColor: '#ffffff',
+        letterSpacing: 0,
+        lineHeight: 1.4
+    };
+
+    const defaultExcelSettings = {
+        scope: 'all',
+        headerFontColor: '#ffffff',
+        headerBgColor: '#1a5fa8',
+        headerFontSize: 12,
+        headerFont: 'Tajawal',
+        headerBold: true,
+        dataFontColor: '#000000',
+        dataBgColor1: '#ffffff',
+        dataBgColor2: '#eaf3fb',
+        dataFontSize: 11,
+        dataFont: 'Tajawal',
+        dataBold: false,
+        rowHeight: 22,
+        borders: true,
+        altRows: true,
+        freezeHeader: true,
+        autoWidth: true,
+        rtl: true
+    };
+
+    let currentSettings = { ...defaultSettings };
+    let currentExcelSettings = { ...defaultExcelSettings };
+
+    function loadSettings() {
+        const saved = localStorage.getItem('teacherRecordSettings');
+        if (saved) {
+            try { currentSettings = { ...defaultSettings, ...JSON.parse(saved) }; }
+            catch (e) { console.warn(e); }
+        }
+        applySettingsToControls();
+
+        const savedExcel = localStorage.getItem('teacherExcelSettings');
+        if (savedExcel) {
+            try { currentExcelSettings = { ...defaultExcelSettings, ...JSON.parse(savedExcel) }; }
+            catch (e) { console.warn(e); }
+        }
+        applyExcelSettingsToControls();
+    }
+
+    function saveSettings() {
+        localStorage.setItem('teacherRecordSettings', JSON.stringify(currentSettings));
+    }
+
+    function saveExcelSettings() {
+        localStorage.setItem('teacherExcelSettings', JSON.stringify(currentExcelSettings));
+    }
+
+    function applySettingsToControls() {
+        document.getElementById('labelColor').value = currentSettings.labelColor;
+        document.getElementById('valueColor').value = currentSettings.valueColor;
+        document.getElementById('labelFontSize').value = currentSettings.labelFontSize;
+        document.getElementById('valueFontSize').value = currentSettings.valueFontSize;
+        document.getElementById('sectionFontSize').value = currentSettings.sectionFontSize;
+        document.getElementById('labelFontFamily').value = currentSettings.labelFontFamily;
+        document.getElementById('valueFontFamily').value = currentSettings.valueFontFamily;
+        document.getElementById('sectionTitleBg').value = currentSettings.sectionTitleBg;
+        document.getElementById('sectionTitleColor').value = currentSettings.sectionTitleColor;
+        document.getElementById('letterSpacing').value = currentSettings.letterSpacing;
+        document.getElementById('lineHeight').value = currentSettings.lineHeight;
+
+        document.getElementById('labelFontSizeVal').textContent = currentSettings.labelFontSize + 'px';
+        document.getElementById('valueFontSizeVal').textContent = currentSettings.valueFontSize + 'px';
+        document.getElementById('sectionFontSizeVal').textContent = currentSettings.sectionFontSize + 'px';
+        document.getElementById('letterSpacingVal').textContent = currentSettings.letterSpacing + 'px';
+        document.getElementById('lineHeightVal').textContent = currentSettings.lineHeight;
+
+        updateStyle();
+    }
+
+    function applyExcelSettingsToControls() {
+        const e = currentExcelSettings;
+        document.getElementById('excelScope').value = e.scope;
+        document.getElementById('excelHeaderFontColor').value = e.headerFontColor;
+        document.getElementById('excelHeaderBgColor').value = e.headerBgColor;
+        document.getElementById('excelHeaderFontSize').value = e.headerFontSize;
+        document.getElementById('excelHeaderFontSizeVal').textContent = e.headerFontSize;
+        document.getElementById('excelHeaderFont').value = e.headerFont;
+        document.getElementById('excelHeaderBold').checked = e.headerBold;
+        document.getElementById('excelDataFontColor').value = e.dataFontColor;
+        document.getElementById('excelDataBgColor1').value = e.dataBgColor1;
+        document.getElementById('excelDataBgColor2').value = e.dataBgColor2;
+        document.getElementById('excelDataFontSize').value = e.dataFontSize;
+        document.getElementById('excelDataFontSizeVal').textContent = e.dataFontSize;
+        document.getElementById('excelDataFont').value = e.dataFont;
+        document.getElementById('excelDataBold').checked = e.dataBold;
+        document.getElementById('excelRowHeight').value = e.rowHeight;
+        document.getElementById('excelRowHeightVal').textContent = e.rowHeight;
+        document.getElementById('excelBorders').checked = e.borders;
+        document.getElementById('excelAltRows').checked = e.altRows;
+        document.getElementById('excelFreezeHeader').checked = e.freezeHeader;
+        document.getElementById('excelAutoWidth').checked = e.autoWidth;
+        document.getElementById('excelRTL').checked = e.rtl;
+    }
+
+    window.updateStyle = function () {
+        currentSettings.labelColor = document.getElementById('labelColor').value;
+        currentSettings.valueColor = document.getElementById('valueColor').value;
+        currentSettings.labelFontSize = parseInt(document.getElementById('labelFontSize').value);
+        currentSettings.valueFontSize = parseInt(document.getElementById('valueFontSize').value);
+        currentSettings.sectionFontSize = parseInt(document.getElementById('sectionFontSize').value);
+        currentSettings.labelFontFamily = document.getElementById('labelFontFamily').value;
+        currentSettings.valueFontFamily = document.getElementById('valueFontFamily').value;
+        currentSettings.sectionTitleBg = document.getElementById('sectionTitleBg').value;
+        currentSettings.sectionTitleColor = document.getElementById('sectionTitleColor').value;
+        currentSettings.letterSpacing = parseFloat(document.getElementById('letterSpacing').value);
+        currentSettings.lineHeight = parseFloat(document.getElementById('lineHeight').value);
+
+        document.getElementById('labelFontSizeVal').textContent = currentSettings.labelFontSize + 'px';
+        document.getElementById('valueFontSizeVal').textContent = currentSettings.valueFontSize + 'px';
+        document.getElementById('sectionFontSizeVal').textContent = currentSettings.sectionFontSize + 'px';
+        document.getElementById('letterSpacingVal').textContent = currentSettings.letterSpacing + 'px';
+        document.getElementById('lineHeightVal').textContent = currentSettings.lineHeight;
+
+        const root = document.documentElement;
+        root.style.setProperty('--label-color', currentSettings.labelColor);
+        root.style.setProperty('--value-color', currentSettings.valueColor);
+        root.style.setProperty('--label-font-size', currentSettings.labelFontSize + 'px');
+        root.style.setProperty('--value-font-size', currentSettings.valueFontSize + 'px');
+        root.style.setProperty('--section-title-font-size', currentSettings.sectionFontSize + 'px');
+        root.style.setProperty('--label-font-family', currentSettings.labelFontFamily);
+        root.style.setProperty('--value-font-family', currentSettings.valueFontFamily);
+        root.style.setProperty('--section-title-bg', currentSettings.sectionTitleBg);
+        root.style.setProperty('--section-title-color', currentSettings.sectionTitleColor);
+        root.style.setProperty('--letter-spacing', currentSettings.letterSpacing + 'px');
+        root.style.setProperty('--line-height', currentSettings.lineHeight);
+
+        saveSettings();
+    };
+
+    window.resetSettings = function () {
+        if (!confirm('هل تريد إعادة تعيين جميع إعدادات المعاينة؟')) return;
+        currentSettings = { ...defaultSettings };
+        applySettingsToControls();
+    };
+
+    window.resetExcelSettings = function () {
+        if (!confirm('هل تريد إعادة تعيين جميع إعدادات Excel؟')) return;
+        currentExcelSettings = { ...defaultExcelSettings };
+        applyExcelSettingsToControls();
+    };
+
+    window.toggleSettings = function () {
+        document.getElementById('settingsPanel').classList.toggle('open');
+    };
+
+    window.openExcelModal = function (scope = 'all') {
+        if (scope === 'current' && !currentTeacher) {
+            alert('افتح سجل معلم أولاً');
+            return;
+        }
+        if (scope === 'current') {
+            currentExcelSettings.scope = 'current';
+            document.getElementById('excelScope').value = 'current';
+        }
+        document.getElementById('excelModal').style.display = 'flex';
+    };
+
+    window.closeExcelModal = function () {
+        document.getElementById('excelModal').style.display = 'none';
+    };
+
+    function formatCash(num) {
+        if (!num) return '';
+        const clean = String(num).replace(/\s/g, '');
+        return clean.replace(/(.{4})/g, '$1 ').trim();
+    }
+
+    window.loadTeachers = async function () {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '<tr><td colspan="7" class="loading-spinner">⏳ جاري تحميل البيانات...</td></tr>';
+
+        try {
+            const q = query(collection(db, "teachers"), orderBy("createdAt", "desc"));
+            const querySnapshot = await getDocs(q);
+
+            teachersData = [];
+            querySnapshot.forEach((docSnap) => {
+                teachersData.push({ firebaseId: docSnap.id, ...docSnap.data() });
+            });
+
+            filteredData = [...teachersData];
+            renderTable(teachersData);
+            document.getElementById('totalCount').textContent = teachersData.length;
+            document.getElementById('filteredCount').textContent = teachersData.length;
+
+        } catch (error) {
+            console.error("خطأ في التحميل:", error);
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:red; padding: 20px;">
+                ❌ خطأ: ${error.message}
+            </td></tr>`;
+        }
+    };
+
+    function renderTable(data) {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px;">لا توجد بيانات</td></tr>';
+            return;
+        }
+
+        data.forEach((teacher, index) => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${teacher.fullName || '---'}</td>
+                    <td>${teacher.selfNumber || '---'}</td>
+                    <td>${teacher.school || '---'}</td>
+                    <td>${teacher.region || '---'}</td>
+                    <td>${teacher.jobStatus || '---'}</td>
+                    <td>
+                        <button class="btn btn-view" onclick="viewRecord('${teacher.firebaseId}')">👁️</button>
+                        <button class="btn btn-edit" onclick="openEditModal('${teacher.firebaseId}')">✏️</button>
+                        <button class="btn btn-delete" onclick="deleteRecord('${teacher.firebaseId}')">🗑️</button>
+                    </td>
+                </tr>`;
+        });
+    }
+
+    window.filterTable = function () {
+        const q = document.getElementById('searchInput').value.toLowerCase();
+        filteredData = teachersData.filter(t =>
+            (t.fullName || '').toLowerCase().includes(q) ||
+            (t.selfNumber || '').includes(q) ||
+            (t.school || '').toLowerCase().includes(q) ||
+            (t.region || '').toLowerCase().includes(q)
+        );
+        renderTable(filteredData);
+        document.getElementById('filteredCount').textContent = filteredData.length;
+    };
+
+    window.openEditModal = function (firebaseId) {
+        const t = teachersData.find(x => x.firebaseId === firebaseId);
+        if (!t) return;
+
+        currentEditId = firebaseId;
+        const form = document.getElementById('editForm');
+
+        const fields = ['serialNumber','selfNumber','cashAccount','ministry','publicEntity','orgUnit','subOrgUnit','region','school','shift','phone','firstName','fatherName','lastName','fullName','motherName','birthPlace','birthDay','birthMonth','birthYear','bloodType','gender','maritalStatus','civilRegistry','trustee','nationalId','idCardBack','familyRecord','childrenCount','childrenNames','wivesCount','wifeName','wifeNationalId','wifePhone','wifeJob','wifeWorksInEducation','wifeSchool','category','jobDescription','currentJobTitle','salaryNature','employmentRelation','jobStatus','assignedWork','startDate','seniority','degree','specialization','degreeDate','postDegree','postSpecialization','postDegreeDate','firstAppointmentDate','currentEntityStartDate','wantsRetirement','retirementReason','wantsTransfer','transferDestination','wantsContinueEducation','notes'];
+
+        fields.forEach(f => {
+            const input = form.querySelector(`[name="${f}"]`);
+            if (input) input.value = t[f] || '';
+        });
+
+        document.getElementById('editModal').style.display = 'flex';
+    };
+
+    window.closeEditModal = function () {
+        document.getElementById('editModal').style.display = 'none';
+        currentEditId = null;
+    };
+
+    window.saveEdit = async function () {
+        if (!currentEditId) return;
+        if (!confirm('هل تريد حفظ التعديلات؟')) return;
+
+        const form = document.getElementById('editForm');
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        try {
+            await updateDoc(doc(db, "teachers", currentEditId), data);
+            alert('✅ تم حفظ التعديلات بنجاح');
+            closeEditModal();
+            await loadTeachers();
+        } catch (e) {
+            alert('❌ فشل الحفظ: ' + e.message);
+        }
+    };
+
+    window.viewRecord = function (firebaseId) {
+        currentTeacher = teachersData.find(t => t.firebaseId === firebaseId);
+        if (!currentTeacher) return;
+        const t = currentTeacher;
+
+        let positionsRows = '';
+        if (t.previousPositions && t.previousPositions.length > 0) {
+            positionsRows = t.previousPositions.map(p => `
+                <tr>
+                    <td colspan="2"><span class="label">اسم المكان / المدرسة</span><span class="value">${p.place || ''}</span></td>
+                    <td><span class="label">من تاريخ ← إلى تاريخ</span><span class="value">${p.from || ''} ← ${p.to || ''}</span></td>
+                </tr>
+            `).join('');
+        } else {
+            positionsRows = `<tr><td colspan="3" style="text-align:center;"><span class="value">لا توجد مواقع سابقة</span></td></tr>`;
+        }
+
+        const wifeSection = (t.gender === 'ذكر' && t.wifeName) ? `
+            <div class="record-section-title green">بيانات الزوجة</div>
+            <table class="record-table">
+                <tr>
+                    <td><span class="label">${getLabel('wivesCount')}</span><span class="value">${t.wivesCount || 0}</span></td>
+                    <td><span class="label">${getLabel('wifeName')}</span><span class="value">${t.wifeName || ''}</span></td>
+                    <td><span class="label">${getLabel('wifeNationalId')}</span><span class="value">${t.wifeNationalId || ''}</span></td>
+                </tr>
+                <tr>
+                    <td><span class="label">${getLabel('wifePhone')}</span><span class="value">${t.wifePhone || ''}</span></td>
+                    <td><span class="label">${getLabel('wifeJob')}</span><span class="value">${t.wifeJob || ''}</span></td>
+                    <td><span class="label">${getLabel('wifeWorksInEducation')}</span><span class="value">${t.wifeWorksInEducation || ''}</span></td>
+                </tr>
+                <tr>
+                    <td colspan="3"><span class="label">${getLabel('wifeSchool')}</span><span class="value">${t.wifeSchool || ''}</span></td>
+                </tr>
+            </table>
+        ` : '';
+
+        const page1 = `
+            <h2>السجل الشخصي للمعلم: ${t.fullName || ''}</h2>
+            <div class="record-section-title">البيانات الإدارية</div>
+            <table class="record-table">
+                <tr>
+                    <td><span class="label">${getLabel('serialNumber')}</span><span class="value">${t.serialNumber || ''}</span></td>
+                    <td><span class="label">${getLabel('selfNumber')}</span><span class="value">${t.selfNumber || ''}</span></td>
+                    <td><span class="label">${getLabel('cashAccount')}</span><span class="value">${formatCash(t.cashAccount)}</span></td>
+                </tr>
+                <tr>
+                    <td><span class="label">${getLabel('ministry')}</span><span class="value">${t.ministry || ''}</span></td>
+                    <td><span class="label">${getLabel('publicEntity')}</span><span class="value">${t.publicEntity || ''}</span></td>
+                    <td><span class="label">${getLabel('orgUnit')}</span><span class="value">${t.orgUnit || ''}</span></td>
+                </tr>
+                <tr>
+                    <td><span class="label">${getLabel('subOrgUnit')}</span><span class="value">${t.subOrgUnit || ''}</span></td>
+                    <td><span class="label">${getLabel('region')}</span><span class="value">${t.region || ''}</span></td>
+                    <td><span class="label">${getLabel('school')}</span><span class="value">${t.school || ''}</span></td>
+                </tr>
+                <tr>
+                    <td><span class="label">${getLabel('shift')}</span><span class="value">${t.shift || ''}</span></td>
+                    <td colspan="2"><span class="label">${getLabel('phone')}</span><span class="value">${t.phone || ''}</span></td>
+                </tr>
+            </table>
+
+            <div class="record-section-title green">المعلومات الشخصية</div>
+            <table class="record-table">
+                <tr>
+                    <td><span class="label">${getLabel('firstName')}</span><span class="value">${t.firstName || ''}</span></td>
+                    <td><span class="label">${getLabel('fatherName')}</span><span class="value">${t.fatherName || ''}</span></td>
+                    <td><span class="label">${getLabel('lastName')}</span><span class="value">${t.lastName || ''}</span></td>
+                </tr>
+                <tr>
+                    <td><span class="label">${getLabel('fullName')}</span><span class="value">${t.fullName || ''}</span></td>
+                    <td><span class="label">${getLabel('motherName')}</span><span class="value">${t.motherName || ''}</span></td>
+                    <td><span class="label">${getLabel('birthPlace')}</span><span class="value">${t.birthPlace || ''}</span></td>
+                </tr>
+                <tr>
+                    <td><span class="label">${getLabel('birthDay')}</span><span class="value">${t.birthDay || ''}</span></td>
+                    <td><span class="label">${getLabel('birthMonth')}</span><span class="value">${t.birthMonth || ''}</span></td>
+                    <td><span class="label">${getLabel('birthYear')}</span><span class="value">${t.birthYear || ''}</span></td>
+                </tr>
+                <tr>
+                    <td><span class="label">${getLabel('bloodType')}</span><span class="value">${t.bloodType || ''}</span></td>
+                    <td><span class="label">${getLabel('gender')}</span><span class="value">${t.gender || ''}</span></td>
+                    <td><span class="label">${getLabel('maritalStatus')}</span><span class="value">${t.maritalStatus || ''}</span></td>
+                </tr>
+                <tr>
+                    <td><span class="label">${getLabel('civilRegistry')}</span><span class="value">${t.civilRegistry || ''}</span></td>
+                    <td><span class="label">${getLabel('trustee')}</span><span class="value">${t.trustee || ''}</span></td>
+                    <td><span class="label">${getLabel('nationalId')}</span><span class="value">${t.nationalId || ''}</span></td>
+                </tr>
+                <tr>
+                    <td><span class="label">${getLabel('idCardBack')}</span><span class="value">${t.idCardBack || ''}</span></td>
+                    <td><span class="label">${getLabel('familyRecord')}</span><span class="value">${t.familyRecord || ''}</span></td>
+                    <td><span class="label">${getLabel('childrenCount')}</span><span class="value">${t.childrenCount || 0}</span></td>
+                </tr>
+                <tr>
+                    <td colspan="3"><span class="label">${getLabel('childrenNames')}</span><span class="value">${t.childrenNames || 'لا يوجد'}</span></td>
+                </tr>
+            </table>
+            ${wifeSection}
+        `;
+
+        const page2 = `
+            <div class="record-section-title">الوضع الوظيفي</div>
+            <table class="record-table">
+                <tr>
+                    <td><span class="label">${getLabel('category')}</span><span class="value">${t.category || ''}</span></td>
+                    <td><span class="label">${getLabel('jobDescription')}</span><span class="value">${t.jobDescription || ''}</span></td>
+                    <td><span class="label">${getLabel('currentJobTitle')}</span><span class="value">${t.currentJobTitle || ''}</span></td>
+                </tr>
+                <tr>
+                    <td><span class="label">${getLabel('salaryNature')}</span><span class="value">${t.salaryNature || ''}</span></td>
+                    <td><span class="label">${getLabel('employmentRelation')}</span><span class="value">${t.employmentRelation || ''}</span></td>
+                    <td><span class="label">${getLabel('jobStatus')}</span><span class="value">${t.jobStatus || ''}</span></td>
+                </tr>
+                <tr>
+                    <td colspan="3"><span class="label">${getLabel('assignedWork')}</span><span class="value">${t.assignedWork || ''}</span></td>
+                </tr>
+                <tr>
+                    <td><span class="label">${getLabel('startDate')}</span><span class="value">${t.startDate || ''}</span></td>
+                    <td colspan="2"><span class="label">${getLabel('seniority')}</span><span class="value">${t.seniority ? t.seniority + ' سنة' : ''}</span></td>
+                </tr>
+            </table>
+
+            <div class="record-section-title green">الوضع العلمي</div>
+            <table class="record-table">
+                <tr>
+                    <td><span class="label">${getLabel('degree')}</span><span class="value">${t.degree || ''}</span></td>
+                    <td><span class="label">${getLabel('specialization')}</span><span class="value">${t.specialization || ''}</span></td>
+                    <td><span class="label">${getLabel('degreeDate')}</span><span class="value">${t.degreeDate || ''}</span></td>
+                </tr>
+                <tr>
+                    <td><span class="label">${getLabel('postDegree')}</span><span class="value">${t.postDegree || ''}</span></td>
+                    <td><span class="label">${getLabel('postSpecialization')}</span><span class="value">${t.postSpecialization || ''}</span></td>
+                    <td><span class="label">${getLabel('postDegreeDate')}</span><span class="value">${t.postDegreeDate || ''}</span></td>
+                </tr>
+                <tr>
+                    <td><span class="label">${getLabel('firstAppointmentDate')}</span><span class="value">${t.firstAppointmentDate || ''}</span></td>
+                    <td colspan="2"><span class="label">${getLabel('currentEntityStartDate')}</span><span class="value">${t.currentEntityStartDate || ''}</span></td>
+                </tr>
+            </table>
+
+            <div class="record-section-title">المواقع الوظيفية السابقة</div>
+            <table class="record-table">${positionsRows}</table>
+
+            <div class="record-section-title green">الدورات التدريبية</div>
+            <table class="record-table">
+                <tr><td colspan="3"><span class="label">${getLabel('generalCourses')}</span><span class="value">${t.generalCourses || 'لا يوجد'}</span></td></tr>
+                <tr><td colspan="3"><span class="label">${getLabel('specialCourses')}</span><span class="value">${t.specialCourses || 'لا يوجد'}</span></td></tr>
+            </table>
+
+            <div class="record-section-title">التوجهات والملاحظات</div>
+            <table class="record-table">
+                <tr>
+                    <td><span class="label">${getLabel('wantsRetirement')}</span><span class="value">${t.wantsRetirement || ''}</span></td>
+                    <td><span class="label">${getLabel('retirementReason')}</span><span class="value">${t.retirementReason || ''}</span></td>
+                    <td><span class="label">${getLabel('wantsTransfer')}</span><span class="value">${t.wantsTransfer || ''}</span></td>
+                </tr>
+                <tr>
+                    <td><span class="label">${getLabel('transferDestination')}</span><span class="value">${t.transferDestination || ''}</span></td>
+                    <td colspan="2"><span class="label">${getLabel('wantsContinueEducation')}</span><span class="value">${t.wantsContinueEducation || ''}</span></td>
+                </tr>
+                <tr>
+                    <td colspan="3"><span class="label">${getLabel('notes')}</span><span class="value">${t.notes || 'لا يوجد'}</span></td>
+                </tr>
+            </table>
+
+            <table class="signatures-table">
+                <tr>
+                    <td><div class="sign-line">توقيع المعلم</div></td>
+                    <td><div class="sign-line">توقيع المدير</div></td>
+                </tr>
+            </table>
+        `;
+
+        const html = page1 + '<div class="page-break"></div>' + page2;
+        document.getElementById('officialRecord').innerHTML = html;
+        document.getElementById('recordModal').style.display = 'flex';
+        applySettingsToControls();
+    };
+
+    window.closeModal = function () {
+        document.getElementById('recordModal').style.display = 'none';
+    };
+
+    window.deleteRecord = async function (firebaseId) {
+        if (!confirm('⚠️ هل أنت متأكد من حذف هذا السجل نهائياً؟')) return;
+        try {
+            await deleteDoc(doc(db, "teachers", firebaseId));
+            alert('✅ تم الحذف بنجاح');
+            loadTeachers();
+        } catch (error) {
+            alert('❌ خطأ في الحذف: ' + error.message);
+        }
+    };
+
+    function hexToArgb(hex) {
+        if (!hex) return 'FF000000';
+        hex = hex.replace('#', '').toUpperCase();
+        if (hex.length === 6) return 'FF' + hex;
+        if (hex.length === 8) return hex;
+        return 'FF000000';
+    }
+
+    function extractTeacherRow(t) {
+        const row = {};
+        fieldList.forEach(f => {
+            const label = getLabel(f.key);
+            let val = t[f.key];
+            if (f.key === 'cashAccount') val = formatCash(val);
+            if (f.key === 'seniority' && val) val = val + ' سنة';
+            row[label] = val || '';
+        });
+        return row;
+    }
+
+    window.confirmExcelExport = function () {
+        currentExcelSettings.scope = document.getElementById('excelScope').value;
+        currentExcelSettings.headerFontColor = document.getElementById('excelHeaderFontColor').value;
+        currentExcelSettings.headerBgColor = document.getElementById('excelHeaderBgColor').value;
+        currentExcelSettings.headerFontSize = parseInt(document.getElementById('excelHeaderFontSize').value);
+        currentExcelSettings.headerFont = document.getElementById('excelHeaderFont').value;
+        currentExcelSettings.headerBold = document.getElementById('excelHeaderBold').checked;
+        currentExcelSettings.dataFontColor = document.getElementById('excelDataFontColor').value;
+        currentExcelSettings.dataBgColor1 = document.getElementById('excelDataBgColor1').value;
+        currentExcelSettings.dataBgColor2 = document.getElementById('excelDataBgColor2').value;
+        currentExcelSettings.dataFontSize = parseInt(document.getElementById('excelDataFontSize').value);
+        currentExcelSettings.dataFont = document.getElementById('excelDataFont').value;
+        currentExcelSettings.dataBold = document.getElementById('excelDataBold').checked;
+        currentExcelSettings.rowHeight = parseInt(document.getElementById('excelRowHeight').value);
+        currentExcelSettings.borders = document.getElementById('excelBorders').checked;
+        currentExcelSettings.altRows = document.getElementById('excelAltRows').checked;
+        currentExcelSettings.freezeHeader = document.getElementById('excelFreezeHeader').checked;
+        currentExcelSettings.autoWidth = document.getElementById('excelAutoWidth').checked;
+        currentExcelSettings.rtl = document.getElementById('excelRTL').checked;
+
+        saveExcelSettings();
+
+        let dataToExport = [];
+        if (currentExcelSettings.scope === 'current') {
+            if (!currentTeacher) { alert('لا يوجد سجل حالي'); return; }
+            dataToExport = [extractTeacherRow(currentTeacher)];
+        } else if (currentExcelSettings.scope === 'filtered') {
+            dataToExport = filteredData.map(extractTeacherRow);
+        } else {
+            dataToExport = teachersData.map(extractTeacherRow);
+        }
+
+        if (dataToExport.length === 0) {
+            alert('لا توجد بيانات لتصديرها');
+            return;
+        }
+
+        const ws = XLSX.utils.json_to_sheet(dataToExport);
+        const headers = Object.keys(dataToExport[0]);
+        const range = XLSX.utils.decode_range(ws['!ref']);
+
+        const headerFontColor = hexToArgb(currentExcelSettings.headerFontColor);
+        const headerBgColor = hexToArgb(currentExcelSettings.headerBgColor);
+        const dataFontColor = hexToArgb(currentExcelSettings.dataFontColor);
+        const dataBg1 = hexToArgb(currentExcelSettings.dataBgColor1);
+        const dataBg2 = hexToArgb(currentExcelSettings.dataBgColor2);
+        const borderColor = 'FF888888';
+
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+            const cellAddr = XLSX.utils.encode_cell({ r: 0, c: C });
+            if (!ws[cellAddr]) continue;
+            ws[cellAddr].s = {
+                font: {
+                    name: currentExcelSettings.headerFont,
+                    sz: currentExcelSettings.headerFontSize,
+                    color: { rgb: headerFontColor },
+                    bold: currentExcelSettings.headerBold
+                },
+                fill: { fgColor: { rgb: headerBgColor } },
+                alignment: {
+                    horizontal: 'center',
+                    vertical: 'center',
+                    wrapText: true,
+                    readingOrder: 2
+                },
+                border: currentExcelSettings.borders ? {
+                    top:    { style: 'thin', color: { rgb: borderColor } },
+                    bottom: { style: 'thin', color: { rgb: borderColor } },
+                    left:   { style: 'thin', color: { rgb: borderColor } },
+                    right:  { style: 'thin', color: { rgb: borderColor } }
+                } : undefined
+            };
+        }
+
+        for (let R = 1; R <= range.e.r; ++R) {
+            const isAlt = currentExcelSettings.altRows && (R % 2 === 0);
+            const rowBg = isAlt ? dataBg2 : dataBg1;
+
+            for (let C = range.s.c; C <= range.e.c; ++C) {
+                const cellAddr = XLSX.utils.encode_cell({ r: R, c: C });
+                if (!ws[cellAddr]) ws[cellAddr] = { t: 's', v: '' };
+                ws[cellAddr].s = {
+                    font: {
+                        name: currentExcelSettings.dataFont,
+                        sz: currentExcelSettings.dataFontSize,
+                        color: { rgb: dataFontColor },
+                        bold: currentExcelSettings.dataBold
+                    },
+                    fill: { fgColor: { rgb: rowBg } },
+                    alignment: {
+                        horizontal: 'center',
+                        vertical: 'center',
+                        wrapText: true,
+                        readingOrder: 2
+                    },
+                    border: currentExcelSettings.borders ? {
+                        top:    { style: 'thin', color: { rgb: borderColor } },
+                        bottom: { style: 'thin', color: { rgb: borderColor } },
+                        left:   { style: 'thin', color: { rgb: borderColor } },
+                        right:  { style: 'thin', color: { rgb: borderColor } }
+                    } : undefined
+                };
+            }
+        }
+
+        ws['!rows'] = [];
+        for (let R = 0; R <= range.e.r; ++R) {
+            ws['!rows'].push({ hpt: R === 0 ? currentExcelSettings.rowHeight + 4 : currentExcelSettings.rowHeight });
+        }
+
+        ws['!cols'] = [];
+        if (currentExcelSettings.autoWidth) {
+            headers.forEach((header) => {
+                let maxLen = header.length;
+                dataToExport.forEach(row => {
+                    const val = String(row[header] || '');
+                    if (val.length > maxLen) maxLen = val.length;
+                });
+                const width = Math.min(Math.max(maxLen + 2, 12), 40);
+                ws['!cols'].push({ wch: width });
+            });
+        } else {
+            headers.forEach(() => ws['!cols'].push({ wch: 18 }));
+        }
+
+        if (currentExcelSettings.freezeHeader) {
+            ws['!freeze'] = { xSplit: 0, ySplit: 1 };
+        }
+
+        if (currentExcelSettings.rtl) {
+            ws['!views'] = [{ RTL: true }];
+        }
+
+        const wb = XLSX.utils.book_new();
+        wb.Workbook = wb.Workbook || {};
+        wb.Workbook.Views = [{ RTL: true }];
+
+        XLSX.utils.book_append_sheet(wb, ws, "المعلمين");
+
+        let filename;
+        if (currentExcelSettings.scope === 'current' && currentTeacher) {
+            filename = `سجل_${currentTeacher.fullName || 'معلم'}.xlsx`;
+        } else {
+            filename = `سجل_المعلمين_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        }
+
+        XLSX.writeFile(wb, filename);
+        closeExcelModal();
+    };
+
+    // ============ 📄 PDF المُصلح (بدون قص من اليمين) ============
+    window.downloadPDF = function () {
+        if (!currentTeacher) {
+            alert('افتح سجل معلم أولاً');
+            return;
+        }
+
+        const s = currentSettings;
+        const content = document.getElementById('officialRecord').innerHTML;
+
+        // إظهار مؤشر التحميل
+        const pdfLoading = document.getElementById('pdfLoading');
+        pdfLoading.style.display = 'flex';
+
+        // إنشاء iframe بحجم A4 (بالبكسل: A4 عند 96 DPI = 794×1123 بكسل)
+        const iframe = document.createElement('iframe');
+        iframe.style.position = 'fixed';
+        iframe.style.left = '-10000px';
+        iframe.style.top = '0';
+        iframe.style.width = '794px';
+        iframe.style.height = '1123px';
+        iframe.style.border = '0';
+        document.body.appendChild(iframe);
+
+        const iframeDoc = iframe.contentWindow.document;
+
+        iframeDoc.open();
+        iframeDoc.write(`
+            <!DOCTYPE html>
+            <html lang="ar" dir="rtl">
+            <head>
+                <meta charset="UTF-8">
+                <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@400;600;700&family=Amiri:wght@400;700&family=Almarai:wght@400;700;800&display=swap" rel="stylesheet">
+                <style>
+                    * { box-sizing: border-box; margin: 0; padding: 0; }
+                    html, body {
+                        font-family: 'Tajawal', sans-serif;
+                        background: #ffffff;
+                        direction: rtl;
+                        width: 794px;
+                        padding: 0;
+                        margin: 0;
+                    }
+                    #pdfContent {
+                        width: 794px;
+                        padding: 30px 45px;
+                        margin: 0;
+                        background: #ffffff;
+                        box-sizing: border-box;
+                        direction: rtl;
+                    }
+                    .official-record { width: 100%; direction: rtl; }
+                    .official-record h2 {
+                        text-align: center;
+                        background: #1a3a5c;
+                        color: white;
+                        padding: 10px;
+                        border-radius: 6px;
+                        margin-bottom: 15px;
+                        font-size: 14px;
+                        font-weight: 700;
+                    }
+                    .record-section-title {
+                        background-color: ${s.sectionTitleBg};
+                        color: ${s.sectionTitleColor};
+                        padding: 6px 12px;
+                        font-weight: 700;
+                        margin: 12px 0 0 0;
+                        font-size: ${s.sectionFontSize}px;
+                        border-radius: 4px 4px 0 0;
+                        text-align: center;
+                        letter-spacing: ${s.letterSpacing}px;
+                    }
+                    .record-section-title.green { background-color: #27ae60; }
+                    table.record-table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-bottom: 10px;
+                        table-layout: fixed;
+                    }
+                    table.record-table td {
+                        border: 1px solid #888;
+                        padding: 6px 8px;
+                        vertical-align: middle;
+                        text-align: center;
+                        font-size: ${s.valueFontSize}px;
+                        line-height: ${s.lineHeight};
+                        background: #fff;
+                        letter-spacing: ${s.letterSpacing}px;
+                        word-break: break-word;
+                    }
+                    table.record-table td .label {
+                        display: block;
+                        font-size: ${s.labelFontSize}px;
+                        color: ${s.labelColor};
+                        font-weight: 700;
+                        margin-bottom: 3px;
+                        text-align: center;
+                        font-family: '${s.labelFontFamily}', 'Tajawal', sans-serif;
+                        letter-spacing: ${s.letterSpacing}px;
+                    }
+                    table.record-table td .value {
+                        display: block;
+                        font-size: ${s.valueFontSize}px;
+                        color: ${s.valueColor};
+                        font-weight: 500;
+                        word-break: break-word;
+                        text-align: center;
+                        font-family: '${s.valueFontFamily}', 'Tajawal', sans-serif;
+                        letter-spacing: ${s.letterSpacing}px;
+                    }
+                    table.signatures-table {
+                        width: 100%;
+                        margin-top: 40px;
+                        border: none;
+                    }
+                    table.signatures-table td {
+                        border: none;
+                        text-align: center;
+                        padding-top: 25px;
+                        vertical-align: bottom;
+                    }
+                    table.signatures-table .sign-line {
+                        border-top: 1.5px solid #333;
+                        padding-top: 8px;
+                        font-size: 12px;
+                        font-weight: 700;
+                        width: 80%;
+                        margin: 0 auto;
+                    }
+                    .page-break {
+                        page-break-before: always;
+                        break-before: page;
+                        height: 0;
+                        margin: 0;
+                        padding: 0;
+                    }
+                    .record-section-title, table.record-table {
+                        page-break-inside: avoid;
+                        break-inside: avoid;
+                    }
+                </style>
+            </head>
+            <body>
+                <div id="pdfContent">
+                    <div class="official-record">${content}</div>
+                </div>
+            </body>
+            </html>
+        `);
+        iframeDoc.close();
+
+        // انتظار تحميل الخطوط
+        setTimeout(() => {
+            const element = iframeDoc.getElementById('pdfContent');
+
+            const opt = {
+                margin: [0, 0, 0, 0],
+                filename: `سجل_${currentTeacher.fullName || 'معلم'}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    scrollX: 0,
+                    scrollY: 0,
+                    x: 0,
+                    y: 0,
+                    width: 794,
+                    windowWidth: 794,
+                    backgroundColor: '#ffffff'
+                },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak: { mode: ['css', 'legacy'], before: '.page-break' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                document.body.removeChild(iframe);
+                pdfLoading.style.display = 'none';
+            }).catch(err => {
+                console.error('خطأ في PDF:', err);
+                document.body.removeChild(iframe);
+                pdfLoading.style.display = 'none';
+                alert('حدث خطأ أثناء إنشاء PDF. جرب استخدام زر الطباعة ثم اختر "حفظ كـ PDF".');
+            });
+        }, 2000);
+    };
+
+    window.exportCurrentToPDF = function () {
+        if (!currentTeacher) {
+            alert('افتح سجل معلم أولاً من زر "عرض"');
+            return;
+        }
+        downloadPDF();
+    };
+
+    // ============ 🖨️ الطباعة ============
+    window.printCurrentRecord = function () {
+        if (!currentTeacher) {
+            alert('افتح سجل معلم أولاً');
+            return;
+        }
+
+        const content = document.getElementById('officialRecord').innerHTML;
+        const s = currentSettings;
+
+        const printWindow = window.open('', '_blank', 'width=900,height=700');
+        if (!printWindow) {
+            alert('❌ يرجى السماح بالنوافذ المنبثقة');
+            return;
+        }
+
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html lang="ar" dir="rtl">
+            <head>
+                <meta charset="UTF-8">
+                <title>طباعة السجل - ${currentTeacher.fullName || ''}</title>
+                <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@400;600;700&family=Amiri:wght@400;700&family=Almarai:wght@400;700;800&display=swap" rel="stylesheet">
+                <style>
+                    @page { size: A4; margin: 8mm 12mm; }
+                    * { box-sizing: border-box; margin: 0; padding: 0; }
+                    body {
+                        font-family: 'Tajawal', sans-serif;
+                        background: white;
+                        direction: rtl;
+                        padding: 0;
+                    }
+                    .official-record {
+                        width: 100%;
+                        max-width: 186mm;
+                        margin: 0 auto;
+                        background: white;
+                        padding: 0;
+                    }
+                    .official-record h2 {
+                        text-align: center;
+                        background: #1a3a5c;
+                        color: white;
+                        padding: 10px;
+                        border-radius: 6px;
+                        margin-bottom: 15px;
+                        font-size: 14px;
+                        font-weight: 700;
+                    }
+                    .record-section-title {
+                        background-color: ${s.sectionTitleBg};
+                        color: ${s.sectionTitleColor};
+                        padding: 6px 12px;
+                        font-weight: 700;
+                        margin: 12px 0 0 0;
+                        font-size: ${s.sectionFontSize}px;
+                        border-radius: 4px 4px 0 0;
+                        text-align: center;
+                        letter-spacing: ${s.letterSpacing}px;
+                    }
+                    .record-section-title.green { background-color: #27ae60; }
+                    table.record-table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-bottom: 10px;
+                        table-layout: fixed;
+                    }
+                    table.record-table td {
+                        border: 1px solid #888;
+                        padding: 6px 8px;
+                        vertical-align: middle;
+                        text-align: center;
+                        font-size: ${s.valueFontSize}px;
+                        line-height: ${s.lineHeight};
+                        background: #fff;
+                        letter-spacing: ${s.letterSpacing}px;
+                    }
+                    table.record-table td .label {
+                        display: block;
+                        font-size: ${s.labelFontSize}px;
+                        color: ${s.labelColor};
+                        font-weight: 700;
+                        margin-bottom: 3px;
+                        text-align: center;
+                        font-family: '${s.labelFontFamily}', 'Tajawal', sans-serif;
+                        letter-spacing: ${s.letterSpacing}px;
+                    }
+                    table.record-table td .value {
+                        display: block;
+                        font-size: ${s.valueFontSize}px;
+                        color: ${s.valueColor};
+                        font-weight: 500;
+                        word-break: break-word;
+                        text-align: center;
+                        font-family: '${s.valueFontFamily}', 'Tajawal', sans-serif;
+                        letter-spacing: ${s.letterSpacing}px;
+                    }
+                    table.signatures-table {
+                        width: 100%;
+                        margin-top: 40px;
+                        border: none;
+                    }
+                    table.signatures-table td {
+                        border: none;
+                        text-align: center;
+                        padding-top: 25px;
+                        vertical-align: bottom;
+                    }
+                    table.signatures-table .sign-line {
+                        border-top: 1.5px solid #333;
+                        padding-top: 8px;
+                        font-size: 12px;
+                        font-weight: 700;
+                        width: 80%;
+                        margin: 0 auto;
+                    }
+                    .page-break {
+                        page-break-before: always;
+                        break-before: page;
+                        height: 0;
+                        margin: 0;
+                        padding: 0;
+                    }
+                    .record-section-title, table.record-table {
+                        page-break-inside: avoid;
+                        break-inside: avoid;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="official-record">${content}</div>
+                <script>
+                    window.onload = function () {
+                        setTimeout(function () {
+                            window.focus();
+                            window.print();
+                            setTimeout(function () { window.close(); }, 500);
+                        }, 1000);
+                    };
+                <\/script>
+            </body>
+            </html>
+        `);
+
+        printWindow.document.close();
+    };
+
+    document.getElementById('recordModal').addEventListener('click', function (e) {
+        if (e.target === this) closeModal();
+    });
+    document.getElementById('excelModal').addEventListener('click', function (e) {
+        if (e.target === this) closeExcelModal();
+    });
+    document.getElementById('editModal').addEventListener('click', function (e) {
+        if (e.target === this) closeEditModal();
+    });
+    document.getElementById('columnsModal').addEventListener('click', function (e) {
+        if (e.target === this) closeColumnsModal();
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            if (document.getElementById('columnsModal').style.display === 'flex') closeColumnsModal();
+            else if (document.getElementById('editModal').style.display === 'flex') closeEditModal();
+            else if (document.getElementById('excelModal').style.display === 'flex') closeExcelModal();
+            else if (document.getElementById('recordModal').style.display === 'flex') closeModal();
+        }
+    });
+
+    (async () => {
+        await loadColumnLabels();
+        loadSettings();
+        loadTeachers();
+    })();
+</script>
+
+</body>
+</html>
