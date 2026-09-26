@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>السجل الشخصي للمعلم</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&family=Cairo:wght@400;600;700&family=Amiri:wght@400;700&family=Almarai:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #1a3a5c;
+            --secondary-color: #2d7dd2;
+            --accent-color: #27ae60;
+            --bg-color: #eef2f7;
+            --card-bg: #ffffff;
+            --text-color: #2c3e50;
+            --border-color: #d0d8e0;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Tajawal', sans-serif; }
+        body { background-color: var(--bg-color); display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; padding: 20px; }
+        .container { background-color: var(--card-bg); width: 100%; max-width: 950px; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); overflow: hidden; }
+
+        .progress-container { width: 100%; background-color: #e0e0e0; height: 6px; }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, var(--secondary-color), var(--accent-color)); width: 0%; transition: width 0.4s ease; }
+
+        .header { background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; padding: 25px; text-align: center; }
+        .header h1 { font-size: 1.6rem; margin-bottom: 5px; }
+        .header p { font-size: 0.9rem; opacity: 0.9; }
+
+        .form-step { display: none; padding: 30px 35px; animation: fadeIn 0.5s ease; }
+        .form-step.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        .step-header { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid var(--bg-color); }
+        .step-number { background: var(--secondary-color); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem; flex-shrink: 0; }
+        .step-title { font-size: 1.25rem; color: var(--primary-color); font-weight: 700; }
+
+        .section-title { font-size: 0.95rem; color: white; background: var(--secondary-color); padding: 8px 15px; border-radius: 6px; margin: 20px 0 15px 0; font-weight: 700; display: inline-block; }
+        .section-title.green { background: var(--accent-color); }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+        .form-grid.three-cols { grid-template-columns: 1fr 1fr 1fr; }
+        .form-grid.four-cols { grid-template-columns: 1fr 1fr 1fr 1fr; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group.full-width { grid-column: span 2; }
+        .form-group.full-width-3 { grid-column: span 3; }
+        .form-group.full-width-4 { grid-column: span 4; }
+        .form-group label { margin-bottom: 6px; font-weight: 500; color: var(--text-color); font-size: 0.9rem; }
+        .form-group label .required { color: var(--danger); }
+        .form-group input, .form-group select, .form-group textarea {
+            padding: 11px 14px; border: 1.5px solid var(--border-color); border-radius: 8px;
+            font-size: 0.95rem; background-color: #fafbfc; font-family: 'Tajawal', sans-serif;
+            transition: all 0.3s;
+        }
+        .form-group textarea { resize: vertical; min-height: 75px; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none; border-color: var(--secondary-color); background-color: #fff;
+            box-shadow: 0 0 0 3px rgba(45,125,210,0.1);
+        }
+        .form-group input.ltr { direction: ltr; text-align: right; unicode-bidi: embed; font-family: 'Courier New', monospace; font-weight: 600; letter-spacing: 0.5px; }
+        .form-group small.hint { color: #888; font-size: 0.78rem; margin-top: 3px; }
+
+        .hidden { display: none !important; }
+
+        .conditional-box { background: #f0f8ff; padding: 18px; border-radius: 10px; border: 1.5px dashed var(--secondary-color); margin-top: 15px; }
+        .conditional-box h4 { color: var(--primary-color); margin-bottom: 12px; font-size: 0.95rem; }
+
+        .dynamic-item { background: #f9fafb; padding: 15px; border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--border-color); position: relative; }
+        .btn-remove { position: absolute; top: 10px; left: 10px; background: var(--danger); color: white; border: none; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-weight: 700; }
+
+        .buttons-container { display: flex; justify-content: space-between; align-items: center; padding: 20px 35px; background-color: #f9fafc; border-top: 1px solid var(--border-color); }
+        .btn { padding: 12px 28px; border: none; border-radius: 8px; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.3s; font-family: 'Tajawal', sans-serif; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.15); }
+        .btn:active { transform: translateY(0); }
+        .btn-prev { background-color: #e0e0e0; color: #555; }
+        .btn-next, .btn-submit { background: linear-gradient(135deg, var(--secondary-color), var(--primary-color)); color: white; }
+        .btn-submit { background: linear-gradient(135deg, var(--accent-color), #1e8449); display: none; }
+        .btn-add { background-color: var(--secondary-color); color: white; padding: 9px 18px; font-size: 0.85rem; margin-top: 5px; }
+
+        .step-indicator { font-size: 0.85rem; color: #7f8c8d; }
+
+        .success-message { display: none; text-align: center; padding: 60px 30px; }
+        .success-message .check-icon { width: 80px; height: 80px; background: var(--accent-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 20px; }
+        .success-message h2 { color: var(--accent-color); margin-bottom: 10px; }
+        .success-message p { color: #666; margin-bottom: 20px; }
+
+        .loading-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.3rem; flex-direction: column; gap: 15px; }
+        .spinner { width: 50px; height: 50px; border: 5px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* شاشة بدء التحميل */
+        .init-overlay {
+            position: fixed; inset: 0; background: linear-gradient(135deg, #1a3a5c, #2d7dd2);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            gap: 20px; color: white; z-index: 10000; transition: opacity 0.5s;
+        }
+        .init-overlay.hidden { opacity: 0; pointer-events: none; }
+        .init-spinner { width: 60px; height: 60px; border: 5px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite; }
+        .init-overlay p { font-size: 1.1rem; font-weight: 600; }
+
+        .error-box {
+            display: none; padding: 30px; background: #fdecea; border-right: 4px solid var(--danger);
+            border-radius: 12px; color: #922b21; margin: 20px; font-size: 0.95rem; line-height: 1.7;
+        }
+        .error-box.show { display: block; }
+        .error-box h3 { margin-bottom: 10px; }
+
+        @media (max-width: 700px) {
+            .form-grid, .form-grid.three-cols, .form-grid.four-cols { grid-template-columns: 1fr; }
+            .form-group.full-width, .form-group.full-width-3, .form-group.full-width-4 { grid-column: span 1; }
+            .form-step { padding: 20px; }
+            .buttons-container { padding: 15px 20px; flex-wrap: wrap; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ============ شاشة التحميل الأولي ============ -->
+<div class="init-overlay" id="initOverlay">
+    <div class="init-spinner"></div>
+    <p>⏳ جاري تحميل النموذج...</p>
+    <p style="font-size: 0.85rem; opacity: 0.8;">يرجى الانتظار قليلاً</p>
+</div>
+
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <div>⏳ جاري حفظ البيانات...</div>
+</div>
+
+<div class="container">
+    <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
+    <div class="header">
+        <h1>📋 السجل الشخصي للمعلم</h1>
+        <p>وزارة التربية - الجمهورية العربية السورية</p>
+    </div>
+
+    <!-- رسالة خطأ إن لم تكن الحقول محمّلة -->
+    <div class="error-box" id="errorBox">
+        <h3>⚠️ تعذّر تحميل النموذج</h3>
+        <p id="errorMessage">لم يتم العثور على الحقول الديناميكية في قاعدة البيانات.</p>
+        <p style="margin-top: 10px;">💡 <strong>الحل:</strong> الرجاء التأكد من تشغيل ملف <code>migration.html</code> أولاً لتهيئة الحقول.</p>
+    </div>
+
+    <form id="teacherForm" style="display: none;">
+        <div id="stepsContainer"></div>
+
+        <div class="success-message" id="successMessage">
+            <div class="check-icon">✓</div>
+            <h2>تم حفظ البيانات بنجاح!</h2>
+            <p>شكراً لك، تم تسجيل بيانات المعلم في قاعدة البيانات.</p>
+            <button type="button" class="btn btn-next" onclick="location.reload()">تسجيل معلم جديد</button>
+        </div>
+    </form>
+
+    <div class="buttons-container" id="navButtons" style="display: none;">
+        <button type="button" class="btn btn-prev" id="prevBtn" onclick="changeStep(-1)" style="visibility: hidden;">← السابق</button>
+        <span class="step-indicator">الخطوة <span id="currentStepNum">1</span> من <span id="totalStepsNum">1</span></span>
+        <button type="button" class="btn btn-next" id="nextBtn" onclick="changeStep(1)">التالي →</button>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, addDoc, doc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyC31P3GxbtuFEl34czIe0KFuuKNv3JDKBU",
+        authDomain: "khitmaty1.firebaseapp.com",
+        projectId: "khitmaty1",
+        storageBucket: "khitmaty1.firebasestorage.app",
+        messagingSenderId: "555189930690",
+        appId: "1:555189930690:web:8bbd5347b7a3596923095b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // ==========================================
+    // الحالة العامة
+    // ==========================================
+    let dynamicFields = [];
+    let dynamicSections = [];
+    let cascadesData = {};
+    let columnLabels = {};
+
+    let currentStep = 1;
+    let totalSteps = 1;
+    let stepMapping = []; // [{step: 1, sections: ['administrative', 'personal']}, ...]
+
+    const form = document.getElementById('teacherForm');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const progressBar = document.getElementById('progressBar');
+    const navButtons = document.getElementById('navButtons');
+    const successMessage = document.getElementById('successMessage');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const currentStepNum = document.getElementById('currentStepNum');
+    const totalStepsNum = document.getElementById('totalStepsNum');
+
+    // ==========================================
+    // تحميل البيانات من Firestore
+    // ==========================================
+    async function loadAllData() {
+        try {
+            // 1. تحميل الحقول
+            const fieldsDoc = await getDoc(doc(db, 'settings', 'dynamicFields'));
+            if (!fieldsDoc.exists()) {
+                showError('لم يتم العثور على الحقول الديناميكية في قاعدة البيانات.');
+                return false;
+            }
+            const data = fieldsDoc.data();
+            dynamicFields = data.fields || [];
+            dynamicSections = (data.sections || []).sort((a, b) => (a.order || 0) - (b.order || 0));
+
+            if (dynamicFields.length === 0) {
+                showError('لا توجد حقول معرفة.');
+                return false;
+            }
+
+            // 2. تحميل العلاقات المترابطة
+            try {
+                const cascadesDoc = await getDoc(doc(db, 'settings', 'cascades'));
+                cascadesData = cascadesDoc.exists() ? (cascadesDoc.data().data || {}) : {};
+            } catch (e) {
+                cascadesData = {};
+            }
+
+            // 3. تحميل التسميات المخصصة
+            try {
+                const labelsDoc = await getDoc(doc(db, 'settings', 'columnLabels'));
+                columnLabels = labelsDoc.exists() ? (labelsDoc.data() || {}) : {};
+            } catch (e) {
+                columnLabels = {};
+            }
+
+            return true;
+        } catch (e) {
+            console.error(e);
+            showError('فشل تحميل البيانات: ' + e.message);
+            return false;
+        }
+    }
+
+    function showError(msg) {
+        document.getElementById('errorMessage').textContent = msg;
+        document.getElementById('errorBox').classList.add('show');
+        document.getElementById('initOverlay').classList.add('hidden');
+        document.getElementById('loadingOverlay').style.display = 'none';
+    }
+
+    function getLabel(key) {
+        const field = dynamicFields.find(f => f.key === key);
+        if (!field) return key;
+        return columnLabels[key] || field.label || key;
+    }
+
+    // ==========================================
+    // تقسيم الأقسام على الخطوات
+    // ==========================================
+    function buildSteps() {
+        // استراتيجية: قسمان لكل خطوة كحد أقصى، والحد الأدنى خطوة واحدة لكل قسم
+        stepMapping = [];
+        let currentStepSections = [];
+        let stepNum = 1;
+
+        dynamicSections.forEach(section => {
+            const hasFields = dynamicFields.some(f => f.section === section.id && f.showIn?.form !== false);
+            if (!hasFields) return;
+
+            currentStepSections.push(section.id);
+
+            // كل خطوة تحوي 2 أقسام بحد أقصى (يمكن تعديلها)
+            if (currentStepSections.length === 2) {
+                stepMapping.push({ step: stepNum, sections: [...currentStepSections] });
+                currentStepSections = [];
+                stepNum++;
+            }
+        });
+
+        if (currentStepSections.length > 0) {
+            stepMapping.push({ step: stepNum, sections: [...currentStepSections] });
+        }
+
+        // إضافة خطوة أخيرة للمعاينة والحفظ
+        stepMapping.push({ step: stepMapping.length + 1, sections: [], isSubmitStep: true });
+
+        totalSteps = stepMapping.length;
+        totalStepsNum.textContent = totalSteps;
+    }
+
+    // ==========================================
+    // بناء النموذج
+    // ==========================================
+    function buildForm() {
+        const container = document.getElementById('stepsContainer');
+        container.innerHTML = '';
+
+        stepMapping.forEach((mapping, idx) => {
+            const stepDiv = document.createElement('div');
+            stepDiv.className = 'form-step' + (idx === 0 ? ' active' : '');
+            stepDiv.dataset.step = mapping.step;
+
+            // رأس الخطوة
+            const header = document.createElement('div');
+            header.className = 'step-header';
+            header.innerHTML = `
+                <div class="step-number">${mapping.step}</div>
+                <div class="step-title">${mapping.isSubmitStep ? 'المعاينة والحفظ' : getStepTitle(mapping.sections)}</div>
+            `;
+            stepDiv.appendChild(header);
+
+            if (mapping.isSubmitStep) {
+                stepDiv.innerHTML += `
+                    <div style="text-align: center; padding: 30px; background: #f9fafc; border-radius: 12px;">
+                        <h3 style="color: var(--primary-color); margin-bottom: 15px;">✅ أنت على وشك حفظ السجل</h3>
+                        <p style="color: #666; margin-bottom: 20px;">تأكد من صحة جميع البيانات قبل الحفظ النهائي.</p>
+                        <button type="button" class="btn btn-submit" onclick="submitForm()" style="display:inline-block; padding: 15px 40px; font-size: 1.1rem;">
+                            💾 حفظ البيانات في قاعدة البيانات
+                        </button>
+                    </div>
+                `;
+            } else {
+                // بناء أقسام الخطوة
+                mapping.sections.forEach(sectionId => {
+                    const section = dynamicSections.find(s => s.id === sectionId);
+                    if (!section) return;
+
+                    const sectionFields = dynamicFields
+                        .filter(f => f.section === sectionId && f.showIn?.form !== false)
+                        .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+                    if (sectionFields.length === 0) return;
+
+                    // عنوان القسم
+                    const sectionTitle = document.createElement('div');
+                    sectionTitle.className = 'section-title';
+                    sectionTitle.textContent = section.label;
+                    stepDiv.appendChild(sectionTitle);
+
+                    // شبكة الحقول
+                    const grid = document.createElement('div');
+                    grid.className = 'form-grid';
+
+                    sectionFields.forEach(field => {
+                        grid.appendChild(buildFormField(field));
+                    });
+
+                    stepDiv.appendChild(grid);
+                });
+            }
+
+            container.appendChild(stepDiv);
+        });
+    }
+
+    function getStepTitle(sectionIds) {
+        const labels = sectionIds.map(id => dynamicSections.find(s => s.id === id)?.label).filter(Boolean);
+        return labels.join(' و ') || 'البيانات';
+    }
+
+    // ==========================================
+    // بناء حقل واحد
+    // ==========================================
+    function buildFormField(field) {
+        const group = document.createElement('div');
+        group.className = 'form-group';
+        group.dataset.key = field.key;
+
+        if (field.type === 'textarea') group.classList.add('full-width');
+
+        const labelText = getLabel(field.key) + (field.required ? ' <span class="required">*</span>' : '');
+        const label = document.createElement('label');
+        label.innerHTML = labelText;
+        label.dataset.field = field.key;
+        group.appendChild(label);
+
+        let input;
+
+        if (field.type === 'select' || field.type === 'boolean') {
+            input = document.createElement('select');
+            const opts = field.type === 'boolean' ? ['نعم', 'لا'] : (field.options || []);
+            input.innerHTML = '<option value="">اختر...</option>' +
+                opts.map(o => `<option value="${o}">${o}</option>`).join('');
+            if (field.required) input.required = true;
+        } else if (field.type === 'textarea') {
+            input = document.createElement('textarea');
+            if (field.required) input.required = true;
+        } else if (field.type === 'cascade') {
+            input = document.createElement('select');
+            input.innerHTML = '<option value="">اختر...</option>';
+            input.dataset.cascadeLevel = field.cascadeLevel;
+            if (field.parentKey) input.dataset.parentKey = field.parentKey;
+        } else {
+            input = document.createElement('input');
+            input.type = field.type === 'number' ? 'number' : (field.type === 'date' ? 'date' : 'text');
+            if (field.min !== undefined) input.min = field.min;
+            if (field.max !== undefined) input.max = field.max;
+            if (field.maxLength) input.maxLength = field.maxLength;
+            if (field.defaultValue && field.type !== 'date') input.value = field.defaultValue;
+            if (field.required) input.required = true;
+        }
+
+        input.name = field.key;
+        input.id = 'field_' + field.key;
+
+        if (field.ltr) input.classList.add('ltr');
+        if (field.key === 'cashAccount') {
+            input.placeholder = 'XXXX XXXX XXXX XXXX';
+            input.addEventListener('input', function () { formatCashAccount(this); });
+        }
+        if (field.key === 'phone' || field.key === 'wifePhone') {
+            input.placeholder = '09XXXXXXXX';
+            input.addEventListener('input', function () { validatePhone(this); });
+        }
+
+        // أحداث خاصة
+        if (field.key === 'gender') {
+            input.addEventListener('change', toggleSpouseSection);
+        }
+        if (field.key === 'wantsRetirement') {
+            input.addEventListener('change', toggleConditionalField);
+        }
+        if (field.key === 'wantsTransfer') {
+            input.addEventListener('change', toggleConditionalField);
+        }
+        if (field.type === 'cascade') {
+            input.addEventListener('change', onCascadeChange);
+        }
+
+        group.appendChild(input);
+
+        // تلميح
+        if (field.hint) {
+            const hint = document.createElement('small');
+            hint.className = 'hint';
+            hint.textContent = field.hint;
+            group.appendChild(hint);
+        }
+
+        return group;
+    }
+
+    // ==========================================
+    // القوائم المترابطة
+    // ==========================================
+    function initCascades() {
+        // تهيئة القوائم من المستوى 1
+        const level1Fields = dynamicFields.filter(f => f.type === 'cascade' && f.cascadeLevel === 1);
+
+        level1Fields.forEach(field => {
+            const select = document.getElementById('field_' + field.key);
+            if (!select) return;
+
+            const level1Data = cascadesData[field.key] || {};
+            const options = Object.keys(level1Data);
+
+            select.innerHTML = '<option value="">اختر...</option>' +
+                options.map(o => `<option value="${o}">${o}</option>`).join('');
+        });
+
+        // المستويات 2 و 3 تبدأ فارغة حتى يُختار الأب
+        const higherLevels = dynamicFields.filter(f => f.type === 'cascade' && f.cascadeLevel > 1);
+        higherLevels.forEach(field => {
+            const select = document.getElementById('field_' + field.key);
+            if (select) {
+                select.innerHTML = '<option value="">اختر المستوى الأعلى أولاً...</option>';
+                select.disabled = true;
+            }
+        });
+    }
+
+    function onCascadeChange(event) {
+        const select = event.target;
+        const selectedValue = select.value;
+        const changedKey = select.name;
+        const changedField = dynamicFields.find(f => f.key === changedKey);
+        if (!changedField) return;
+
+        // البحث عن الحقول الأبناء المباشرة
+        const childFields = dynamicFields.filter(f => f.type === 'cascade' && f.parentKey === changedKey);
+
+        childFields.forEach(childField => {
+            const childSelect = document.getElementById('field_' + childField.key);
+            if (!childSelect) return;
+
+            if (!selectedValue) {
+                childSelect.innerHTML = '<option value="">اختر المستوى الأعلى أولاً...</option>';
+                childSelect.disabled = true;
+                // إعادة تعيين الأحفاد
+                resetDescendants(childField.key);
+                return;
+            }
+
+            // جلب القيم الأبناء من cascadesData
+            const parentData = cascadesData[changedKey] || {};
+            const children = parentData[selectedValue] || [];
+
+            childSelect.disabled = false;
+            childSelect.innerHTML = '<option value="">اختر...</option>' +
+                children.map(c => `<option value="${c}">${c}</option>`).join('');
+
+            // إعادة تعيين الأحفاد
+            resetDescendants(childField.key);
+        });
+    }
+
+    function resetDescendants(parentKey) {
+        const descendants = dynamicFields.filter(f => f.type === 'cascade' && f.parentKey === parentKey);
+        descendants.forEach(d => {
+            const sel = document.getElementById('field_' + d.key);
+            if (sel) {
+                sel.innerHTML = '<option value="">اختر المستوى الأعلى أولاً...</option>';
+                sel.disabled = true;
+                resetDescendants(d.key);
+            }
+        });
+    }
+
+    // ==========================================
+    // الحقول الشرطية
+    // ==========================================
+    function toggleSpouseSection() {
+        const genderSelect = document.getElementById('field_gender');
+        if (!genderSelect) return;
+
+        const isMale = genderSelect.value === 'ذكر';
+        const spouseSection = dynamicSections.find(s => s.id === 'spouse');
+        if (!spouseSection) return;
+
+        // إظهار/إخفاء كل حقول الزوجة
+        const spouseFields = dynamicFields.filter(f => f.section === 'spouse');
+        spouseFields.forEach(f => {
+            const group = document.querySelector(`.form-group[data-key="${f.key}"]`);
+            if (group) {
+                group.classList.toggle('hidden', !isMale);
+            }
+        });
+
+        // إخفاء عنوان القسم أيضاً (بحسب أول حقل)
+        if (spouseFields.length > 0) {
+            const firstGroup = document.querySelector(`.form-group[data-key="${spouseFields[0].key}"]`);
+            if (firstGroup && firstGroup.previousElementSibling && firstGroup.previousElementSibling.classList.contains('section-title')) {
+                firstGroup.previousElementSibling.classList.toggle('hidden', !isMale);
+            }
+        }
+    }
+
+    function toggleConditionalField() {
+        // للحقول التي لها parentKey و parentValue
+        const conditionalFields = dynamicFields.filter(f => f.parentKey && f.parentValue && f.type !== 'cascade');
+
+        conditionalFields.forEach(field => {
+            const parentInput = document.getElementById('field_' + field.parentKey);
+            const group = document.querySelector(`.form-group[data-key="${field.key}"]`);
+            if (!parentInput || !group) return;
+
+            const shouldShow = parentInput.value === field.parentValue;
+            group.classList.toggle('hidden', !shouldShow);
+
+            // مسح قيمة الحقل عند إخفائه
+            if (!shouldShow) {
+                const input = group.querySelector('input, select, textarea');
+                if (input) input.value = '';
+            }
+        });
+    }
+
+    // ==========================================
+    // التحقق من المدخلات الخاصة
+    // ==========================================
+    window.formatCashAccount = function (input) {
+        let value = input.value.replace(/\s/g, '').replace(/\D/g, '');
+        value = value.substring(0, 16);
+        input.value = value.replace(/(.{4})/g, '$1 ').trim();
+    };
+
+    window.validatePhone = function (input) {
+        let value = input.value.replace(/\D/g, '');
+        if (value.length > 0 && !value.startsWith('09')) {
+            value = '09' + value.replace(/^0+/, '');
+        }
+        input.value = value.substring(0, 10);
+    };
+
+    // ==========================================
+    // التنقل بين الخطوات
+    // ==========================================
+    window.changeStep = function (direction) {
+        if (direction === 1 && !validateStep(currentStep)) return;
+
+        currentStep += direction;
+        if (currentStep < 1) currentStep = 1;
+        if (currentStep > totalSteps) currentStep = totalSteps;
+        updateStepDisplay();
+    };
+
+    function updateStepDisplay() {
+        document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
+        const activeStep = document.querySelector(`.form-step[data-step="${currentStep}"]`);
+        if (activeStep) activeStep.classList.add('active');
+
+        const progressPercentage = ((currentStep - 1) / (totalSteps - 1)) * 100;
+        progressBar.style.width = `${progressPercentage}%`;
+        currentStepNum.textContent = currentStep;
+
+        prevBtn.style.visibility = currentStep === 1 ? 'hidden' : 'visible';
+
+        const isLastStep = currentStep === totalSteps;
+        nextBtn.style.display = isLastStep ? 'none' : 'block';
+
+        window.scrollTo(0, 0);
+    }
+
+    function validateStep(step) {
+        const stepEl = document.querySelector(`.form-step[data-step="${step}"]`);
+        if (!stepEl) return true;
+
+        const requiredInputs = stepEl.querySelectorAll('input[required], select[required], textarea[required]');
+        let isValid = true;
+        let firstInvalid = null;
+
+        requiredInputs.forEach(input => {
+            // تجاهل الحقول المخفية (الحقول الشرطية)
+            const group = input.closest('.form-group');
+            if (group && group.classList.contains('hidden')) return;
+
+            if (!input.value.trim()) {
+                input.style.borderColor = 'red';
+                isValid = false;
+                if (!firstInvalid) firstInvalid = input;
+            } else {
+                input.style.borderColor = '#d0d8e0';
+            }
+        });
+
+        if (!isValid) {
+            alert('⚠️ الرجاء تعبئة الحقول الإلزامية المعلّمة بـ *');
+            if (firstInvalid) firstInvalid.focus();
+        }
+        return isValid;
+    }
+
+    // ==========================================
+    // حفظ النموذج
+    // ==========================================
+    window.submitForm = async function () {
+        if (!confirm('هل أنت متأكد من حفظ البيانات؟')) return;
+
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        // التحقق من الحقول الإلزامية في كل الخطوات
+        for (let s = 1; s < totalSteps; s++) {
+            if (!validateStep(s)) {
+                // انتقل إلى الخطوة الناقصة
+                currentStep = s;
+                updateStepDisplay();
+                return;
+            }
+        }
+
+        // إضافة بيانات وصفية
+        data.createdAt = serverTimestamp();
+        data.createdAtLocal = new Date().toISOString();
+
+        // تنظيف حقل شام كاش من المسافات
+        if (data.cashAccount) {
+            data.cashAccount = data.cashAccount.replace(/\s/g, '');
+        }
+
+        try {
+            loadingOverlay.style.display = 'flex';
+            await addDoc(collection(db, "teachers"), data);
+
+            form.style.display = 'none';
+            navButtons.style.display = 'none';
+            successMessage.style.display = 'block';
+            progressBar.style.width = '100%';
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (error) {
+            console.error("خطأ في الحفظ:", error);
+            alert('❌ حدث خطأ أثناء الحفظ: ' + error.message);
+        } finally {
+            loadingOverlay.style.display = 'none';
+        }
+    };
+
+    // ==========================================
+    // التشغيل الأولي
+    // ==========================================
+    (async () => {
+        const ok = await loadAllData();
+
+        if (ok) {
+            buildSteps();
+            buildForm();
+            initCascades();
+            toggleSpouseSection();      // لإخفاء حقول الزوجة افتراضياً
+            toggleConditionalField();   // لإخفاء الحقول الشرطية افتراضياً
+            updateStepDisplay();
+
+            form.style.display = 'block';
+            navButtons.style.display = 'flex';
+
+            // إخفاء شاشة التحميل
+            document.getElementById('initOverlay').classList.add('hidden');
+        }
+    })();
+</script>
+
+</body>
+</html>
