@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة تحكم المدير - سجل المعلمين</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@400;600;700&family=Amiri:wght@400;700&family=Almarai:wght@400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@400;600;700;800&family=Amiri:wght@400;700&family=Almarai:wght@400;700;800&family=Noto+Naskh+Arabic:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
@@ -136,7 +136,6 @@
         .column-item input { padding: 8px 12px; border: 1.5px solid var(--border-color); border-radius: 8px; font-size: 0.9rem; font-family: 'Tajawal', sans-serif; }
         .column-item input:focus { outline: none; border-color: var(--secondary-color); }
 
-        /* ============ نافذة إدارة الحقول الديناميكية ============ */
         #fieldsModal .modal-content { max-width: 1200px; max-height: 92vh; overflow-y: auto; }
         .fields-tabs { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 0; flex-wrap: wrap; }
         .fields-tab { padding: 10px 20px; background: #f0f2f5; border: none; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 0.9rem; font-weight: 700; color: #555; transition: all 0.3s; font-family: 'Tajawal', sans-serif; }
@@ -167,7 +166,6 @@
         .badge-boolean { background: #e0f7fa; color: #00695c; }
         .badge-required { background: #ffebee; color: #c62828; font-size: 0.7rem; padding: 2px 6px; }
 
-        /* ============ نموذج تحرير حقل ============ */
         #fieldEditModal .modal-content { max-width: 750px; max-height: 90vh; overflow-y: auto; }
         .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .form-group-f { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
@@ -183,7 +181,6 @@
         .option-item button { background: var(--danger); color: white; border: none; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; font-weight: 700; }
         .btn-add-option { background: var(--secondary-color); color: white; padding: 8px 14px; border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer; font-family: 'Tajawal', sans-serif; margin-top: 8px; }
 
-        /* ============ شجرة العلاقات المترابطة ============ */
         .cascade-tree { padding: 15px; background: #f9fafc; border-radius: 10px; max-height: 500px; overflow-y: auto; font-size: 0.9rem; }
         .tree-level-1 { border-right: 3px solid var(--primary-color); padding-right: 15px; margin-bottom: 15px; }
         .tree-level-2 { border-right: 3px solid var(--secondary-color); padding-right: 15px; margin: 8px 0 8px 15px; }
@@ -197,7 +194,6 @@
         .btn-mini-edit { background: var(--warning); color: white; }
         .btn-mini-del { background: var(--danger); color: white; }
 
-        /* ============ Excel Modal ============ */
         #excelModal .modal-content { max-width: 750px; max-height: 90vh; overflow-y: auto; }
         .excel-preview-box { background: #f9fafc; border: 1.5px dashed var(--border-color); border-radius: 8px; padding: 15px; margin: 15px 0; font-size: 0.85rem; text-align: center; color: #666; }
         .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 600; color: #444; cursor: pointer; }
@@ -271,8 +267,8 @@
             <button class="btn btn-fields" onclick="openFieldsModal()">🛠️ إدارة الحقول</button>
             <button class="btn btn-columns" onclick="openColumnsModal()">🏷️ أسماء الحقول</button>
             <button class="btn btn-excel" onclick="openExcelModal()">📊 تصدير Excel</button>
-            <button class="btn btn-pdf" onclick="exportCurrentToPDF()">📄 PDF</button>
-            <button class="btn btn-print" onclick="printCurrentRecord()">🖨️ طباعة</button>
+            <button class="btn btn-pdf" onclick="openPdfSettingsModal()">📄 إعدادات PDF</button>
+            <button class="btn btn-print" onclick="openPrintSettingsModal()">🖨️ إعدادات الطباعة</button>
         </div>
     </div>
 
@@ -323,6 +319,7 @@
                             <option value="Cairo">Cairo</option>
                             <option value="Amiri">Amiri</option>
                             <option value="Almarai">Almarai</option>
+                            <option value="Noto Naskh Arabic">Noto Naskh Arabic</option>
                         </select>
                     </div>
                     <div class="setting-item">
@@ -332,6 +329,7 @@
                             <option value="Cairo">Cairo</option>
                             <option value="Amiri">Amiri</option>
                             <option value="Almarai">Almarai</option>
+                            <option value="Noto Naskh Arabic">Noto Naskh Arabic</option>
                         </select>
                     </div>
                 </div>
@@ -381,8 +379,8 @@
         </div>
 
         <div class="preview-actions no-print">
-            <button class="btn btn-print" onclick="printCurrentRecord()">🖨️ طباعة السجل</button>
-            <button class="btn btn-pdf" onclick="downloadPDF()">📄 تحميل PDF</button>
+            <button class="btn btn-print" onclick="openPrintSettingsModal()">🖨️ إعدادات الطباعة</button>
+            <button class="btn btn-pdf" onclick="openPdfSettingsModal()">📄 إعدادات PDF</button>
             <button class="btn btn-excel" onclick="openExcelModal('current')">📊 Excel</button>
         </div>
     </div>
@@ -669,6 +667,252 @@
     </div>
 </div>
 
+<!-- ============ نافذة إعدادات PDF ============ -->
+<div class="modal" id="pdfSettingsModal">
+    <div class="modal-content" style="max-width: 850px; max-height: 92vh; overflow-y: auto;">
+        <button class="close-btn" onclick="closePdfSettingsModal()">✕</button>
+        <h3 style="color: var(--primary-color); margin-bottom: 20px; font-size: 1.4rem;">
+            📄 إعدادات تحميل PDF
+        </h3>
+
+        <div class="info-box">
+            💡 هذه الإعدادات تُحفظ تلقائياً وتُستخدم في كل مرة تُحمّل فيها PDF. للحروف العربية يُنصح بـ <strong>تباعد حروف = 0</strong> و <strong>ارتفاع سطر ≥ 1.6</strong>.
+        </div>
+
+        <div class="settings-group">
+            <h4>🔤 الخطوط</h4>
+            <div class="setting-item">
+                <label>خط العناوين</label>
+                <select id="pdfLabelFont">
+                    <option value="Tajawal">Tajawal</option>
+                    <option value="Cairo">Cairo</option>
+                    <option value="Amiri">Amiri</option>
+                    <option value="Almarai">Almarai</option>
+                    <option value="Noto Naskh Arabic">Noto Naskh Arabic</option>
+                </select>
+            </div>
+            <div class="setting-item">
+                <label>خط البيانات</label>
+                <select id="pdfValueFont">
+                    <option value="Tajawal">Tajawal</option>
+                    <option value="Cairo">Cairo</option>
+                    <option value="Amiri">Amiri</option>
+                    <option value="Almarai">Almarai</option>
+                    <option value="Noto Naskh Arabic">Noto Naskh Arabic</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="settings-group">
+            <h4>📏 الأحجام (px)</h4>
+            <div class="setting-item">
+                <label>عنوان السجل: <span class="range-value" id="pdfTitleSizeVal">14</span></label>
+                <input type="range" id="pdfTitleSize" min="10" max="24" value="14">
+            </div>
+            <div class="setting-item">
+                <label>عنوان القسم: <span class="range-value" id="pdfSectionSizeVal">13</span></label>
+                <input type="range" id="pdfSectionSize" min="10" max="22" value="13">
+            </div>
+            <div class="setting-item">
+                <label>عناوين الحقول: <span class="range-value" id="pdfLabelSizeVal">11</span></label>
+                <input type="range" id="pdfLabelSize" min="8" max="20" value="11">
+            </div>
+            <div class="setting-item">
+                <label>البيانات: <span class="range-value" id="pdfValueSizeVal">12</span></label>
+                <input type="range" id="pdfValueSize" min="8" max="20" value="12">
+            </div>
+        </div>
+
+        <div class="settings-group">
+            <h4>📐 التباعد (مهم للعربية)</h4>
+            <div class="setting-item">
+                <label>ارتفاع السطر: <span class="range-value" id="pdfLineHeightVal">1.8</span></label>
+                <input type="range" id="pdfLineHeight" min="1.2" max="3" step="0.1" value="1.8">
+                <small style="color:#888;">القيم ≥ 1.6 تمنع تلاصق الأسطر</small>
+            </div>
+            <div class="setting-item">
+                <label>تباعد الحروف: <span class="range-value" id="pdfLetterSpacingVal">0</span> px</label>
+                <input type="range" id="pdfLetterSpacing" min="-1" max="3" step="0.1" value="0">
+                <small style="color:#888;">اتركها 0 للحروف العربية</small>
+            </div>
+        </div>
+
+        <div class="settings-group">
+            <h4>🎨 الألوان</h4>
+            <div class="setting-item"><label>لون عناوين الحقول</label><input type="color" id="pdfLabelColor" value="#1a5fa8"></div>
+            <div class="setting-item"><label>لون البيانات</label><input type="color" id="pdfValueColor" value="#000000"></div>
+            <div class="setting-item"><label>خلفية عنوان السجل</label><input type="color" id="pdfTitleBgColor" value="#1a3a5c"></div>
+            <div class="setting-item"><label>خلفية عنوان القسم</label><input type="color" id="pdfSectionTitleBg" value="#2d7dd2"></div>
+            <div class="setting-item"><label>لون الإطارات</label><input type="color" id="pdfBorderColor" value="#888888"></div>
+        </div>
+
+        <div class="settings-group">
+            <h4>📄 الصفحة</h4>
+            <div class="setting-item">
+                <label>حجم الورق</label>
+                <select id="pdfPageSize">
+                    <option value="a4">A4</option>
+                    <option value="a3">A3</option>
+                    <option value="letter">Letter</option>
+                </select>
+            </div>
+            <div class="setting-item">
+                <label>الاتجاه</label>
+                <select id="pdfOrientation">
+                    <option value="portrait">عمودي</option>
+                    <option value="landscape">أفقي</option>
+                </select>
+            </div>
+            <div class="setting-item">
+                <label>الهامش (mm): <span class="range-value" id="pdfMarginVal">10</span></label>
+                <input type="range" id="pdfMargin" min="0" max="25" value="10">
+            </div>
+        </div>
+
+        <div class="settings-group">
+            <h4>⚙️ الجودة والتحسينات</h4>
+            <div class="setting-item">
+                <label>الجودة (Scale): <span class="range-value" id="pdfScaleVal">2</span></label>
+                <input type="range" id="pdfScale" min="1" max="4" step="0.5" value="2">
+                <small style="color:#888;">3 أو 4 = جودة أعلى لكن أبطأ</small>
+            </div>
+            <label class="checkbox-item" style="margin-top:10px;">
+                <input type="checkbox" id="pdfLetterRendering" checked>
+                تحسين عرض الحروف (letterRendering)
+            </label>
+            <label class="checkbox-item" style="margin-top:8px;">
+                <input type="checkbox" id="pdfShowTitle" checked> إظهار عنوان السجل
+            </label>
+            <label class="checkbox-item" style="margin-top:8px;">
+                <input type="checkbox" id="pdfShowSignatures" checked> إظهار التواقيع
+            </label>
+            <label class="checkbox-item" style="margin-top:8px;">
+                <input type="checkbox" id="pdfShowBorders" checked> إظهار إطارات الجداول
+            </label>
+        </div>
+
+        <div class="preview-actions">
+            <button class="btn btn-reset" onclick="resetPdfSettings()">🔄 إعادة تعيين</button>
+            <button class="btn btn-pdf" onclick="saveAndDownloadPDF()" style="font-size:1rem; padding:12px 28px;">
+                📄 حفظ وتحميل PDF
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ============ نافذة إعدادات الطباعة ============ -->
+<div class="modal" id="printSettingsModal">
+    <div class="modal-content" style="max-width: 850px; max-height: 92vh; overflow-y: auto;">
+        <button class="close-btn" onclick="closePrintSettingsModal()">✕</button>
+        <h3 style="color: var(--primary-color); margin-bottom: 20px; font-size: 1.4rem;">
+            🖨️ إعدادات الطباعة
+        </h3>
+
+        <div class="info-box">
+            💡 بعد فتح نافذة الطباعة، اختر <strong>"Save as PDF"</strong> أو الطابعة، مع تفعيل <strong>"Background graphics"</strong> لطباعة الألوان.
+        </div>
+
+        <div class="settings-group">
+            <h4>🔤 الخطوط</h4>
+            <div class="setting-item">
+                <label>خط العناوين</label>
+                <select id="prLabelFont">
+                    <option value="Tajawal">Tajawal</option>
+                    <option value="Cairo">Cairo</option>
+                    <option value="Amiri">Amiri</option>
+                    <option value="Almarai">Almarai</option>
+                    <option value="Noto Naskh Arabic">Noto Naskh Arabic</option>
+                </select>
+            </div>
+            <div class="setting-item">
+                <label>خط البيانات</label>
+                <select id="prValueFont">
+                    <option value="Tajawal">Tajawal</option>
+                    <option value="Cairo">Cairo</option>
+                    <option value="Amiri">Amiri</option>
+                    <option value="Almarai">Almarai</option>
+                    <option value="Noto Naskh Arabic">Noto Naskh Arabic</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="settings-group">
+            <h4>📏 الأحجام (px)</h4>
+            <div class="setting-item">
+                <label>عنوان السجل: <span class="range-value" id="prTitleSizeVal">14</span></label>
+                <input type="range" id="prTitleSize" min="10" max="24" value="14">
+            </div>
+            <div class="setting-item">
+                <label>عنوان القسم: <span class="range-value" id="prSectionSizeVal">13</span></label>
+                <input type="range" id="prSectionSize" min="10" max="22" value="13">
+            </div>
+            <div class="setting-item">
+                <label>عناوين الحقول: <span class="range-value" id="prLabelSizeVal">11</span></label>
+                <input type="range" id="prLabelSize" min="8" max="20" value="11">
+            </div>
+            <div class="setting-item">
+                <label>البيانات: <span class="range-value" id="prValueSizeVal">12</span></label>
+                <input type="range" id="prValueSize" min="8" max="20" value="12">
+            </div>
+        </div>
+
+        <div class="settings-group">
+            <h4>📐 التباعد</h4>
+            <div class="setting-item">
+                <label>ارتفاع السطر: <span class="range-value" id="prLineHeightVal">1.8</span></label>
+                <input type="range" id="prLineHeight" min="1.2" max="3" step="0.1" value="1.8">
+            </div>
+            <div class="setting-item">
+                <label>تباعد الحروف: <span class="range-value" id="prLetterSpacingVal">0</span> px</label>
+                <input type="range" id="prLetterSpacing" min="-1" max="3" step="0.1" value="0">
+            </div>
+        </div>
+
+        <div class="settings-group">
+            <h4>🎨 الألوان</h4>
+            <div class="setting-item"><label>لون عناوين الحقول</label><input type="color" id="prLabelColor" value="#1a5fa8"></div>
+            <div class="setting-item"><label>لون البيانات</label><input type="color" id="prValueColor" value="#000000"></div>
+            <div class="setting-item"><label>خلفية عنوان القسم</label><input type="color" id="prSectionTitleBg" value="#2d7dd2"></div>
+        </div>
+
+        <div class="settings-group">
+            <h4>📄 الصفحة</h4>
+            <div class="setting-item">
+                <label>حجم الورق</label>
+                <select id="prPageSize">
+                    <option value="A4">A4</option>
+                    <option value="A3">A3</option>
+                    <option value="Letter">Letter</option>
+                </select>
+            </div>
+            <div class="setting-item">
+                <label>الاتجاه</label>
+                <select id="prOrientation">
+                    <option value="portrait">عمودي</option>
+                    <option value="landscape">أفقي</option>
+                </select>
+            </div>
+            <div class="setting-item">
+                <label>الهوامش</label>
+                <input type="text" id="prMargin" value="10mm 8mm" placeholder="مثال: 10mm 8mm">
+            </div>
+        </div>
+
+        <div class="settings-group">
+            <h4>⚙️ خيارات</h4>
+            <label class="checkbox-item"><input type="checkbox" id="prShowTitle" checked> إظهار عنوان السجل</label>
+            <label class="checkbox-item" style="margin-top:8px;"><input type="checkbox" id="prShowSignatures" checked> إظهار التواقيع</label>
+        </div>
+
+        <div class="preview-actions">
+            <button class="btn btn-reset" onclick="resetPrintSettings()">🔄 إعادة تعيين</button>
+            <button class="btn btn-print" onclick="saveAndPrint()" style="font-size:1rem; padding:12px 28px;">
+                🖨️ حفظ وطباعة
+            </button>
+        </div>
+    </div>
+</div>
+
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc, getDoc, setDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -694,10 +938,10 @@
     let currentEditId = null;
     let columnLabels = {};
 
-    let dynamicFields = [];      // مصفوفة الحقول
-    let dynamicSections = [];    // مصفوفة الأقسام
-    let cascadesData = {};       // العلاقات المترابطة
-    let editingFieldId = null;   // معرف الحقل قيد التعديل
+    let dynamicFields = [];
+    let dynamicSections = [];
+    let cascadesData = {};
+    let editingFieldId = null;
 
     // ==========================================
     // الإعدادات الافتراضية للمعاينة
@@ -737,8 +981,70 @@
         rtl: true
     };
 
+    // ==========================================
+    // إعدادات PDF
+    // ==========================================
+    const defaultPdfSettings = {
+        labelFontFamily: 'Tajawal',
+        valueFontFamily: 'Tajawal',
+        titleFontFamily: 'Tajawal',
+        labelFontSize: 11,
+        valueFontSize: 12,
+        titleFontSize: 14,
+        sectionFontSize: 13,
+        lineHeight: 1.8,
+        letterSpacing: 0,
+        labelColor: '#1a5fa8',
+        valueColor: '#000000',
+        titleColor: '#ffffff',
+        titleBgColor: '#1a3a5c',
+        sectionTitleColor: '#ffffff',
+        sectionTitleBg: '#2d7dd2',
+        borderColor: '#888888',
+        pageSize: 'a4',
+        orientation: 'portrait',
+        marginTop: 10,
+        marginRight: 10,
+        marginBottom: 10,
+        marginLeft: 10,
+        imageQuality: 0.98,
+        scale: 2,
+        useCORS: true,
+        letterRendering: true,
+        showSignatures: true,
+        showTitle: true,
+        showBorders: true,
+    };
+
+    // ==========================================
+    // إعدادات الطباعة
+    // ==========================================
+    const defaultPrintSettings = {
+        labelFontFamily: 'Tajawal',
+        valueFontFamily: 'Tajawal',
+        titleFontFamily: 'Tajawal',
+        labelFontSize: 11,
+        valueFontSize: 12,
+        titleFontSize: 14,
+        sectionFontSize: 13,
+        lineHeight: 1.8,
+        letterSpacing: 0,
+        labelColor: '#1a5fa8',
+        valueColor: '#000000',
+        sectionTitleColor: '#ffffff',
+        sectionTitleBg: '#2d7dd2',
+        pageSize: 'A4',
+        orientation: 'portrait',
+        margin: '10mm 8mm',
+        scale: 100,
+        showSignatures: true,
+        showTitle: true,
+    };
+
     let currentSettings = { ...defaultSettings };
     let currentExcelSettings = { ...defaultExcelSettings };
+    let currentPdfSettings = { ...defaultPdfSettings };
+    let currentPrintSettings = { ...defaultPrintSettings };
 
     // ==========================================
     // تحميل كل شيء
@@ -748,6 +1054,7 @@
         await loadCascades();
         await loadColumnLabels();
         loadSettings();
+        loadPdfAndPrintSettings();
         await loadTeachers();
     };
 
@@ -807,7 +1114,6 @@
     function getLabel(key) {
         const field = dynamicFields.find(f => f.key === key);
         if (!field) return key;
-        // الأولوية: columnLabels (تجاوز) > label الديناميكي > المفتاح
         return columnLabels[key] || field.label || key;
     }
 
@@ -838,12 +1144,30 @@
         applyExcelSettingsToControls();
     }
 
+    function loadPdfAndPrintSettings() {
+        const savedPdf = localStorage.getItem('teacherPdfSettings');
+        if (savedPdf) {
+            try { currentPdfSettings = { ...defaultPdfSettings, ...JSON.parse(savedPdf) }; }
+            catch (e) { console.warn(e); }
+        }
+        const savedPrint = localStorage.getItem('teacherPrintSettings');
+        if (savedPrint) {
+            try { currentPrintSettings = { ...defaultPrintSettings, ...JSON.parse(savedPrint) }; }
+            catch (e) { console.warn(e); }
+        }
+    }
+
     function saveSettings() {
         localStorage.setItem('teacherRecordSettings', JSON.stringify(currentSettings));
     }
-
     function saveExcelSettings() {
         localStorage.setItem('teacherExcelSettings', JSON.stringify(currentExcelSettings));
+    }
+    function savePdfSettings() {
+        localStorage.setItem('teacherPdfSettings', JSON.stringify(currentPdfSettings));
+    }
+    function savePrintSettings() {
+        localStorage.setItem('teacherPrintSettings', JSON.stringify(currentPrintSettings));
     }
 
     function applySettingsToControls() {
@@ -981,7 +1305,6 @@
         }
 
         data.forEach((teacher, index) => {
-            const cash = teacher.cashAccount ? formatCash(teacher.cashAccount) : '---';
             tbody.innerHTML += `
                 <tr>
                     <td>${index + 1}</td>
@@ -1036,7 +1359,6 @@
         const container = document.getElementById('editFormBody');
         container.innerHTML = '';
 
-        // ترتيب الأقسام
         const sortedSections = [...dynamicSections].sort((a, b) => (a.order || 0) - (b.order || 0));
 
         sortedSections.forEach(section => {
@@ -1086,8 +1408,6 @@
             input = document.createElement('input');
             input.type = 'text';
             input.value = value;
-            // إضافة قائمة منسدلة للأب
-            input.setAttribute('list', 'dl_' + field.key);
         } else {
             input = document.createElement('input');
             input.type = field.type === 'number' ? 'number' : (field.type === 'date' ? 'date' : 'text');
@@ -1137,7 +1457,6 @@
         if (!currentTeacher) return;
         const t = currentTeacher;
 
-        // بناء السجل حسب الأقسام
         const sortedSections = [...dynamicSections].sort((a, b) => (a.order || 0) - (b.order || 0));
 
         let pagesHTML = '';
@@ -1151,7 +1470,6 @@
 
             if (sectionFields.length === 0) return;
 
-            // فاصل الصفحات: كل 3 أقسام صفحة جديدة
             if (sectionIndex > 0 && sectionIndex % 4 === 0) {
                 pagesHTML += currentHTML + '<div class="page-break"></div>';
                 currentHTML = '';
@@ -1184,7 +1502,6 @@
         let html = `<div class="record-section-title">${section.label}</div>`;
         html += `<table class="record-table">`;
 
-        // توزيع الحقول على صفوف من 3
         for (let i = 0; i < fields.length; i += 3) {
             const rowFields = fields.slice(i, i + 3);
             html += '<tr>';
@@ -1192,13 +1509,12 @@
                 const val = teacher[field.key] || '';
                 const displayVal = formatFieldValue(field, val);
                 const ltrClass = field.ltr ? ' ltr' : '';
-                const span = rowFields.length === 1 ? ' colspan="3"' : (rowFields.length === 2 ? '' : '');
+                const span = rowFields.length === 1 ? ' colspan="3"' : '';
                 html += `<td${span}>
                     <span class="label">${getLabel(field.key)}</span>
                     <span class="value${ltrClass}">${displayVal}</span>
                 </td>`;
             });
-            // ملء الخلايا الفارغة
             if (rowFields.length === 2) {
                 html += '<td></td>';
             }
@@ -1339,7 +1655,6 @@
             const body = document.createElement('div');
             body.className = 'section-body';
 
-            // رأس الجدول
             const headRow = document.createElement('div');
             headRow.className = 'field-row header';
             headRow.innerHTML = `
@@ -1399,7 +1714,6 @@
 
         document.getElementById('fieldEditTitle').textContent = isNew ? '➕ إضافة حقل جديد' : '✏️ تعديل حقل';
 
-        // تعبئة قائمة الأقسام
         const sectionSelect = document.getElementById('fldSection');
         sectionSelect.innerHTML = [...dynamicSections]
             .sort((a, b) => (a.order || 0) - (b.order || 0))
@@ -1437,13 +1751,11 @@
             document.getElementById('fldShowRecord').checked = field.showIn?.record !== false;
             document.getElementById('fldShowExcel').checked = field.showIn?.excel !== false;
 
-            // الخيارات
             const optsList = document.getElementById('fldOptionsList');
             optsList.innerHTML = '';
             (field.options || []).forEach(opt => addOptionRow(opt));
         }
 
-        // تحديث القوائم المنسدلة
         onFieldTypeChange();
         onCascadeLevelChange();
         updateParentKeyOptions();
@@ -1521,15 +1833,12 @@
         if (!label) { alert('⚠️ يجب إدخال اسم الحقل'); return; }
         if (!key) { alert('⚠️ يجب إدخال المفتاح'); return; }
 
-        // تنظيف المفتاح
         key = key.replace(/[^a-zA-Z0-9_]/g, '');
         if (!key) { alert('⚠️ المفتاح يجب أن يحتوي على أحرف إنجليزية'); return; }
 
-        // فحص التكرار
         const duplicate = dynamicFields.find(f => f.key === key && f.id !== editingFieldId);
         if (duplicate) { alert('⚠️ المفتاح مستخدم بالفعل في حقل آخر'); return; }
 
-        // جمع الخيارات
         const options = [];
         if (type === 'select') {
             document.querySelectorAll('#fldOptionsList .option-item input').forEach(inp => {
@@ -1564,7 +1873,6 @@
         const parentValue = document.getElementById('fldParentValue').value.trim();
         if (parentValue) fieldData.parentValue = parentValue;
 
-        // حفظ في المصفوفة
         if (editingFieldId) {
             const idx = dynamicFields.findIndex(f => f.id === editingFieldId);
             if (idx > -1) dynamicFields[idx] = fieldData;
@@ -1614,15 +1922,6 @@
         const container = document.getElementById('sectionsContainer');
         const sorted = [...dynamicSections].sort((a, b) => (a.order || 0) - (b.order || 0));
 
-        container.innerHTML = sorted.map(s => `
-            <div class="column-item" style="grid-template-columns: 1fr 1fr 80px 100px;">
-                <input type="text" value="${s.label}" onchange="updateSectionLabel('${s.id}', this.value)" placeholder="اسم القسم">
-                <input type="text" value="${s.id}" disabled style="direction:ltr; background:#f0f0f0;">
-                <input type="number" value="${s.order || 0}" onchange="updateSectionOrder('${s.id}', this.value)" min="1">
-                <span style="color:#666; font-size:0.85rem;">حقل</span>
-            </div>
-        `).join('');
-
         container.innerHTML = `
             <div class="column-item" style="grid-template-columns: 1fr 1fr 80px; background: var(--primary-color); color: white; font-weight: 700;">
                 <div>اسم القسم</div>
@@ -1650,12 +1949,11 @@
     };
 
     // ==========================================
-    // العلاقات المترابطة (3 مستويات)
+    // العلاقات المترابطة
     // ==========================================
     function renderCascadeTree() {
         const container = document.getElementById('cascadeContainer');
 
-        // الحصول على حقول القوائم المترابطة مرتبة حسب المستوى
         const level1Field = dynamicFields.find(f => f.type === 'cascade' && f.cascadeLevel === 1);
         const level2Field = dynamicFields.find(f => f.type === 'cascade' && f.cascadeLevel === 2);
         const level3Field = dynamicFields.find(f => f.type === 'cascade' && f.cascadeLevel === 3);
@@ -1726,10 +2024,8 @@
 
         if (!cascadesData[parentKey]) cascadesData[parentKey] = {};
         if (parentValue === null) {
-            // إضافة محافظة (مستوى 1)
             cascadesData[parentKey][name] = [];
         } else {
-            // إضافة ابن
             if (!cascadesData[parentKey][parentValue]) cascadesData[parentKey][parentValue] = [];
             cascadesData[parentKey][parentValue].push(name);
         }
@@ -1743,7 +2039,6 @@
         if (!newName || newName === oldName) return;
 
         const data = cascadesData[parentKey] || {};
-        // إعادة بناء الكائن مع الاسم الجديد
         const newData = {};
         Object.keys(data).forEach(k => {
             if (k === oldName) {
@@ -1967,206 +2262,443 @@
     };
 
     // ==========================================
-    // PDF
+    // نافذة إعدادات PDF
     // ==========================================
-    window.downloadPDF = function () {
+    window.openPdfSettingsModal = function () {
+        if (!currentTeacher) { alert('افتح سجل معلم أولاً'); return; }
+        applyPdfSettingsToControls();
+        document.getElementById('pdfSettingsModal').style.display = 'flex';
+    };
+
+    window.closePdfSettingsModal = function () {
+        document.getElementById('pdfSettingsModal').style.display = 'none';
+    };
+
+    function applyPdfSettingsToControls() {
+        const s = currentPdfSettings;
+        document.getElementById('pdfLabelFont').value = s.labelFontFamily;
+        document.getElementById('pdfValueFont').value = s.valueFontFamily;
+        document.getElementById('pdfTitleSize').value = s.titleFontSize;
+        document.getElementById('pdfSectionSize').value = s.sectionFontSize;
+        document.getElementById('pdfLabelSize').value = s.labelFontSize;
+        document.getElementById('pdfValueSize').value = s.valueFontSize;
+        document.getElementById('pdfLineHeight').value = s.lineHeight;
+        document.getElementById('pdfLetterSpacing').value = s.letterSpacing;
+        document.getElementById('pdfLabelColor').value = s.labelColor;
+        document.getElementById('pdfValueColor').value = s.valueColor;
+        document.getElementById('pdfTitleBgColor').value = s.titleBgColor;
+        document.getElementById('pdfSectionTitleBg').value = s.sectionTitleBg;
+        document.getElementById('pdfBorderColor').value = s.borderColor;
+        document.getElementById('pdfPageSize').value = s.pageSize;
+        document.getElementById('pdfOrientation').value = s.orientation;
+        document.getElementById('pdfMargin').value = s.marginTop;
+        document.getElementById('pdfScale').value = s.scale;
+        document.getElementById('pdfLetterRendering').checked = s.letterRendering;
+        document.getElementById('pdfShowTitle').checked = s.showTitle;
+        document.getElementById('pdfShowSignatures').checked = s.showSignatures;
+        document.getElementById('pdfShowBorders').checked = s.showBorders;
+
+        document.getElementById('pdfTitleSizeVal').textContent = s.titleFontSize;
+        document.getElementById('pdfSectionSizeVal').textContent = s.sectionFontSize;
+        document.getElementById('pdfLabelSizeVal').textContent = s.labelFontSize;
+        document.getElementById('pdfValueSizeVal').textContent = s.valueFontSize;
+        document.getElementById('pdfLineHeightVal').textContent = s.lineHeight;
+        document.getElementById('pdfLetterSpacingVal').textContent = s.letterSpacing;
+        document.getElementById('pdfMarginVal').textContent = s.marginTop;
+        document.getElementById('pdfScaleVal').textContent = s.scale;
+    }
+
+    // ربط عرض قيم PDF الحية
+    ['pdfTitleSize','pdfSectionSize','pdfLabelSize','pdfValueSize','pdfLineHeight','pdfLetterSpacing','pdfMargin','pdfScale'].forEach(id => {
+        document.addEventListener('input', function (e) {
+            if (e.target.id === id) {
+                const valId = id + 'Val';
+                const el = document.getElementById(valId);
+                if (el) el.textContent = e.target.value;
+            }
+        });
+    });
+
+    window.resetPdfSettings = function () {
+        if (!confirm('إعادة تعيين إعدادات PDF إلى الافتراضي؟')) return;
+        currentPdfSettings = { ...defaultPdfSettings };
+        applyPdfSettingsToControls();
+    };
+
+    // ==========================================
+    // نافذة إعدادات الطباعة
+    // ==========================================
+    window.openPrintSettingsModal = function () {
+        if (!currentTeacher) { alert('افتح سجل معلم أولاً'); return; }
+        applyPrintSettingsToControls();
+        document.getElementById('printSettingsModal').style.display = 'flex';
+    };
+
+    window.closePrintSettingsModal = function () {
+        document.getElementById('printSettingsModal').style.display = 'none';
+    };
+
+    function applyPrintSettingsToControls() {
+        const s = currentPrintSettings;
+        document.getElementById('prLabelFont').value = s.labelFontFamily;
+        document.getElementById('prValueFont').value = s.valueFontFamily;
+        document.getElementById('prTitleSize').value = s.titleFontSize;
+        document.getElementById('prSectionSize').value = s.sectionFontSize;
+        document.getElementById('prLabelSize').value = s.labelFontSize;
+        document.getElementById('prValueSize').value = s.valueFontSize;
+        document.getElementById('prLineHeight').value = s.lineHeight;
+        document.getElementById('prLetterSpacing').value = s.letterSpacing;
+        document.getElementById('prLabelColor').value = s.labelColor;
+        document.getElementById('prValueColor').value = s.valueColor;
+        document.getElementById('prSectionTitleBg').value = s.sectionTitleBg;
+        document.getElementById('prPageSize').value = s.pageSize;
+        document.getElementById('prOrientation').value = s.orientation;
+        document.getElementById('prMargin').value = s.margin;
+        document.getElementById('prShowTitle').checked = s.showTitle;
+        document.getElementById('prShowSignatures').checked = s.showSignatures;
+
+        document.getElementById('prTitleSizeVal').textContent = s.titleFontSize;
+        document.getElementById('prSectionSizeVal').textContent = s.sectionFontSize;
+        document.getElementById('prLabelSizeVal').textContent = s.labelFontSize;
+        document.getElementById('prValueSizeVal').textContent = s.valueFontSize;
+        document.getElementById('prLineHeightVal').textContent = s.lineHeight;
+        document.getElementById('prLetterSpacingVal').textContent = s.letterSpacing;
+    }
+
+    // ربط عرض قيم الطباعة الحية
+    ['prTitleSize','prSectionSize','prLabelSize','prValueSize','prLineHeight','prLetterSpacing'].forEach(id => {
+        document.addEventListener('input', function (e) {
+            if (e.target.id === id) {
+                const valId = id + 'Val';
+                const el = document.getElementById(valId);
+                if (el) el.textContent = e.target.value;
+            }
+        });
+    });
+
+    window.resetPrintSettings = function () {
+        if (!confirm('إعادة تعيين إعدادات الطباعة؟')) return;
+        currentPrintSettings = { ...defaultPrintSettings };
+        applyPrintSettingsToControls();
+    };
+
+    // ==========================================
+    // قراءة الإعدادات من النموذج
+    // ==========================================
+    function readPdfSettingsFromControls() {
+        currentPdfSettings.labelFontFamily = document.getElementById('pdfLabelFont').value;
+        currentPdfSettings.valueFontFamily = document.getElementById('pdfValueFont').value;
+        currentPdfSettings.titleFontSize = parseInt(document.getElementById('pdfTitleSize').value);
+        currentPdfSettings.sectionFontSize = parseInt(document.getElementById('pdfSectionSize').value);
+        currentPdfSettings.labelFontSize = parseInt(document.getElementById('pdfLabelSize').value);
+        currentPdfSettings.valueFontSize = parseInt(document.getElementById('pdfValueSize').value);
+        currentPdfSettings.lineHeight = parseFloat(document.getElementById('pdfLineHeight').value);
+        currentPdfSettings.letterSpacing = parseFloat(document.getElementById('pdfLetterSpacing').value);
+        currentPdfSettings.labelColor = document.getElementById('pdfLabelColor').value;
+        currentPdfSettings.valueColor = document.getElementById('pdfValueColor').value;
+        currentPdfSettings.titleBgColor = document.getElementById('pdfTitleBgColor').value;
+        currentPdfSettings.sectionTitleBg = document.getElementById('pdfSectionTitleBg').value;
+        currentPdfSettings.borderColor = document.getElementById('pdfBorderColor').value;
+        currentPdfSettings.pageSize = document.getElementById('pdfPageSize').value;
+        currentPdfSettings.orientation = document.getElementById('pdfOrientation').value;
+        const marginVal = parseInt(document.getElementById('pdfMargin').value);
+        currentPdfSettings.marginTop = marginVal;
+        currentPdfSettings.marginRight = marginVal;
+        currentPdfSettings.marginBottom = marginVal;
+        currentPdfSettings.marginLeft = marginVal;
+        currentPdfSettings.scale = parseFloat(document.getElementById('pdfScale').value);
+        currentPdfSettings.letterRendering = document.getElementById('pdfLetterRendering').checked;
+        currentPdfSettings.showTitle = document.getElementById('pdfShowTitle').checked;
+        currentPdfSettings.showSignatures = document.getElementById('pdfShowSignatures').checked;
+        currentPdfSettings.showBorders = document.getElementById('pdfShowBorders').checked;
+
+        savePdfSettings();
+    }
+
+    function readPrintSettingsFromControls() {
+        currentPrintSettings.labelFontFamily = document.getElementById('prLabelFont').value;
+        currentPrintSettings.valueFontFamily = document.getElementById('prValueFont').value;
+        currentPrintSettings.titleFontSize = parseInt(document.getElementById('prTitleSize').value);
+        currentPrintSettings.sectionFontSize = parseInt(document.getElementById('prSectionSize').value);
+        currentPrintSettings.labelFontSize = parseInt(document.getElementById('prLabelSize').value);
+        currentPrintSettings.valueFontSize = parseInt(document.getElementById('prValueSize').value);
+        currentPrintSettings.lineHeight = parseFloat(document.getElementById('prLineHeight').value);
+        currentPrintSettings.letterSpacing = parseFloat(document.getElementById('prLetterSpacing').value);
+        currentPrintSettings.labelColor = document.getElementById('prLabelColor').value;
+        currentPrintSettings.valueColor = document.getElementById('prValueColor').value;
+        currentPrintSettings.sectionTitleBg = document.getElementById('prSectionTitleBg').value;
+        currentPrintSettings.pageSize = document.getElementById('prPageSize').value;
+        currentPrintSettings.orientation = document.getElementById('prOrientation').value;
+        currentPrintSettings.margin = document.getElementById('prMargin').value;
+        currentPrintSettings.showTitle = document.getElementById('prShowTitle').checked;
+        currentPrintSettings.showSignatures = document.getElementById('prShowSignatures').checked;
+
+        savePrintSettings();
+    }
+
+    window.saveAndDownloadPDF = function () {
+        readPdfSettingsFromControls();
+        closePdfSettingsModal();
+        downloadPDF();
+    };
+
+    window.saveAndPrint = function () {
+        readPrintSettingsFromControls();
+        closePrintSettingsModal();
+        printCurrentRecord();
+    };
+
+    // ==========================================
+    // PDF المُحسَّن (الإصلاح الرئيسي)
+    // ==========================================
+    window.downloadPDF = async function () {
         if (!currentTeacher) {
             alert('افتح سجل معلم أولاً');
             return;
         }
 
-        const s = currentSettings;
-        const content = document.getElementById('officialRecord').innerHTML;
-
+        const s = currentPdfSettings;
         const pdfLoading = document.getElementById('pdfLoading');
         pdfLoading.style.display = 'flex';
 
-        const iframe = document.createElement('iframe');
-        iframe.style.position = 'fixed';
-        iframe.style.left = '-10000px';
-        iframe.style.top = '0';
-        iframe.style.width = '794px';
-        iframe.style.height = '1123px';
-        iframe.style.border = '0';
-        document.body.appendChild(iframe);
+        // أبعاد الورقة
+        const pageDims = {
+            a4: { w: 210, h: 297 },
+            a3: { w: 297, h: 420 },
+            letter: { w: 216, h: 279 }
+        };
+        const dims = pageDims[s.pageSize] || pageDims.a4;
+        const isLandscape = s.orientation === 'landscape';
+        const pageWidthMM = isLandscape ? dims.h : dims.w;
 
+        const PX_PER_MM = 96 / 25.4;
+        const contentWidthMM = pageWidthMM - (s.marginLeft + s.marginRight);
+        const contentWidthPX = Math.round(contentWidthMM * PX_PER_MM);
+
+        const content = document.getElementById('officialRecord').innerHTML;
+
+        const iframe = document.createElement('iframe');
+        iframe.style.cssText = 'position:fixed;left:-10000px;top:0;width:' + contentWidthPX + 'px;height:2000px;border:0;';
+        document.body.appendChild(iframe);
         const iframeDoc = iframe.contentWindow.document;
+
+        const borderStyle = s.showBorders ? `1px solid ${s.borderColor}` : 'none';
 
         iframeDoc.open();
         iframeDoc.write(`
-            <!DOCTYPE html>
-            <html lang="ar" dir="rtl">
-            <head>
-                <meta charset="UTF-8">
-                <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@400;600;700&family=Amiri:wght@400;700&family=Almarai:wght@400;700;800&display=swap" rel="stylesheet">
-                <style>
-                    * { box-sizing: border-box; margin: 0; padding: 0; }
-                    html, body {
-                        font-family: 'Tajawal', sans-serif;
-                        background: #ffffff;
-                        direction: rtl;
-                        width: 794px;
-                        padding: 0;
-                        margin: 0;
-                    }
-                    #pdfContent {
-                        width: 794px;
-                        padding: 30px 45px;
-                        margin: 0;
-                        background: #ffffff;
-                        box-sizing: border-box;
-                        direction: rtl;
-                    }
-                    .official-record { width: 100%; direction: rtl; }
-                    .official-record h2 {
-                        text-align: center;
-                        background: #1a3a5c;
-                        color: white;
-                        padding: 10px;
-                        border-radius: 6px;
-                        margin-bottom: 15px;
-                        font-size: 14px;
-                        font-weight: 700;
-                    }
-                    .record-section-title {
-                        background-color: ${s.sectionTitleBg};
-                        color: ${s.sectionTitleColor};
-                        padding: 6px 12px;
-                        font-weight: 700;
-                        margin: 12px 0 0 0;
-                        font-size: ${s.sectionFontSize}px;
-                        border-radius: 4px 4px 0 0;
-                        text-align: center;
-                        letter-spacing: ${s.letterSpacing}px;
-                    }
-                    .record-section-title.green { background-color: #27ae60; }
-                    table.record-table {
-                        width: 100%;
-                        border-collapse: collapse;
-                        margin-bottom: 10px;
-                        table-layout: fixed;
-                    }
-                    table.record-table td {
-                        border: 1px solid #888;
-                        padding: 6px 8px;
-                        vertical-align: middle;
-                        text-align: center;
-                        font-size: ${s.valueFontSize}px;
-                        line-height: ${s.lineHeight};
-                        background: #fff;
-                        letter-spacing: ${s.letterSpacing}px;
-                        word-break: break-word;
-                    }
-                    table.record-table td .label {
-                        display: block;
-                        font-size: ${s.labelFontSize}px;
-                        color: ${s.labelColor};
-                        font-weight: 700;
-                        margin-bottom: 3px;
-                        text-align: center;
-                        font-family: '${s.labelFontFamily}', 'Tajawal', sans-serif;
-                    }
-                    table.record-table td .value {
-                        display: block;
-                        font-size: ${s.valueFontSize}px;
-                        color: ${s.valueColor};
-                        font-weight: 500;
-                        word-break: break-word;
-                        text-align: center;
-                        font-family: '${s.valueFontFamily}', 'Tajawal', sans-serif;
-                    }
-                    table.record-table td .value.ltr {
-                        direction: ltr;
-                        unicode-bidi: embed;
-                        font-family: 'Courier New', monospace;
-                        font-weight: 600;
-                    }
-                    table.signatures-table {
-                        width: 100%;
-                        margin-top: 40px;
-                        border: none;
-                    }
-                    table.signatures-table td {
-                        border: none;
-                        text-align: center;
-                        padding-top: 25px;
-                        vertical-align: bottom;
-                    }
-                    table.signatures-table .sign-line {
-                        border-top: 1.5px solid #333;
-                        padding-top: 8px;
-                        font-size: 12px;
-                        font-weight: 700;
-                        width: 80%;
-                        margin: 0 auto;
-                    }
-                    .page-break {
-                        page-break-before: always;
-                        break-before: page;
-                        height: 0;
-                        margin: 0;
-                        padding: 0;
-                    }
-                    .record-section-title, table.record-table {
-                        page-break-inside: avoid;
-                        break-inside: avoid;
-                    }
-                </style>
-            </head>
-            <body>
-                <div id="pdfContent">
-                    <div class="official-record">${content}</div>
-                </div>
-            </body>
-            </html>
-        `);
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@400;600;700;800&family=Amiri:wght@400;700&family=Almarai:wght@400;700;800&family=Noto+Naskh+Arabic:wght@400;700&display=swap" rel="stylesheet">
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+        font-family: '${s.valueFontFamily}', 'Tajawal', sans-serif;
+        background: #ffffff;
+        direction: rtl;
+        width: ${contentWidthPX}px;
+        padding: 0;
+        margin: 0;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+    }
+    #pdfContent {
+        width: ${contentWidthPX}px;
+        padding: 0;
+        background: #ffffff;
+        direction: rtl;
+    }
+    .official-record { width: 100%; direction: rtl; }
+
+    .official-record h2 {
+        text-align: center;
+        background: ${s.titleBgColor};
+        color: #ffffff;
+        padding: 12px 16px;
+        border-radius: 6px;
+        margin-bottom: 16px;
+        font-size: ${s.titleFontSize}px;
+        font-weight: 700;
+        font-family: '${s.labelFontFamily}', 'Tajawal', sans-serif;
+        line-height: 1.5;
+        letter-spacing: 0;
+        ${!s.showTitle ? 'display:none;' : ''}
+    }
+
+    .record-section-title {
+        background-color: ${s.sectionTitleBg};
+        color: #ffffff;
+        padding: 8px 14px;
+        font-weight: 700;
+        margin: 14px 0 0 0;
+        font-size: ${s.sectionFontSize}px;
+        border-radius: 4px 4px 0 0;
+        text-align: center;
+        font-family: '${s.labelFontFamily}', 'Tajawal', sans-serif;
+        line-height: 1.6;
+        letter-spacing: ${s.letterSpacing}px;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    table.record-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 12px;
+        table-layout: fixed;
+    }
+    table.record-table td {
+        border: ${borderStyle};
+        padding: 8px 10px;
+        vertical-align: middle;
+        text-align: center;
+        font-size: ${s.valueFontSize}px;
+        line-height: ${s.lineHeight};
+        background: #fff;
+        letter-spacing: ${s.letterSpacing}px;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        font-family: '${s.valueFontFamily}', 'Tajawal', sans-serif;
+    }
+    table.record-table td .label {
+        display: block;
+        font-size: ${s.labelFontSize}px;
+        color: ${s.labelColor};
+        font-weight: 700;
+        margin-bottom: 4px;
+        text-align: center;
+        font-family: '${s.labelFontFamily}', 'Tajawal', sans-serif;
+        line-height: ${s.lineHeight};
+        letter-spacing: ${s.letterSpacing}px;
+    }
+    table.record-table td .value {
+        display: block;
+        font-size: ${s.valueFontSize}px;
+        color: ${s.valueColor};
+        font-weight: 500;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        text-align: center;
+        font-family: '${s.valueFontFamily}', 'Tajawal', sans-serif;
+        line-height: ${s.lineHeight};
+        letter-spacing: ${s.letterSpacing}px;
+    }
+    table.record-table td .value.ltr {
+        direction: ltr;
+        unicode-bidi: embed;
+        font-family: 'Courier New', monospace;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+
+    table.signatures-table {
+        width: 100%;
+        margin-top: 50px;
+        border: none;
+        ${!s.showSignatures ? 'display:none;' : ''}
+    }
+    table.signatures-table td {
+        border: none;
+        text-align: center;
+        padding-top: 30px;
+        vertical-align: bottom;
+        font-family: '${s.valueFontFamily}', 'Tajawal', sans-serif;
+    }
+    table.signatures-table .sign-line {
+        border-top: 1.5px solid #333;
+        padding-top: 10px;
+        font-size: 12px;
+        font-weight: 700;
+        width: 80%;
+        margin: 0 auto;
+        line-height: 1.6;
+    }
+
+    .page-break {
+        page-break-before: always;
+        break-before: page;
+        height: 0;
+        margin: 0;
+        padding: 0;
+    }
+    .record-section-title, table.record-table {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+</style>
+</head>
+<body>
+    <div id="pdfContent">
+        <div class="official-record">${content}</div>
+    </div>
+</body>
+</html>`);
         iframeDoc.close();
 
-        setTimeout(() => {
-            const element = iframeDoc.getElementById('pdfContent');
+        // ⏳ انتظر تحميل الخطوط فعلياً
+        try {
+            if (iframe.contentWindow.document.fonts) {
+                await iframe.contentWindow.document.fonts.ready;
+            }
+        } catch (e) { /* تجاهل */ }
 
-            const opt = {
-                margin: [0, 0, 0, 0],
-                filename: `سجل_${currentTeacher.fullName || 'معلم'}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: {
-                    scale: 2,
-                    useCORS: true,
-                    allowTaint: true,
-                    scrollX: 0,
-                    scrollY: 0,
-                    x: 0,
-                    y: 0,
-                    width: 794,
-                    windowWidth: 794,
-                    backgroundColor: '#ffffff'
-                },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                pagebreak: { mode: ['css', 'legacy'], before: '.page-break' }
-            };
+        await new Promise(r => setTimeout(r, 1200));
 
-            html2pdf().set(opt).from(element).save().then(() => {
-                document.body.removeChild(iframe);
-                pdfLoading.style.display = 'none';
-            }).catch(err => {
-                console.error('خطأ في PDF:', err);
-                document.body.removeChild(iframe);
-                pdfLoading.style.display = 'none';
-                alert('حدث خطأ أثناء إنشاء PDF. جرب استخدام زر الطباعة ثم اختر "حفظ كـ PDF".');
-            });
-        }, 2000);
+        const element = iframeDoc.getElementById('pdfContent');
+
+        const opt = {
+            margin: [s.marginTop, s.marginRight, s.marginBottom, s.marginLeft],
+            filename: `سجل_${currentTeacher.fullName || 'معلم'}.pdf`,
+            image: { type: 'jpeg', quality: s.imageQuality },
+            html2canvas: {
+                scale: s.scale,
+                useCORS: true,
+                allowTaint: true,
+                letterRendering: s.letterRendering,
+                scrollX: 0,
+                scrollY: 0,
+                x: 0,
+                y: 0,
+                windowWidth: contentWidthPX,
+                width: contentWidthPX,
+                backgroundColor: '#ffffff',
+                logging: false,
+                removeContainer: true,
+            },
+            jsPDF: {
+                unit: 'mm',
+                format: s.pageSize,
+                orientation: s.orientation,
+                compress: true
+            },
+            pagebreak: {
+                mode: ['css', 'legacy'],
+                before: '.page-break',
+                avoid: ['table.record-table', '.record-section-title']
+            }
+        };
+
+        try {
+            await html2pdf().set(opt).from(element).save();
+        } catch (err) {
+            console.error('PDF error:', err);
+            alert('حدث خطأ أثناء إنشاء PDF. جرّب: تقليل Scale، أو استخدام زر الطباعة ثم "Save as PDF".');
+        } finally {
+            document.body.removeChild(iframe);
+            pdfLoading.style.display = 'none';
+        }
     };
 
     window.exportCurrentToPDF = function () {
-        if (!currentTeacher) {
-            alert('افتح سجل معلم أولاً من زر "عرض"');
-            return;
-        }
-        downloadPDF();
+        openPdfSettingsModal();
     };
 
     // ==========================================
-    // الطباعة
+    // الطباعة المُحسَّنة
     // ==========================================
     window.printCurrentRecord = function () {
         if (!currentTeacher) {
@@ -2175,145 +2707,175 @@
         }
 
         const content = document.getElementById('officialRecord').innerHTML;
-        const s = currentSettings;
+        const s = currentPrintSettings;
+        const borderStyle = '1px solid #888';
 
         const printWindow = window.open('', '_blank', 'width=900,height=700');
-        if (!printWindow) {
-            alert('❌ يرجى السماح بالنوافذ المنبثقة');
-            return;
-        }
+        if (!printWindow) { alert('❌ اسمح بالنوافذ المنبثقة'); return; }
 
         printWindow.document.write(`
-            <!DOCTYPE html>
-            <html lang="ar" dir="rtl">
-            <head>
-                <meta charset="UTF-8">
-                <title>طباعة السجل - ${currentTeacher.fullName || ''}</title>
-                <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@400;600;700&family=Amiri:wght@400;700&family=Almarai:wght@400;700;800&display=swap" rel="stylesheet">
-                <style>
-                    @page { size: A4; margin: 8mm 12mm; }
-                    * { box-sizing: border-box; margin: 0; padding: 0; }
-                    body {
-                        font-family: 'Tajawal', sans-serif;
-                        background: white;
-                        direction: rtl;
-                        padding: 0;
-                    }
-                    .official-record {
-                        width: 100%;
-                        max-width: 186mm;
-                        margin: 0 auto;
-                        background: white;
-                        padding: 0;
-                    }
-                    .official-record h2 {
-                        text-align: center;
-                        background: #1a3a5c;
-                        color: white;
-                        padding: 10px;
-                        border-radius: 6px;
-                        margin-bottom: 15px;
-                        font-size: 14px;
-                        font-weight: 700;
-                    }
-                    .record-section-title {
-                        background-color: ${s.sectionTitleBg};
-                        color: ${s.sectionTitleColor};
-                        padding: 6px 12px;
-                        font-weight: 700;
-                        margin: 12px 0 0 0;
-                        font-size: ${s.sectionFontSize}px;
-                        border-radius: 4px 4px 0 0;
-                        text-align: center;
-                        letter-spacing: ${s.letterSpacing}px;
-                    }
-                    .record-section-title.green { background-color: #27ae60; }
-                    table.record-table {
-                        width: 100%;
-                        border-collapse: collapse;
-                        margin-bottom: 10px;
-                        table-layout: fixed;
-                    }
-                    table.record-table td {
-                        border: 1px solid #888;
-                        padding: 6px 8px;
-                        vertical-align: middle;
-                        text-align: center;
-                        font-size: ${s.valueFontSize}px;
-                        line-height: ${s.lineHeight};
-                        background: #fff;
-                        letter-spacing: ${s.letterSpacing}px;
-                    }
-                    table.record-table td .label {
-                        display: block;
-                        font-size: ${s.labelFontSize}px;
-                        color: ${s.labelColor};
-                        font-weight: 700;
-                        margin-bottom: 3px;
-                        text-align: center;
-                        font-family: '${s.labelFontFamily}', 'Tajawal', sans-serif;
-                    }
-                    table.record-table td .value {
-                        display: block;
-                        font-size: ${s.valueFontSize}px;
-                        color: ${s.valueColor};
-                        font-weight: 500;
-                        word-break: break-word;
-                        text-align: center;
-                        font-family: '${s.valueFontFamily}', 'Tajawal', sans-serif;
-                    }
-                    table.record-table td .value.ltr {
-                        direction: ltr;
-                        unicode-bidi: embed;
-                        font-family: 'Courier New', monospace;
-                        font-weight: 600;
-                    }
-                    table.signatures-table {
-                        width: 100%;
-                        margin-top: 40px;
-                        border: none;
-                    }
-                    table.signatures-table td {
-                        border: none;
-                        text-align: center;
-                        padding-top: 25px;
-                        vertical-align: bottom;
-                    }
-                    table.signatures-table .sign-line {
-                        border-top: 1.5px solid #333;
-                        padding-top: 8px;
-                        font-size: 12px;
-                        font-weight: 700;
-                        width: 80%;
-                        margin: 0 auto;
-                    }
-                    .page-break {
-                        page-break-before: always;
-                        break-before: page;
-                        height: 0;
-                        margin: 0;
-                        padding: 0;
-                    }
-                    .record-section-title, table.record-table {
-                        page-break-inside: avoid;
-                        break-inside: avoid;
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="official-record">${content}</div>
-                <script>
-                    window.onload = function () {
-                        setTimeout(function () {
-                            window.focus();
-                            window.print();
-                            setTimeout(function () { window.close(); }, 500);
-                        }, 1000);
-                    };
-                <\/script>
-            </body>
-            </html>
-        `);
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>طباعة السجل - ${currentTeacher.fullName || ''}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@400;600;700;800&family=Amiri:wght@400;700&family=Almarai:wght@400;700;800&family=Noto+Naskh+Arabic:wght@400;700&display=swap" rel="stylesheet">
+<style>
+    @page {
+        size: ${s.pageSize} ${s.orientation};
+        margin: ${s.margin};
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+        font-family: '${s.valueFontFamily}', 'Tajawal', sans-serif;
+        background: white;
+        direction: rtl;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+    }
+    .official-record {
+        width: 100%;
+        margin: 0 auto;
+        background: white;
+    }
+    .official-record h2 {
+        text-align: center;
+        background: #1a3a5c;
+        color: white;
+        padding: 12px 16px;
+        border-radius: 6px;
+        margin-bottom: 16px;
+        font-size: ${s.titleFontSize}px;
+        font-weight: 700;
+        font-family: '${s.labelFontFamily}', 'Tajawal', sans-serif;
+        line-height: 1.5;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        ${!s.showTitle ? 'display:none;' : ''}
+    }
+    .record-section-title {
+        background-color: ${s.sectionTitleBg};
+        color: #ffffff;
+        padding: 8px 14px;
+        font-weight: 700;
+        margin: 14px 0 0 0;
+        font-size: ${s.sectionFontSize}px;
+        border-radius: 4px 4px 0 0;
+        text-align: center;
+        font-family: '${s.labelFontFamily}', 'Tajawal', sans-serif;
+        line-height: 1.6;
+        letter-spacing: ${s.letterSpacing}px;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    table.record-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 12px;
+        table-layout: fixed;
+    }
+    table.record-table td {
+        border: ${borderStyle};
+        padding: 8px 10px;
+        vertical-align: middle;
+        text-align: center;
+        font-size: ${s.valueFontSize}px;
+        line-height: ${s.lineHeight};
+        background: #fff;
+        letter-spacing: ${s.letterSpacing}px;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        font-family: '${s.valueFontFamily}', 'Tajawal', sans-serif;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    table.record-table td .label {
+        display: block;
+        font-size: ${s.labelFontSize}px;
+        color: ${s.labelColor};
+        font-weight: 700;
+        margin-bottom: 4px;
+        text-align: center;
+        font-family: '${s.labelFontFamily}', 'Tajawal', sans-serif;
+        line-height: ${s.lineHeight};
+        letter-spacing: ${s.letterSpacing}px;
+    }
+    table.record-table td .value {
+        display: block;
+        font-size: ${s.valueFontSize}px;
+        color: ${s.valueColor};
+        font-weight: 500;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        text-align: center;
+        font-family: '${s.valueFontFamily}', 'Tajawal', sans-serif;
+        line-height: ${s.lineHeight};
+        letter-spacing: ${s.letterSpacing}px;
+    }
+    table.record-table td .value.ltr {
+        direction: ltr;
+        unicode-bidi: embed;
+        font-family: 'Courier New', monospace;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+    table.signatures-table {
+        width: 100%;
+        margin-top: 50px;
+        border: none;
+        ${!s.showSignatures ? 'display:none;' : ''}
+    }
+    table.signatures-table td {
+        border: none;
+        text-align: center;
+        padding-top: 30px;
+        vertical-align: bottom;
+        font-family: '${s.valueFontFamily}', 'Tajawal', sans-serif;
+    }
+    table.signatures-table .sign-line {
+        border-top: 1.5px solid #333;
+        padding-top: 10px;
+        font-size: 12px;
+        font-weight: 700;
+        width: 80%;
+        margin: 0 auto;
+        line-height: 1.6;
+    }
+    .page-break {
+        page-break-before: always;
+        break-before: page;
+        height: 0;
+        margin: 0;
+        padding: 0;
+    }
+    .record-section-title, table.record-table {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+    @media print {
+        html, body { width: auto; }
+        .no-print { display: none !important; }
+    }
+</style>
+</head>
+<body>
+    <div class="official-record">${content}</div>
+    <script>
+        window.onload = async function () {
+            try {
+                if (document.fonts) await document.fonts.ready;
+            } catch(e) {}
+            setTimeout(function () {
+                window.focus();
+                window.print();
+                setTimeout(function () { window.close(); }, 800);
+            }, 800);
+        };
+    <\/script>
+</body>
+</html>`);
 
         printWindow.document.close();
     };
@@ -2339,6 +2901,12 @@
     document.getElementById('fieldEditModal').addEventListener('click', function (e) {
         if (e.target === this) closeFieldEditModal();
     });
+    document.getElementById('pdfSettingsModal').addEventListener('click', function (e) {
+        if (e.target === this) closePdfSettingsModal();
+    });
+    document.getElementById('printSettingsModal').addEventListener('click', function (e) {
+        if (e.target === this) closePrintSettingsModal();
+    });
 
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') {
@@ -2347,6 +2915,8 @@
             else if (document.getElementById('columnsModal').style.display === 'flex') closeColumnsModal();
             else if (document.getElementById('editModal').style.display === 'flex') closeEditModal();
             else if (document.getElementById('excelModal').style.display === 'flex') closeExcelModal();
+            else if (document.getElementById('pdfSettingsModal').style.display === 'flex') closePdfSettingsModal();
+            else if (document.getElementById('printSettingsModal').style.display === 'flex') closePrintSettingsModal();
             else if (document.getElementById('recordModal').style.display === 'flex') closeModal();
         }
     });
