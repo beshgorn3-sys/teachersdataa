@@ -89,7 +89,6 @@
         .spinner { width: 50px; height: 50px; border: 5px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* شاشة بدء التحميل */
         .init-overlay {
             position: fixed; inset: 0; background: linear-gradient(135deg, #1a3a5c, #2d7dd2);
             display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -135,7 +134,6 @@
         <p>وزارة التربية - الجمهورية العربية السورية</p>
     </div>
 
-    <!-- رسالة خطأ إن لم تكن الحقول محمّلة -->
     <div class="error-box" id="errorBox">
         <h3>⚠️ تعذّر تحميل النموذج</h3>
         <p id="errorMessage">لم يتم العثور على الحقول الديناميكية في قاعدة البيانات.</p>
@@ -186,7 +184,7 @@
 
     let currentStep = 1;
     let totalSteps = 1;
-    let stepMapping = []; // [{step: 1, sections: ['administrative', 'personal']}, ...]
+    let stepMapping = [];
 
     const form = document.getElementById('teacherForm');
     const prevBtn = document.getElementById('prevBtn');
@@ -203,7 +201,6 @@
     // ==========================================
     async function loadAllData() {
         try {
-            // 1. تحميل الحقول
             const fieldsDoc = await getDoc(doc(db, 'settings', 'dynamicFields'));
             if (!fieldsDoc.exists()) {
                 showError('لم يتم العثور على الحقول الديناميكية في قاعدة البيانات.');
@@ -218,7 +215,6 @@
                 return false;
             }
 
-            // 2. تحميل العلاقات المترابطة
             try {
                 const cascadesDoc = await getDoc(doc(db, 'settings', 'cascades'));
                 cascadesData = cascadesDoc.exists() ? (cascadesDoc.data().data || {}) : {};
@@ -226,7 +222,6 @@
                 cascadesData = {};
             }
 
-            // 3. تحميل التسميات المخصصة
             try {
                 const labelsDoc = await getDoc(doc(db, 'settings', 'columnLabels'));
                 columnLabels = labelsDoc.exists() ? (labelsDoc.data() || {}) : {};
@@ -259,7 +254,6 @@
     // تقسيم الأقسام على الخطوات
     // ==========================================
     function buildSteps() {
-        // استراتيجية: قسمان لكل خطوة كحد أقصى، والحد الأدنى خطوة واحدة لكل قسم
         stepMapping = [];
         let currentStepSections = [];
         let stepNum = 1;
@@ -270,7 +264,6 @@
 
             currentStepSections.push(section.id);
 
-            // كل خطوة تحوي 2 أقسام بحد أقصى (يمكن تعديلها)
             if (currentStepSections.length === 2) {
                 stepMapping.push({ step: stepNum, sections: [...currentStepSections] });
                 currentStepSections = [];
@@ -282,7 +275,6 @@
             stepMapping.push({ step: stepNum, sections: [...currentStepSections] });
         }
 
-        // إضافة خطوة أخيرة للمعاينة والحفظ
         stepMapping.push({ step: stepMapping.length + 1, sections: [], isSubmitStep: true });
 
         totalSteps = stepMapping.length;
@@ -301,7 +293,6 @@
             stepDiv.className = 'form-step' + (idx === 0 ? ' active' : '');
             stepDiv.dataset.step = mapping.step;
 
-            // رأس الخطوة
             const header = document.createElement('div');
             header.className = 'step-header';
             header.innerHTML = `
@@ -321,7 +312,6 @@
                     </div>
                 `;
             } else {
-                // بناء أقسام الخطوة
                 mapping.sections.forEach(sectionId => {
                     const section = dynamicSections.find(s => s.id === sectionId);
                     if (!section) return;
@@ -332,13 +322,12 @@
 
                     if (sectionFields.length === 0) return;
 
-                    // عنوان القسم
                     const sectionTitle = document.createElement('div');
                     sectionTitle.className = 'section-title';
+                    sectionTitle.dataset.sectionId = sectionId;
                     sectionTitle.textContent = section.label;
                     stepDiv.appendChild(sectionTitle);
 
-                    // شبكة الحقول
                     const grid = document.createElement('div');
                     grid.className = 'form-grid';
 
@@ -416,12 +405,15 @@
 
         // أحداث خاصة
         if (field.key === 'gender') {
+            input.addEventListener('change', function () {
+                toggleSpouseSection();
+                adaptSpouseLabels(this.value);
+            });
+        }
+        if (field.key === 'maritalStatus') {
             input.addEventListener('change', toggleSpouseSection);
         }
-        if (field.key === 'wantsRetirement') {
-            input.addEventListener('change', toggleConditionalField);
-        }
-        if (field.key === 'wantsTransfer') {
+        if (field.key === 'wantsRetirement' || field.key === 'wantsTransfer') {
             input.addEventListener('change', toggleConditionalField);
         }
         if (field.type === 'cascade') {
@@ -430,7 +422,6 @@
 
         group.appendChild(input);
 
-        // تلميح
         if (field.hint) {
             const hint = document.createElement('small');
             hint.className = 'hint';
@@ -445,7 +436,6 @@
     // القوائم المترابطة
     // ==========================================
     function initCascades() {
-        // تهيئة القوائم من المستوى 1
         const level1Fields = dynamicFields.filter(f => f.type === 'cascade' && f.cascadeLevel === 1);
 
         level1Fields.forEach(field => {
@@ -459,7 +449,6 @@
                 options.map(o => `<option value="${o}">${o}</option>`).join('');
         });
 
-        // المستويات 2 و 3 تبدأ فارغة حتى يُختار الأب
         const higherLevels = dynamicFields.filter(f => f.type === 'cascade' && f.cascadeLevel > 1);
         higherLevels.forEach(field => {
             const select = document.getElementById('field_' + field.key);
@@ -474,10 +463,7 @@
         const select = event.target;
         const selectedValue = select.value;
         const changedKey = select.name;
-        const changedField = dynamicFields.find(f => f.key === changedKey);
-        if (!changedField) return;
 
-        // البحث عن الحقول الأبناء المباشرة
         const childFields = dynamicFields.filter(f => f.type === 'cascade' && f.parentKey === changedKey);
 
         childFields.forEach(childField => {
@@ -487,12 +473,10 @@
             if (!selectedValue) {
                 childSelect.innerHTML = '<option value="">اختر المستوى الأعلى أولاً...</option>';
                 childSelect.disabled = true;
-                // إعادة تعيين الأحفاد
                 resetDescendants(childField.key);
                 return;
             }
 
-            // جلب القيم الأبناء من cascadesData
             const parentData = cascadesData[changedKey] || {};
             const children = parentData[selectedValue] || [];
 
@@ -500,7 +484,6 @@
             childSelect.innerHTML = '<option value="">اختر...</option>' +
                 children.map(c => `<option value="${c}">${c}</option>`).join('');
 
-            // إعادة تعيين الأحفاد
             resetDescendants(childField.key);
         });
     }
@@ -518,37 +501,105 @@
     }
 
     // ==========================================
-    // الحقول الشرطية
+    // قسم الزوج/الزوجة — منطق جديد
     // ==========================================
+
+    /**
+     * يظهر/يخفي قسم spouse بناءً على الحالة الاجتماعية + الجنس
+     * - يظهر فقط عند "متزوج" أو "متزوجة"
+     * - يُخفي ويُفرغ القيم خلاف ذلك
+     */
     function toggleSpouseSection() {
         const genderSelect = document.getElementById('field_gender');
+        const maritalSelect = document.getElementById('field_maritalStatus');
         if (!genderSelect) return;
 
-        const isMale = genderSelect.value === 'ذكر';
-        const spouseSection = dynamicSections.find(s => s.id === 'spouse');
-        if (!spouseSection) return;
+        const gender = genderSelect.value;
+        const maritalStatus = maritalSelect ? maritalSelect.value : '';
 
-        // إظهار/إخفاء كل حقول الزوجة
+        // شرط الإظهار
+        const isMarried = maritalStatus === 'متزوج' || maritalStatus === 'متزوجة';
+        const shouldShow = maritalSelect
+            ? isMarried
+            : (gender === 'ذكر' || gender === 'أنثى');
+
         const spouseFields = dynamicFields.filter(f => f.section === 'spouse');
+        if (spouseFields.length === 0) return;
+
+        // 1) إظهار/إخفاء الحقول
         spouseFields.forEach(f => {
             const group = document.querySelector(`.form-group[data-key="${f.key}"]`);
-            if (group) {
-                group.classList.toggle('hidden', !isMale);
+            if (!group) return;
+
+            group.classList.toggle('hidden', !shouldShow);
+
+            // مسح القيم عند الإخفاء
+            if (!shouldShow) {
+                const inp = group.querySelector('input, select, textarea');
+                if (inp) {
+                    if (inp.tagName === 'SELECT') inp.selectedIndex = 0;
+                    else inp.value = '';
+                }
             }
         });
 
-        // إخفاء عنوان القسم أيضاً (بحسب أول حقل)
-        if (spouseFields.length > 0) {
-            const firstGroup = document.querySelector(`.form-group[data-key="${spouseFields[0].key}"]`);
-            if (firstGroup && firstGroup.previousElementSibling && firstGroup.previousElementSibling.classList.contains('section-title')) {
-                firstGroup.previousElementSibling.classList.toggle('hidden', !isMale);
+        // 2) تعديل عنوان القسم
+        const firstGroup = document.querySelector(`.form-group[data-key="${spouseFields[0].key}"]`);
+        const titleEl = firstGroup?.previousElementSibling;
+        if (titleEl && titleEl.classList.contains('section-title')) {
+            titleEl.classList.toggle('hidden', !shouldShow);
+            if (shouldShow) {
+                titleEl.textContent = gender === 'أنثى' ? 'بيانات الزوج' : 'بيانات الزوجة';
             }
+        }
+
+        // 3) تكييف التسميات
+        adaptSpouseLabels(gender);
+
+        // 4) إعادة تهيئة القوائم المترابطة داخل القسم عند الإظهار
+        if (shouldShow) {
+            initCascades();
         }
     }
 
+    /**
+     * يعدّل تسميات الحقول لتتناسب مع جنس صاحب السجل
+     * (زوجة ↔ زوج)
+     */
+    function adaptSpouseLabels(gender) {
+        const spouseFields = dynamicFields.filter(f => f.section === 'spouse');
+
+        spouseFields.forEach(field => {
+            const label = document.querySelector(`label[data-field="${field.key}"]`);
+            if (!label) return;
+
+            // التسمية الأصلية (من columnLabels أو الحقل نفسه)
+            let text = columnLabels[field.key] || field.label || field.key;
+
+            if (gender === 'أنثى') {
+                // تحويل الصيغة المؤنثة → مذكرة
+                text = text
+                    .replace(/الزوجة/g, 'الزوج')
+                    .replace(/للزوجة/g, 'للزوج')
+                    .replace(/زوجة/g, 'زوج');
+            } else if (gender === 'ذكر') {
+                // تأكيد الصيغة المؤنثة (تجنب "الزوج" بدون "ة")
+                text = text
+                    .replace(/الزوج(?!ة)/g, 'الزوجة')
+                    .replace(/للزوج(?!ة)/g, 'للزوجة');
+            }
+
+            label.innerHTML = text + (field.required ? ' <span class="required">*</span>' : '');
+        });
+    }
+
+    // ==========================================
+    // الحقول الشرطية (خارج قسم الزوجة)
+    // ==========================================
     function toggleConditionalField() {
-        // للحقول التي لها parentKey و parentValue
-        const conditionalFields = dynamicFields.filter(f => f.parentKey && f.parentValue && f.type !== 'cascade');
+        const conditionalFields = dynamicFields.filter(
+            f => f.parentKey && f.parentValue && f.type !== 'cascade' && f.section !== 'spouse'
+        );
 
         conditionalFields.forEach(field => {
             const parentInput = document.getElementById('field_' + field.parentKey);
@@ -558,10 +609,12 @@
             const shouldShow = parentInput.value === field.parentValue;
             group.classList.toggle('hidden', !shouldShow);
 
-            // مسح قيمة الحقل عند إخفائه
             if (!shouldShow) {
                 const input = group.querySelector('input, select, textarea');
-                if (input) input.value = '';
+                if (input) {
+                    if (input.tagName === 'SELECT') input.selectedIndex = 0;
+                    else input.value = '';
+                }
             }
         });
     }
@@ -621,8 +674,8 @@
         let firstInvalid = null;
 
         requiredInputs.forEach(input => {
-            // تجاهل الحقول المخفية (الحقول الشرطية)
             const group = input.closest('.form-group');
+            // تجاهل الحقول المخفية (قسم الزوجة عند عدم الحاجة + الحقول الشرطية)
             if (group && group.classList.contains('hidden')) return;
 
             if (!input.value.trim()) {
@@ -650,21 +703,26 @@
         const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
 
-        // التحقق من الحقول الإلزامية في كل الخطوات
+        // التحقق من كل الخطوات
         for (let s = 1; s < totalSteps; s++) {
             if (!validateStep(s)) {
-                // انتقل إلى الخطوة الناقصة
                 currentStep = s;
                 updateStepDisplay();
                 return;
             }
         }
 
-        // إضافة بيانات وصفية
+        // إزالة حقول قسم الزوجة إذا كانت مخفية
+        const spouseFields = dynamicFields.filter(f => f.section === 'spouse');
+        const maritalStatus = data.maritalStatus;
+        const isMarried = maritalStatus === 'متزوج' || maritalStatus === 'متزوجة';
+        if (!isMarried) {
+            spouseFields.forEach(f => delete data[f.key]);
+        }
+
         data.createdAt = serverTimestamp();
         data.createdAtLocal = new Date().toISOString();
 
-        // تنظيف حقل شام كاش من المسافات
         if (data.cashAccount) {
             data.cashAccount = data.cashAccount.replace(/\s/g, '');
         }
@@ -697,14 +755,13 @@
             buildSteps();
             buildForm();
             initCascades();
-            toggleSpouseSection();      // لإخفاء حقول الزوجة افتراضياً
-            toggleConditionalField();   // لإخفاء الحقول الشرطية افتراضياً
+            toggleSpouseSection();      // يخفي القسم افتراضياً إن لم يكن متزوجاً
+            toggleConditionalField();
             updateStepDisplay();
 
             form.style.display = 'block';
             navButtons.style.display = 'flex';
 
-            // إخفاء شاشة التحميل
             document.getElementById('initOverlay').classList.add('hidden');
         }
     })();
