@@ -1,0 +1,2585 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة المالك - نظام سجل المعلمين</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@400;600;700;800&family=Amiri:wght@400;700&family=Almarai:wght@400;700;800&family=Noto+Naskh+Arabic:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+<style>
+:root {
+    --primary: #1a3a5c; --primary-light: #234a72; --primary-dark: #12293f;
+    --secondary: #2d7dd2; --secondary-light: #4a94e0;
+    --accent: #27ae60; --accent-dark: #1e8449;
+    --danger: #e74c3c; --danger-dark: #c0392b;
+    --warning: #f39c12; --info: #3498db;
+    --bg-body: #eef2f7; --bg-card: #ffffff; --bg-sidebar: #1a3a5c;
+    --bg-hover: #f1f5fa; --bg-input: #fafbfc;
+    --text-main: #2c3e50; --text-light: #7f8c8d; --text-white: #ffffff; --text-muted: #95a5a6;
+    --border: #d0d8e0; --border-light: #e8eef5;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 10px 30px rgba(0,0,0,0.12);
+    --shadow-xl: 0 20px 60px rgba(0,0,0,0.15);
+    --radius-sm: 6px; --radius-md: 10px; --radius-lg: 14px; --radius-xl: 18px;
+    --transition: all 0.25s ease;
+    --sidebar-width: 260px; --topbar-height: 64px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Tajawal', sans-serif; }
+html, body { height: 100%; background: var(--bg-body); color: var(--text-main); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+button { font-family: inherit; cursor: pointer; }
+input, select, textarea { font-family: inherit; }
+
+/* Splash */
+#splash { position: fixed; inset: 0; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 20px; color: white; z-index: 9999; transition: opacity 0.4s; }
+#splash.hidden { opacity: 0; pointer-events: none; }
+.splash-spinner { width: 64px; height: 64px; border: 5px solid rgba(255,255,255,0.25); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.splash-text { font-size: 1.1rem; font-weight: 600; }
+.splash-sub { font-size: 0.85rem; opacity: 0.8; }
+
+/* Login */
+#loginScreen { position: fixed; inset: 0; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); display: none; justify-content: center; align-items: center; padding: 20px; z-index: 100; }
+#loginScreen.active { display: flex; }
+.login-card { background: white; border-radius: var(--radius-xl); box-shadow: var(--shadow-xl); padding: 40px; width: 100%; max-width: 420px; animation: slideUp 0.4s ease; }
+@keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+.login-logo { width: 80px; height: 80px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 2.2rem; color: white; box-shadow: 0 10px 25px rgba(45,125,210,0.3); }
+.login-title { text-align: center; color: var(--primary); font-size: 1.5rem; font-weight: 800; margin-bottom: 6px; }
+.login-subtitle { text-align: center; color: var(--text-light); font-size: 0.9rem; margin-bottom: 30px; }
+.login-field { margin-bottom: 18px; }
+.login-field label { display: block; font-size: 0.88rem; font-weight: 600; color: var(--text-main); margin-bottom: 6px; }
+.login-field input { width: 100%; padding: 12px 16px; border: 1.5px solid var(--border); border-radius: var(--radius-md); font-size: 1rem; background: var(--bg-input); transition: var(--transition); }
+.login-field input:focus { outline: none; border-color: var(--secondary); background: white; box-shadow: 0 0 0 4px rgba(45,125,210,0.1); }
+.login-field input.ltr { direction: ltr; text-align: left; }
+.password-wrap { position: relative; }
+.password-wrap input { padding-left: 45px; }
+.password-toggle { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.1rem; color: var(--text-light); padding: 4px; cursor: pointer; }
+.login-btn { width: 100%; padding: 13px; background: linear-gradient(135deg, var(--secondary), var(--primary)); color: white; border: none; border-radius: var(--radius-md); font-size: 1rem; font-weight: 700; margin-top: 8px; transition: var(--transition); }
+.login-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(45,125,210,0.35); }
+.login-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.login-error { display: none; background: #fdecea; color: #922b21; padding: 12px 16px; border-radius: var(--radius-md); border-right: 4px solid var(--danger); font-size: 0.88rem; margin-bottom: 15px; }
+.login-error.show { display: block; }
+.login-footer { text-align: center; margin-top: 20px; font-size: 0.8rem; color: var(--text-muted); }
+
+/* Layout */
+#appLayout { display: none; min-height: 100vh; }
+#appLayout.active { display: flex; }
+.sidebar { width: var(--sidebar-width); background: var(--bg-sidebar); color: var(--text-white); display: flex; flex-direction: column; position: fixed; top: 0; right: 0; bottom: 0; z-index: 50; transition: var(--transition); overflow-y: auto; }
+.sidebar-header { padding: 22px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 12px; }
+.sidebar-logo { width: 42px; height: 42px; background: linear-gradient(135deg, var(--secondary), var(--accent)); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0; }
+.sidebar-title { font-size: 1rem; font-weight: 800; line-height: 1.2; }
+.sidebar-role { font-size: 0.72rem; color: rgba(255,255,255,0.6); margin-top: 2px; }
+.sidebar-nav { flex: 1; padding: 15px 0; overflow-y: auto; }
+.nav-section-title { padding: 12px 20px 6px; font-size: 0.72rem; color: rgba(255,255,255,0.4); font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+.nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 20px; color: rgba(255,255,255,0.85); cursor: pointer; transition: var(--transition); border: none; background: none; width: 100%; text-align: right; font-size: 0.92rem; font-weight: 500; border-right: 3px solid transparent; }
+.nav-item:hover { background: rgba(255,255,255,0.06); color: white; }
+.nav-item.active { background: rgba(45,125,210,0.2); color: white; border-right-color: var(--secondary); font-weight: 700; }
+.nav-icon { font-size: 1.15rem; width: 24px; text-align: center; flex-shrink: 0; }
+.nav-badge { margin-right: auto; background: var(--danger); color: white; font-size: 0.7rem; padding: 2px 7px; border-radius: 10px; font-weight: 700; }
+.sidebar-footer { padding: 15px 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+.user-card { display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(255,255,255,0.06); border-radius: var(--radius-md); margin-bottom: 10px; }
+.user-avatar { width: 36px; height: 36px; background: linear-gradient(135deg, var(--secondary), var(--accent)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.95rem; color: white; flex-shrink: 0; }
+.user-info { flex: 1; min-width: 0; }
+.user-name { font-size: 0.88rem; font-weight: 700; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-role { font-size: 0.72rem; color: rgba(255,255,255,0.6); }
+.logout-btn { width: 100%; padding: 10px; background: rgba(231,76,60,0.15); color: #ffb3aa; border: 1px solid rgba(231,76,60,0.3); border-radius: var(--radius-md); font-size: 0.88rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; transition: var(--transition); }
+.logout-btn:hover { background: rgba(231,76,60,0.3); color: white; }
+.main-content { flex: 1; margin-right: var(--sidebar-width); transition: var(--transition); min-height: 100vh; display: flex; flex-direction: column; }
+.topbar { height: var(--topbar-height); background: white; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; justify-content: space-between; padding: 0 25px; position: sticky; top: 0; z-index: 40; box-shadow: var(--shadow-sm); }
+.topbar-title { font-size: 1.15rem; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 10px; }
+.topbar-title .icon { font-size: 1.3rem; }
+.topbar-actions { display: flex; gap: 10px; align-items: center; }
+.status-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-size: 0.82rem; font-weight: 700; }
+.status-pill.open { background: #e8f8f0; color: #1e8449; }
+.status-pill.closed { background: #fdecea; color: #c0392b; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+.hamburger { display: none; background: none; border: none; font-size: 1.5rem; color: var(--primary); padding: 8px; cursor: pointer; }
+.content-area { flex: 1; padding: 25px; }
+
+/* Pages */
+.page { display: none; }
+.page.active { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.page-header { margin-bottom: 22px; }
+.page-title { font-size: 1.5rem; font-weight: 800; color: var(--primary); margin-bottom: 4px; }
+.page-subtitle { font-size: 0.9rem; color: var(--text-light); }
+
+/* Cards */
+.card { background: var(--bg-card); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 22px; margin-bottom: 20px; border: 1px solid var(--border-light); }
+.card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--border-light); flex-wrap: wrap; gap: 10px; }
+.card-title { font-size: 1.05rem; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+.card-title .icon { font-size: 1.2rem; }
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 18px; border: none; border-radius: var(--radius-md); font-size: 0.9rem; font-weight: 700; transition: var(--transition); white-space: nowrap; }
+.btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.btn:active { transform: translateY(0); }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+.btn-lg { padding: 13px 26px; font-size: 1rem; }
+.btn-primary { background: var(--secondary); color: white; }
+.btn-primary:hover { background: var(--secondary-light); }
+.btn-success { background: var(--accent); color: white; }
+.btn-success:hover { background: var(--accent-dark); }
+.btn-danger { background: var(--danger); color: white; }
+.btn-danger:hover { background: var(--danger-dark); }
+.btn-warning { background: var(--warning); color: white; }
+.btn-outline { background: white; color: var(--primary); border: 1.5px solid var(--border); }
+.btn-outline:hover { border-color: var(--secondary); color: var(--secondary); }
+.btn-ghost { background: transparent; color: var(--text-light); }
+.btn-ghost:hover { background: var(--bg-hover); color: var(--text-main); }
+.btn-icon { padding: 8px; width: 36px; height: 36px; border-radius: var(--radius-md); }
+
+/* Stats */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 22px; }
+.stat-card { background: white; border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-light); display: flex; align-items: center; gap: 15px; transition: var(--transition); }
+.stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+.stat-icon { width: 52px; height: 52px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; }
+.stat-icon.blue { background: #e3f2fd; color: #1565c0; }
+.stat-icon.green { background: #e8f5e9; color: #2e7d32; }
+.stat-icon.orange { background: #fff3e0; color: #e65100; }
+.stat-icon.purple { background: #f3e5f5; color: #6a1b9a; }
+.stat-value { font-size: 1.8rem; font-weight: 800; color: var(--primary); line-height: 1; margin-bottom: 4px; }
+.stat-label { font-size: 0.85rem; color: var(--text-light); font-weight: 600; }
+
+/* Tables */
+.table-wrap { overflow-x: auto; border-radius: var(--radius-md); border: 1px solid var(--border-light); }
+table.data-table { width: 100%; border-collapse: collapse; min-width: 700px; }
+table.data-table th { background: var(--primary); color: white; padding: 13px 15px; text-align: right; font-size: 0.85rem; font-weight: 700; white-space: nowrap; }
+table.data-table td { padding: 12px 15px; border-bottom: 1px solid var(--border-light); font-size: 0.88rem; color: var(--text-main); text-align: right; }
+table.data-table tbody tr { transition: var(--transition); }
+table.data-table tbody tr:hover { background: var(--bg-hover); }
+table.data-table tbody tr:last-child td { border-bottom: none; }
+table.data-table td.ltr { direction: ltr; text-align: right; unicode-bidi: embed; font-family: 'Courier New', monospace; font-weight: 600; letter-spacing: 0.5px; }
+.table-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* Badges */
+.badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; white-space: nowrap; }
+.badge-owner { background: #fff3cd; color: #856404; }
+.badge-admin { background: #d1ecf1; color: #0c5460; }
+.badge-teacher { background: #d4edda; color: #155724; }
+.badge-active { background: #d4edda; color: #155724; }
+.badge-inactive { background: #f8d7da; color: #721c24; }
+.badge-text { background: #e3f2fd; color: #1565c0; }
+.badge-number { background: #fff3e0; color: #e65100; }
+.badge-date { background: #f3e5f5; color: #6a1b9a; }
+.badge-select { background: #e8f5e9; color: #2e7d32; }
+.badge-textarea { background: #fce4ec; color: #ad1457; }
+.badge-cascade { background: #fff9c4; color: #f57f17; }
+.badge-boolean { background: #e0f7fa; color: #00695c; }
+.badge-required { background: #ffebee; color: #c62828; font-size: 0.7rem; padding: 2px 6px; }
+
+/* Forms */
+.form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 15px; }
+.form-group { display: flex; flex-direction: column; }
+.form-group.full { grid-column: 1 / -1; }
+.form-group label { font-size: 0.88rem; font-weight: 700; color: var(--text-main); margin-bottom: 6px; }
+.form-group label .req { color: var(--danger); }
+.form-group input, .form-group select, .form-group textarea { padding: 11px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-md); font-size: 0.92rem; background: white; transition: var(--transition); }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--secondary); box-shadow: 0 0 0 3px rgba(45,125,210,0.1); }
+.form-group input.ltr { direction: ltr; text-align: left; }
+.form-group textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+.form-group small.hint { color: var(--text-muted); font-size: 0.78rem; margin-top: 4px; }
+.input-with-btn { display: flex; gap: 8px; }
+.input-with-btn input { flex: 1; }
+
+/* Modals */
+.modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: flex-start; padding: 20px; overflow-y: auto; }
+.modal.active { display: flex; }
+.modal-content { background: white; border-radius: var(--radius-xl); width: 100%; max-width: 700px; box-shadow: var(--shadow-xl); margin: auto; animation: slideUp 0.3s ease; max-height: calc(100vh - 40px); display: flex; flex-direction: column; }
+.modal-content.lg { max-width: 900px; }
+.modal-content.xl { max-width: 1200px; }
+.modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.modal-title { font-size: 1.15rem; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+.modal-close { width: 34px; height: 34px; border-radius: 50%; background: #f5f5f5; border: none; font-size: 1.1rem; color: var(--text-light); display: flex; align-items: center; justify-content: center; transition: var(--transition); }
+.modal-close:hover { background: var(--danger); color: white; transform: rotate(90deg); }
+.modal-body { padding: 24px; overflow-y: auto; flex: 1; }
+.modal-footer { padding: 16px 24px; border-top: 1px solid var(--border-light); display: flex; justify-content: flex-end; gap: 10px; flex-shrink: 0; flex-wrap: wrap; }
+
+/* Toast */
+#toastContainer { position: fixed; top: 20px; left: 20px; z-index: 2000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+.toast { background: white; border-radius: var(--radius-md); padding: 14px 18px; box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 12px; min-width: 280px; max-width: 400px; border-right: 4px solid var(--info); animation: toastIn 0.3s ease; pointer-events: auto; }
+@keyframes toastIn { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
+.toast.success { border-right-color: var(--accent); }
+.toast.error { border-right-color: var(--danger); }
+.toast.warning { border-right-color: var(--warning); }
+.toast-icon { font-size: 1.3rem; }
+.toast-msg { font-size: 0.9rem; font-weight: 600; color: var(--text-main); flex: 1; }
+
+/* Empty */
+.empty-state { text-align: center; padding: 50px 20px; color: var(--text-light); }
+.empty-icon { font-size: 3rem; margin-bottom: 15px; opacity: 0.5; }
+.empty-title { font-size: 1.05rem; font-weight: 700; color: var(--text-main); margin-bottom: 6px; }
+.empty-desc { font-size: 0.88rem; color: var(--text-light); }
+
+/* Search */
+.search-bar { position: relative; margin-bottom: 15px; }
+.search-bar input { width: 100%; padding: 12px 45px 12px 16px; border: 1.5px solid var(--border); border-radius: var(--radius-md); font-size: 0.95rem; background: white; transition: var(--transition); }
+.search-bar input:focus { outline: none; border-color: var(--secondary); box-shadow: 0 0 0 3px rgba(45,125,210,0.1); }
+.search-bar .search-icon { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 1.1rem; pointer-events: none; }
+
+/* Status card */
+.status-card { background: linear-gradient(135deg, #f8f9fa, #eef2f7); border-radius: var(--radius-lg); padding: 30px; text-align: center; border: 2px solid var(--border-light); margin-bottom: 20px; }
+.status-card.open { background: linear-gradient(135deg, #e8f8f0, #d4f4e1); border-color: var(--accent); }
+.status-card.closed { background: linear-gradient(135deg, #fdecea, #fadbd8); border-color: var(--danger); }
+.status-icon { font-size: 4rem; margin-bottom: 15px; }
+.status-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 8px; }
+.status-card.open .status-title { color: var(--accent-dark); }
+.status-card.closed .status-title { color: var(--danger-dark); }
+.status-desc { font-size: 0.95rem; color: var(--text-light); margin-bottom: 20px; }
+.status-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+/* Tabs */
+.tabs { display: flex; gap: 6px; border-bottom: 2px solid var(--border-light); margin-bottom: 20px; overflow-x: auto; }
+.tab { padding: 11px 20px; background: transparent; border: none; border-radius: var(--radius-md) var(--radius-md) 0 0; font-size: 0.9rem; font-weight: 700; color: var(--text-light); cursor: pointer; transition: var(--transition); border-bottom: 3px solid transparent; white-space: nowrap; }
+.tab:hover { color: var(--primary); background: var(--bg-hover); }
+.tab.active { color: var(--secondary); border-bottom-color: var(--secondary); background: #f0f7ff; }
+
+/* Info box */
+.info-box { padding: 14px 18px; border-radius: var(--radius-md); font-size: 0.9rem; margin-bottom: 18px; display: flex; align-items: flex-start; gap: 12px; line-height: 1.6; }
+.info-box.info { background: #e3f2fd; border-right: 4px solid var(--info); color: #0d47a1; }
+.info-box.warning { background: #fff8e1; border-right: 4px solid var(--warning); color: #7d5b00; }
+.info-box.success { background: #e8f8f0; border-right: 4px solid var(--accent); color: #145a32; }
+.info-box.danger { background: #fdecea; border-right: 4px solid var(--danger); color: #922b21; }
+
+/* Accordion */
+.section-accordion { margin-bottom: 15px; border: 1.5px solid var(--border-light); border-radius: var(--radius-md); overflow: hidden; }
+.section-header { padding: 12px 18px; background: #f9fafc; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: 700; color: var(--primary); border-bottom: 1.5px solid var(--border-light); }
+.section-header:hover { background: #eef2f7; }
+.section-header .section-icon { font-size: 1.2rem; transition: transform 0.3s; }
+.section-header.open .section-icon { transform: rotate(90deg); }
+.section-body { display: none; padding: 15px; background: white; }
+.section-body.open { display: block; }
+
+/* Field row */
+.field-row { display: grid; grid-template-columns: 40px 1.5fr 1fr 0.8fr 0.8fr 0.8fr 1.5fr; gap: 10px; padding: 10px 12px; align-items: center; border-bottom: 1px solid #eef2f7; font-size: 0.85rem; }
+.field-row:hover { background: #f9fafc; }
+.field-row.header { background: var(--primary); color: white; font-weight: 700; border-radius: var(--radius-sm) var(--radius-sm) 0 0; position: sticky; top: 0; z-index: 1; }
+.field-row .actions { display: flex; gap: 5px; justify-content: flex-end; }
+
+/* Options */
+.options-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.option-item { display: flex; gap: 8px; align-items: center; }
+.option-item input { flex: 1; }
+.option-item button { background: var(--danger); color: white; border: none; width: 32px; height: 32px; border-radius: var(--radius-sm); cursor: pointer; font-weight: 700; }
+.btn-add-option { background: var(--secondary); color: white; padding: 8px 14px; border: none; border-radius: var(--radius-md); font-size: 0.85rem; font-weight: 700; cursor: pointer; margin-top: 8px; }
+
+/* Cascade tree */
+.cascade-tree { padding: 15px; background: #f9fafc; border-radius: var(--radius-md); max-height: 500px; overflow-y: auto; font-size: 0.9rem; }
+.tree-level-1 { border-right: 3px solid var(--primary); padding-right: 15px; margin-bottom: 15px; }
+.tree-level-2 { border-right: 3px solid var(--secondary); padding-right: 15px; margin: 8px 0 8px 15px; }
+.tree-level-3 { border-right: 3px solid var(--accent); padding-right: 15px; margin: 5px 0 5px 15px; }
+.tree-item { padding: 6px 10px; margin: 4px 0; background: white; border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.tree-item .label { font-weight: 600; color: #333; }
+.tree-item .actions { display: flex; gap: 5px; }
+.tree-item .actions button { padding: 3px 8px; font-size: 0.75rem; border: none; border-radius: 4px; cursor: pointer; font-weight: 700; }
+.btn-mini-add { background: var(--accent); color: white; }
+.btn-mini-edit { background: var(--warning); color: white; }
+.btn-mini-del { background: var(--danger); color: white; }
+
+/* Loading */
+.loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.9); display: none; justify-content: center; align-items: center; flex-direction: column; gap: 15px; z-index: 9000; }
+.loading-overlay.active { display: flex; }
+.loading-overlay .spinner { width: 50px; height: 50px; border: 4px solid var(--border); border-top-color: var(--secondary); border-radius: 50%; animation: spin 1s linear infinite; }
+.loading-overlay p { color: var(--primary); font-weight: 700; }
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .sidebar { transform: translateX(100%); width: 260px; }
+    .sidebar.open { transform: translateX(0); }
+    .main-content { margin-right: 0; }
+    .hamburger { display: block; }
+    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 45; }
+    .sidebar-overlay.active { display: block; }
+    .field-row { grid-template-columns: 40px 1fr 1fr; font-size: 0.8rem; }
+    .field-row > *:nth-child(n+4):not(.actions) { display: none; }
+}
+@media (max-width: 768px) {
+    .content-area { padding: 18px; }
+    .topbar { padding: 0 15px; }
+    .page-title { font-size: 1.25rem; }
+    .card { padding: 16px; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .stat-icon { width: 42px; height: 42px; font-size: 1.2rem; }
+    .stat-value { font-size: 1.4rem; }
+}
+@media (max-width: 480px) {
+    .stats-grid { grid-template-columns: 1fr; }
+    .login-card { padding: 25px; }
+}
+
+/* Utilities */
+.hidden { display: none !important; }
+.text-center { text-align: center; }
+.text-muted { color: var(--text-muted); }
+.text-danger { color: var(--danger); }
+.mb-1 { margin-bottom: 8px; }
+.mb-2 { margin-bottom: 16px; }
+.d-flex { display: flex; }
+.gap-1 { gap: 8px; }
+.flex-wrap { flex-wrap: wrap; }
+.align-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-body); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<div id="splash">
+    <div class="splash-spinner"></div>
+    <div class="splash-text">⏳ جاري التحقق...</div>
+    <div class="splash-sub">يُرجى الانتظار قليلاً</div>
+</div>
+
+<div id="loginScreen">
+    <div class="login-card">
+        <div class="login-logo">👑</div>
+        <div class="login-title">لوحة المالك</div>
+        <div class="login-subtitle">نظام سجل المعلمين</div>
+        <div class="login-error" id="loginError"></div>
+        <form id="loginForm" onsubmit="handleLogin(event); return false;">
+            <div class="login-field">
+                <label>اسم المستخدم</label>
+                <input type="text" id="loginUsername" class="ltr" placeholder="username" autocomplete="username" required>
+            </div>
+            <div class="login-field">
+                <label>كلمة المرور</label>
+                <div class="password-wrap">
+                    <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" required>
+                    <button type="button" class="password-toggle" onclick="togglePassword()" tabindex="-1">👁️</button>
+                </div>
+            </div>
+            <button type="submit" class="login-btn" id="loginBtn">🔓 تسجيل الدخول</button>
+        </form>
+        <div class="login-footer">نظام سجل المعلمين — لوحة المالك</div>
+    </div>
+</div>
+
+<div id="appLayout">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">👑</div>
+            <div>
+                <div class="sidebar-title">لوحة المالك</div>
+                <div class="sidebar-role">مدير النظام</div>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section-title">الرئيسية</div>
+            <button class="nav-item active" data-page="overview" onclick="navigateTo('overview')">
+                <span class="nav-icon">📊</span><span>نظرة عامة</span>
+            </button>
+            <div class="nav-section-title">الإدارة</div>
+            <button class="nav-item" data-page="users" onclick="navigateTo('users')">
+                <span class="nav-icon">👥</span><span>إدارة المستخدمين</span>
+            </button>
+            <button class="nav-item" data-page="schools" onclick="navigateTo('schools')">
+                <span class="nav-icon">🏫</span><span>إدارة المدارس</span>
+            </button>
+            <div class="nav-section-title">رابط المعلم</div>
+            <button class="nav-item" data-page="appStatus" onclick="navigateTo('appStatus')">
+                <span class="nav-icon">🔒</span><span>حالة رابط المعلم</span>
+                <span class="nav-badge" id="navAppStatusBadge" style="display:none;">!</span>
+            </button>
+            <div class="nav-section-title">البيانات</div>
+            <button class="nav-item" data-page="teachers" onclick="navigateTo('teachers')">
+                <span class="nav-icon">📋</span><span>سجلات المعلمين</span>
+            </button>
+            <button class="nav-item" data-page="fields" onclick="navigateTo('fields')">
+                <span class="nav-icon">🛠️</span><span>الحقول الديناميكية</span>
+            </button>
+            <div class="nav-section-title">النظام</div>
+            <button class="nav-item" data-page="settings" onclick="navigateTo('settings')">
+                <span class="nav-icon">⚙️</span><span>الإعدادات العامة</span>
+            </button>
+            <button class="nav-item" data-page="audit" onclick="navigateTo('audit')">
+                <span class="nav-icon">📜</span><span>سجل التغييرات</span>
+            </button>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-card">
+                <div class="user-avatar" id="ownerAvatar">م</div>
+                <div class="user-info">
+                    <div class="user-name" id="ownerName">المالك</div>
+                    <div class="user-role">مالك النظام</div>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="handleLogout()">
+                <span>🚪</span><span>تسجيل الخروج</span>
+            </button>
+        </div>
+    </aside>
+
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div class="d-flex align-center gap-1">
+                <button class="hamburger" onclick="toggleSidebar()">☰</button>
+                <div class="topbar-title">
+                    <span class="icon" id="topbarIcon">📊</span>
+                    <span id="topbarTitle">نظرة عامة</span>
+                </div>
+            </div>
+            <div class="topbar-actions">
+                <button class="btn btn-outline btn-sm" onclick="refreshCurrentPage()" title="تحديث">
+                    <span>🔄</span><span class="hidden-mobile">تحديث</span>
+                </button>
+                <div class="status-pill open" id="appStatusPill">
+                    <span class="status-dot"></span>
+                    <span id="appStatusText">جاري الفحص...</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="content-area">
+
+            <section class="page active" id="page-overview">
+                <div class="page-header">
+                    <h1 class="page-title">📊 نظرة عامة</h1>
+                    <p class="page-subtitle">ملخص عام لحالة النظام</p>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon blue">👨‍🏫</div>
+                        <div>
+                            <div class="stat-value" id="statTeachers">0</div>
+                            <div class="stat-label">إجمالي المعلمين</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green">🏫</div>
+                        <div>
+                            <div class="stat-value" id="statSchools">0</div>
+                            <div class="stat-label">المدارس</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon orange">👥</div>
+                        <div>
+                            <div class="stat-value" id="statAdmins">0</div>
+                            <div class="stat-label">مديرو المدارس</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon purple">🔒</div>
+                        <div>
+                            <div class="stat-value" id="statAppStatus">—</div>
+                            <div class="stat-label">حالة الرابط</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <span class="icon">🕒</span><span>آخر النشاطات</span>
+                        </div>
+                    </div>
+                    <div id="recentActivity">
+                        <div class="empty-state">
+                            <div class="empty-icon">📭</div>
+                            <div class="empty-title">لا توجد نشاطات بعد</div>
+                            <div class="empty-desc">ستظهر هنا آخر العمليات التي تمت</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="page" id="page-users">
+                <div class="page-header d-flex justify-between align-center flex-wrap gap-1">
+                    <div>
+                        <h1 class="page-title">👥 إدارة المستخدمين</h1>
+                        <p class="page-subtitle">إنشاء وإدارة حسابات مديري المدارس</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openAddUserModal()">
+                        <span>➕</span><span>إضافة مدير مدرسة</span>
+                    </button>
+                </div>
+                <div class="card">
+                    <div class="search-bar">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="usersSearch" placeholder="ابحث باسم المستخدم أو الاسم الكامل..." oninput="filterUsersTable()">
+                    </div>
+                    <div class="table-wrap">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>اسم المستخدم</th>
+                                    <th>الاسم الكامل</th>
+                                    <th>الدور</th>
+                                    <th>المدرسة</th>
+                                    <th>الحالة</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                <tr><td colspan="7" class="text-center text-muted" style="padding:30px;">⏳ جاري التحميل...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section class="page" id="page-schools">
+                <div class="page-header d-flex justify-between align-center flex-wrap gap-1">
+                    <div>
+                        <h1 class="page-title">🏫 إدارة المدارس</h1>
+                        <p class="page-subtitle">إضافة وتعديل المدارس وربطها بمديريها</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openAddSchoolModal()">
+                        <span>➕</span><span>إضافة مدرسة</span>
+                    </button>
+                </div>
+                <div class="card">
+                    <div class="search-bar">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="schoolsSearch" placeholder="ابحث باسم المدرسة أو المنطقة..." oninput="filterSchoolsTable()">
+                    </div>
+                    <div class="table-wrap">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>اسم المدرسة</th>
+                                    <th>المنطقة</th>
+                                    <th>المدير</th>
+                                    <th>الحالة</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="schoolsTableBody">
+                                <tr><td colspan="6" class="text-center text-muted" style="padding:30px;">⏳ جاري التحميل...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section class="page" id="page-appStatus">
+                <div class="page-header">
+                    <h1 class="page-title">🔒 حالة رابط المعلم</h1>
+                    <p class="page-subtitle">تحكم بفتح وإغلاق رابط إدخال البيانات للمعلمين</p>
+                </div>
+                <div class="card">
+                    <div class="status-card" id="appStatusCard">
+                        <div class="status-icon" id="appStatusIcon">⏳</div>
+                        <div class="status-title" id="appStatusTitle">جاري الفحص...</div>
+                        <div class="status-desc" id="appStatusDesc">يُرجى الانتظار</div>
+                        <div class="status-actions">
+                            <button class="btn btn-success btn-lg" id="btnOpenApp" onclick="openTeacherApp()">
+                                <span>🔓</span><span>فتح الرابط</span>
+                            </button>
+                            <button class="btn btn-danger btn-lg" id="btnCloseApp" onclick="closeTeacherApp()">
+                                <span>🔒</span><span>إغلاق الرابط</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <span class="icon">📝</span><span>رسالة الإغلاق</span>
+                        </div>
+                    </div>
+                    <div class="form-group full mb-2">
+                        <label>عنوان الرسالة</label>
+                        <input type="text" id="closureTitle" placeholder="مثال: النظام مغلق مؤقتاً" maxlength="80">
+                    </div>
+                    <div class="form-group full mb-2">
+                        <label>نص الرسالة</label>
+                        <textarea id="closureMessage" placeholder="اكتب رسالة توضيحية للمعلمين..." maxlength="500" rows="4"></textarea>
+                        <small class="hint"><span id="closureMsgCount">0</span> / 500 حرف</small>
+                    </div>
+                    <div class="form-group full mb-2">
+                        <label>طريقة العرض للمعلم</label>
+                        <select id="closureDisplayMode">
+                            <option value="message">📩 رسالة فقط</option>
+                            <option value="countdown">⏱️ رسالة + عدّاد تنازلي</option>
+                        </select>
+                    </div>
+                    <div class="form-group full mb-2 hidden" id="reopenDateGroup">
+                        <label>تاريخ ووقت الفتح المتوقع</label>
+                        <input type="datetime-local" id="reopenDate">
+                    </div>
+                    <div class="d-flex gap-1 flex-wrap">
+                        <button class="btn btn-primary" onclick="saveClosureSettings()">
+                            <span>💾</span><span>حفظ الإعدادات</span>
+                        </button>
+                        <button class="btn btn-outline" onclick="previewClosureScreen()">
+                            <span>👁️</span><span>معاينة</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="page" id="page-teachers">
+                <div class="page-header d-flex justify-between align-center flex-wrap gap-1">
+                    <div>
+                        <h1 class="page-title">📋 سجلات المعلمين</h1>
+                        <p class="page-subtitle">عرض وإدارة جميع سجلات المعلمين</p>
+                    </div>
+                    <button class="btn btn-success" onclick="exportTeachersExcel()">
+                        <span>📊</span><span>تصدير Excel</span>
+                    </button>
+                </div>
+                <div class="card">
+                    <div class="search-bar">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="teachersSearch" placeholder="ابحث بالاسم، الرقم الذاتي، المدرسة..." oninput="filterTeachersTable()">
+                    </div>
+                    <div class="table-wrap">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>الاسم</th>
+                                    <th>الرقم الذاتي</th>
+                                    <th>المدرسة</th>
+                                    <th>الوضع الوظيفي</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="teachersTableBody">
+                                <tr><td colspan="6" class="text-center text-muted" style="padding:30px;">⏳ جاري التحميل...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section class="page" id="page-fields">
+                <div class="page-header d-flex justify-between align-center flex-wrap gap-1">
+                    <div>
+                        <h1 class="page-title">🛠️ الحقول الديناميكية</h1>
+                        <p class="page-subtitle">إدارة حقول النموذج والأقسام والعلاقات</p>
+                    </div>
+                    <div class="d-flex gap-1 flex-wrap">
+                        <button class="btn btn-outline btn-sm" onclick="reloadFieldsData()">🔄 تحديث</button>
+                        <button class="btn btn-primary" onclick="openFieldEditModal(null)">➕ حقل جديد</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="tabs">
+                        <button class="tab active" onclick="switchFieldsTab('fields', this)">📋 الحقول</button>
+                        <button class="tab" onclick="switchFieldsTab('sections', this)">🗂️ الأقسام</button>
+                        <button class="tab" onclick="switchFieldsTab('cascades', this)">🔗 العلاقات المترابطة</button>
+                        <button class="tab" onclick="switchFieldsTab('labels', this)">🏷️ تسميات الحقول</button>
+                    </div>
+
+                    <div id="fieldsTabContent">
+                        <div id="fieldsTab-fields"></div>
+                        <div id="fieldsTab-sections" style="display:none;"></div>
+                        <div id="fieldsTab-cascades" style="display:none;"></div>
+                        <div id="fieldsTab-labels" style="display:none;"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="page" id="page-settings">
+                <div class="page-header">
+                    <h1 class="page-title">⚙️ الإعدادات العامة</h1>
+                    <p class="page-subtitle">تخصيص سلوك النظام</p>
+                </div>
+                <div class="card">
+                    <div class="card-header"><div class="card-title"><span class="icon">🔧</span><span>إنشاء الحسابات</span></div></div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>النطاق الداخلي للبريد</label>
+                            <input type="text" id="setInternalDomain" class="ltr" value="school.local" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>طول كلمة المرور المولّدة</label>
+                            <select id="setPasswordLength">
+                                <option value="10">10</option>
+                                <option value="12" selected>12</option>
+                                <option value="14">14</option>
+                                <option value="16">16</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group full mb-2">
+                        <label class="d-flex align-center gap-1" style="font-weight:500; cursor:pointer;">
+                            <input type="checkbox" id="setRequirePasswordChange" checked>
+                            <span>إلزام مدير المدرسة بتغيير كلمة المرور عند أول دخول</span>
+                        </label>
+                        <label class="d-flex align-center gap-1" style="margin-top:8px; font-weight:500; cursor:pointer;">
+                            <input type="checkbox" id="setAutoCopyCreds" checked>
+                            <span>نسخ بيانات الحساب تلقائياً بعد الإنشاء</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="d-flex justify-between align-center flex-wrap gap-1">
+                        <div>
+                            <div class="card-title mb-1"><span class="icon">💾</span><span>حفظ الإعدادات</span></div>
+                        </div>
+                        <button class="btn btn-primary btn-lg" onclick="saveGeneralSettings()">💾 حفظ الإعدادات</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="page" id="page-audit">
+                <div class="page-header">
+                    <h1 class="page-title">📜 سجل التغييرات</h1>
+                    <p class="page-subtitle">كل العمليات التي تمت في النظام</p>
+                </div>
+                <div class="card">
+                    <div id="auditLogContainer">
+                        <div class="empty-state">
+                            <div class="empty-icon">📭</div>
+                            <div class="empty-title">لا توجد سجلات بعد</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+</div>
+
+<!-- Modals -->
+<div class="modal" id="modalAddUser">
+    <div class="modal-content lg">
+        <div class="modal-header">
+            <div class="modal-title"><span>👤</span><span>إضافة مدير مدرسة</span></div>
+            <button class="modal-close" onclick="closeModal('modalAddUser')">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>اسم المستخدم <span class="req">*</span></label>
+                    <input type="text" id="newUserUsername" class="ltr" placeholder="ahmad" maxlength="20">
+                </div>
+                <div class="form-group">
+                    <label>الاسم الكامل <span class="req">*</span></label>
+                    <input type="text" id="newUserFullName" placeholder="أحمد محمد العلي" maxlength="60">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>كلمة المرور <span class="req">*</span></label>
+                    <div class="input-with-btn">
+                        <input type="text" id="newUserPassword" class="ltr" placeholder="••••••••">
+                        <button type="button" class="btn btn-outline" onclick="generatePassword()">🎲</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>المدرسة <span class="req">*</span></label>
+                    <select id="newUserSchool"></select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>رقم الهاتف</label>
+                    <input type="text" id="newUserPhone" class="ltr" maxlength="10">
+                </div>
+                <div class="form-group">
+                    <label>الحالة</label>
+                    <select id="newUserActive">
+                        <option value="true" selected>مفعّل</option>
+                        <option value="false">معطّل</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('modalAddUser')">إلغاء</button>
+            <button class="btn btn-primary" id="btnSaveUser" onclick="saveNewUser()">💾 إنشاء الحساب</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="modalAddSchool">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title"><span>🏫</span><span>إضافة مدرسة</span></div>
+            <button class="modal-close" onclick="closeModal('modalAddSchool')">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>اسم المدرسة <span class="req">*</span></label>
+                    <input type="text" id="newSchoolName" placeholder="مدرسة الشهيد" maxlength="80">
+                </div>
+                <div class="form-group">
+                    <label>المنطقة <span class="req">*</span></label>
+                    <input type="text" id="newSchoolRegion" placeholder="دمشق" maxlength="60">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>مدير المدرسة (اختياري)</label>
+                    <select id="newSchoolPrincipal"><option value="">— بدون مدير حالياً —</option></select>
+                </div>
+                <div class="form-group">
+                    <label>الحالة</label>
+                    <select id="newSchoolActive">
+                        <option value="true" selected>مفعّلة</option>
+                        <option value="false">معطّلة</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('modalAddSchool')">إلغاء</button>
+            <button class="btn btn-primary" onclick="saveNewSchool()">💾 حفظ</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="modalCredentials">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title"><span>✅</span><span>تم إنشاء الحساب</span></div>
+            <button class="modal-close" onclick="closeModal('modalCredentials')">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="info-box success"><span>🎉</span><div>احفظ بيانات الدخول وسلّمها لمدير المدرسة.</div></div>
+            <div class="form-group mb-2"><label>اسم المستخدم</label><input type="text" id="credUsername" class="ltr" readonly></div>
+            <div class="form-group mb-2"><label>كلمة المرور</label><input type="text" id="credPassword" class="ltr" readonly></div>
+            <div class="form-group mb-2"><label>البريد الداخلي</label><input type="text" id="credEmail" class="ltr" readonly></div>
+            <button class="btn btn-primary btn-block" onclick="copyCredentials()">📋 نسخ</button>
+        </div>
+        <div class="modal-footer"><button class="btn btn-primary" onclick="closeModal('modalCredentials')">تم</button></div>
+    </div>
+</div>
+
+<div class="modal" id="modalConfirm">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title"><span id="confirmIcon">⚠️</span><span id="confirmTitle">تأكيد</span></div>
+            <button class="modal-close" onclick="closeModal('modalConfirm')">✕</button>
+        </div>
+        <div class="modal-body"><p id="confirmMessage" style="font-size:0.95rem; line-height:1.7;"></p></div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('modalConfirm')">إلغاء</button>
+            <button class="btn btn-danger" id="confirmBtn">تأكيد</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="modalFieldEdit">
+    <div class="modal-content lg">
+        <div class="modal-header">
+            <div class="modal-title"><span id="fieldEditIcon">✏️</span><span id="fieldEditTitle">تعديل حقل</span></div>
+            <button class="modal-close" onclick="closeFieldEditModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>اسم الحقل (Label) <span class="req">*</span></label>
+                    <input type="text" id="fldLabel" placeholder="مثال: الرقم الذاتي">
+                </div>
+                <div class="form-group">
+                    <label>المفتاح (Key) <span class="req">*</span></label>
+                    <input type="text" id="fldKey" class="ltr" placeholder="selfNumber">
+                    <small class="hint">أحرف إنجليزية وأرقام فقط</small>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>النوع</label>
+                    <select id="fldType" onchange="onFieldTypeChange()">
+                        <option value="text">نص</option>
+                        <option value="number">رقم</option>
+                        <option value="date">تاريخ</option>
+                        <option value="select">قائمة منسدلة</option>
+                        <option value="textarea">نص طويل</option>
+                        <option value="boolean">نعم / لا</option>
+                        <option value="cascade">قائمة مترابطة</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>القسم</label>
+                    <select id="fldSection"></select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>الترتيب</label>
+                    <input type="number" id="fldOrder" min="1" value="1">
+                </div>
+                <div class="form-group">
+                    <label>إلزامي؟</label>
+                    <select id="fldRequired"><option value="false">لا</option><option value="true">نعم</option></select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>اتجاه LTR</label>
+                    <select id="fldLtr"><option value="false">لا (RTL)</option><option value="true">نعم (LTR)</option></select>
+                </div>
+                <div class="form-group">
+                    <label>تلميح (Hint)</label>
+                    <input type="text" id="fldHint" placeholder="نص إرشادي">
+                </div>
+            </div>
+            <div class="form-group full mb-2" id="fldOptionsGroup" style="display:none;">
+                <label>خيارات القائمة المنسدلة</label>
+                <div class="options-list" id="fldOptionsList"></div>
+                <button type="button" class="btn-add-option" onclick="addOptionRow('')">➕ إضافة خيار</button>
+            </div>
+            <div class="form-group full mb-2" id="fldCascadeGroup" style="display:none;">
+                <label>مستوى القائمة المترابطة</label>
+                <select id="fldCascadeLevel" onchange="onCascadeLevelChange()">
+                    <option value="1">المستوى الأول (محافظة)</option>
+                    <option value="2">المستوى الثاني (منطقة)</option>
+                    <option value="3">المستوى الثالث (مدرسة)</option>
+                </select>
+            </div>
+            <div class="form-group full mb-2" id="fldParentGroup" style="display:none;">
+                <label>الحقل الأب</label>
+                <select id="fldParentKey"></select>
+            </div>
+            <div class="form-group full mb-2">
+                <label>إظهار الحقل في</label>
+                <div style="display: flex; gap: 20px; margin-top: 5px;">
+                    <label class="d-flex align-center gap-1"><input type="checkbox" id="fldShowForm" checked> نموذج الإدخال</label>
+                    <label class="d-flex align-center gap-1"><input type="checkbox" id="fldShowRecord" checked> السجل الرسمي</label>
+                    <label class="d-flex align-center gap-1"><input type="checkbox" id="fldShowExcel" checked> Excel</label>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeFieldEditModal()">إلغاء</button>
+            <button class="btn btn-primary" onclick="saveSingleField()">💾 حفظ</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="modalConfirmFields">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title"><span>💾</span><span>حفظ التغييرات</span></div>
+            <button class="modal-close" onclick="closeModal('modalConfirmFields')">✕</button>
+        </div>
+        <div class="modal-body">
+            <p style="line-height:1.8;">تم إجراء تعديلات على الحقول. هل تريد حفظها الآن في قاعدة البيانات؟</p>
+            <div class="info-box warning mt-2"><span>⚠️</span><div>إذا لم تحفظ، ستفقد التعديلات عند إغلاق الصفحة.</div></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('modalConfirmFields')">لاحقاً</button>
+            <button class="btn btn-primary" onclick="saveDynamicFields(); closeModal('modalConfirmFields');">💾 حفظ الآن</button>
+        </div>
+    </div>
+</div>
+
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <p id="loadingText">⏳ جاري التنفيذ...</p>
+</div>
+
+<div id="toastContainer"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, where, orderBy, limit, serverTimestamp, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyC31P3GxbtuFEl34czIe0KFuuKNv3JDKBU",
+    authDomain: "khitmaty1.firebaseapp.com",
+    projectId: "khitmaty1",
+    storageBucket: "khitmaty1.firebasestorage.app",
+    messagingSenderId: "555189930690",
+    appId: "1:555189930690:web:8bbd5347b7a3596923095b"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const APP_STATE = {
+    currentUser: null, currentUserData: null,
+    users: [], schools: [], teachers: [],
+    filteredUsers: [], filteredSchools: [], filteredTeachers: [],
+    appStatus: null,
+    dynamicFields: [], dynamicSections: [], cascadesData: {}, columnLabels: {},
+    editingFieldId: null,
+    generalSettings: {
+        internalDomain: 'school.local', passwordLength: 12,
+        requirePasswordChange: true, autoCopyCreds: true,
+        defaultClosureMode: 'message', closureTheme: 'calm', enableDraft: true
+    }
+};
+window.APP_STATE = APP_STATE;
+
+const PAGE_TITLES = {
+    overview: { icon: '📊', title: 'نظرة عامة' },
+    users: { icon: '👥', title: 'إدارة المستخدمين' },
+    schools: { icon: '🏫', title: 'إدارة المدارس' },
+    appStatus: { icon: '🔒', title: 'حالة رابط المعلم' },
+    teachers: { icon: '📋', title: 'سجلات المعلمين' },
+    fields: { icon: '🛠️', title: 'الحقول الديناميكية' },
+    settings: { icon: '⚙️', title: 'الإعدادات العامة' },
+    audit: { icon: '📜', title: 'سجل التغييرات' }
+};
+
+const ROLE_LABELS = { owner: 'مالك', school_admin: 'مدير مدرسة', teacher: 'معلم' };
+const ROLE_BADGES = { owner: 'badge-owner', school_admin: 'badge-admin', teacher: 'badge-teacher' };
+
+// Toast
+window.showToast = function(message, type = 'info', duration = 3500) {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+    toast.innerHTML = `<span class="toast-icon">${icons[type] || icons.info}</span><span class="toast-msg">${message}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-30px)';
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
+};
+
+window.showLoading = function(text = '⏳ جاري التنفيذ...') {
+    const overlay = document.getElementById('loadingOverlay');
+    const textEl = document.getElementById('loadingText');
+    if (textEl) textEl.textContent = text;
+    if (overlay) overlay.classList.add('active');
+};
+window.hideLoading = function() {
+    document.getElementById('loadingOverlay')?.classList.remove('active');
+};
+
+window.openModal = function(id) { document.getElementById(id)?.classList.add('active'); };
+window.closeModal = function(id) { document.getElementById(id)?.classList.remove('active'); };
+
+window.confirmAction = function(title, message, onConfirm, confirmText = 'تأكيد', danger = true) {
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmMessage').textContent = message;
+    document.getElementById('confirmIcon').textContent = danger ? '⚠️' : '❓';
+    const btn = document.getElementById('confirmBtn');
+    btn.textContent = confirmText;
+    btn.className = danger ? 'btn btn-danger' : 'btn btn-primary';
+    const newBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(newBtn, btn);
+    newBtn.addEventListener('click', () => {
+        closeModal('modalConfirm');
+        if (typeof onConfirm === 'function') onConfirm();
+    });
+    openModal('modalConfirm');
+};
+
+window.usernameToEmail = function(username) {
+    const domain = APP_STATE.generalSettings.internalDomain || 'school.local';
+    return `${username.toLowerCase().trim()}@${domain}`;
+};
+
+window.togglePassword = function() {
+    const input = document.getElementById('loginPassword');
+    const btn = document.querySelector('.password-toggle');
+    if (!input) return;
+    if (input.type === 'password') { input.type = 'text'; if (btn) btn.textContent = '🙈'; }
+    else { input.type = 'password'; if (btn) btn.textContent = '👁️'; }
+};
+
+function showLoginError(msg) {
+    const box = document.getElementById('loginError');
+    if (!box) return;
+    box.textContent = msg;
+    box.classList.add('show');
+}
+function hideLoginError() { document.getElementById('loginError')?.classList.remove('show'); }
+
+window.handleLogin = async function(event) {
+    if (event) event.preventDefault();
+    const usernameInput = document.getElementById('loginUsername');
+    const passwordInput = document.getElementById('loginPassword');
+    const loginBtn = document.getElementById('loginBtn');
+    const username = usernameInput.value.trim().toLowerCase();
+    const password = passwordInput.value;
+    hideLoginError();
+    if (!username) { showLoginError('⚠️ الرجاء إدخال اسم المستخدم'); usernameInput.focus(); return; }
+    if (!/^[a-z0-9._]{3,20}$/.test(username)) { showLoginError('⚠️ اسم المستخدم بأحرف إنجليزية'); usernameInput.focus(); return; }
+    if (!password) { showLoginError('⚠️ الرجاء إدخال كلمة المرور'); passwordInput.focus(); return; }
+    loginBtn.disabled = true;
+    loginBtn.textContent = '⏳ جاري التحقق...';
+    try {
+        const usernameDocRef = doc(db, 'usernames', username);
+        const usernameSnap = await getDoc(usernameDocRef);
+        let email;
+        if (usernameSnap.exists()) {
+            const data = usernameSnap.data();
+            if (data.isActive === false) { showLoginError('🚫 هذا الحساب معطّل.'); return; }
+            email = data.email;
+        } else { email = window.usernameToEmail(username); }
+        const credential = await signInWithEmailAndPassword(auth, email, password);
+        const uid = credential.user.uid;
+        const userDocRef = doc(db, 'users', uid);
+        const userSnap = await getDoc(userDocRef);
+        if (!userSnap.exists()) { await signOut(auth); showLoginError('❌ حسابك غير مُهيَّأ.'); return; }
+        const userData = userSnap.data();
+        if (userData.isActive === false) { await signOut(auth); showLoginError('🚫 حسابك معطّل.'); return; }
+        if (userData.role !== 'owner') { await signOut(auth); showLoginError('⛔ هذه الصفحة للمالك فقط.'); return; }
+        try { await updateDoc(userDocRef, { lastLogin: serverTimestamp() }); } catch (e) {}
+        APP_STATE.currentUser = credential.user;
+        APP_STATE.currentUserData = userData;
+        loginBtn.textContent = '✅ تم الدخول';
+    } catch (error) {
+        console.error('Login error:', error);
+        const code = error.code || '';
+        if (code.includes('wrong-password') || code.includes('invalid-credential') || code.includes('user-not-found')) showLoginError('❌ اسم المستخدم أو كلمة المرور غير صحيحة');
+        else if (code.includes('too-many-requests')) showLoginError('⏳ محاولات كثيرة. حاول لاحقاً.');
+        else if (code.includes('network')) showLoginError('🌐 تحقق من الإنترنت.');
+        else showLoginError('❌ ' + (error.message || 'خطأ غير معروف'));
+    } finally {
+        loginBtn.disabled = false;
+        if (loginBtn.textContent !== '✅ تم الدخول') loginBtn.textContent = '🔓 تسجيل الدخول';
+    }
+};
+
+window.handleLogout = function() {
+    confirmAction('تسجيل الخروج', 'هل تريد تسجيل الخروج؟', async () => {
+        try { await signOut(auth); window.showToast('تم تسجيل الخروج', 'success'); }
+        catch (e) { window.showToast('فشل تسجيل الخروج', 'error'); }
+    }, 'تسجيل الخروج', true);
+};
+
+window.navigateTo = function(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + pageId)?.classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === pageId));
+    const meta = PAGE_TITLES[pageId] || { icon: '📄', title: pageId };
+    const tEl = document.getElementById('topbarTitle');
+    const iEl = document.getElementById('topbarIcon');
+    if (tEl) tEl.textContent = meta.title;
+    if (iEl) iEl.textContent = meta.icon;
+    closeSidebar();
+    if (pageId === 'users') loadUsersPage();
+    else if (pageId === 'schools') loadSchoolsPage();
+    else if (pageId === 'teachers') loadTeachersPage();
+    else if (pageId === 'appStatus') loadAppStatusPage();
+    else if (pageId === 'settings') loadSettingsPage();
+    else if (pageId === 'fields') loadFieldsPage();
+    else if (pageId === 'audit') loadAuditPage();
+};
+
+window.refreshCurrentPage = function() {
+    const active = document.querySelector('.page.active');
+    if (!active) return;
+    const id = active.id.replace('page-', '');
+    window.showToast('🔄 جاري التحديث...', 'info', 1500);
+    navigateTo(id);
+};
+
+window.toggleSidebar = function() {
+    document.getElementById('sidebar')?.classList.toggle('open');
+    document.getElementById('sidebarOverlay')?.classList.toggle('active');
+};
+window.closeSidebar = function() {
+    document.getElementById('sidebar')?.classList.remove('open');
+    document.getElementById('sidebarOverlay')?.classList.remove('active');
+};
+
+function showLoginScreen() {
+    document.getElementById('splash')?.classList.add('hidden');
+    document.getElementById('loginScreen')?.classList.add('active');
+    document.getElementById('appLayout')?.classList.remove('active');
+}
+function showAppScreen() {
+    document.getElementById('splash')?.classList.add('hidden');
+    document.getElementById('loginScreen')?.classList.remove('active');
+    document.getElementById('appLayout')?.classList.add('active');
+}
+
+function renderOwnerInfo(userData) {
+    const name = userData.fullName || userData.username || 'المالك';
+    const nameEl = document.getElementById('ownerName');
+    const avEl = document.getElementById('ownerAvatar');
+    if (nameEl) nameEl.textContent = name;
+    if (avEl) avEl.textContent = name.charAt(0) || 'م';
+}
+
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        try {
+            const userSnap = await getDoc(doc(db, 'users', user.uid));
+            if (!userSnap.exists()) { await signOut(auth); showLoginScreen(); showLoginError('❌ حسابك غير مُهيَّأ.'); return; }
+            const userData = userSnap.data();
+            if (userData.isActive === false) { await signOut(auth); showLoginScreen(); showLoginError('🚫 معطّل.'); return; }
+            if (userData.role !== 'owner') { await signOut(auth); showLoginScreen(); showLoginError('⛔ للمالك فقط.'); return; }
+            APP_STATE.currentUser = user;
+            APP_STATE.currentUserData = userData;
+            renderOwnerInfo(userData);
+            showAppScreen();
+            await initializeData();
+        } catch (e) {
+            console.error(e);
+            showLoginScreen();
+            showLoginError('خطأ غير متوقع.');
+        }
+    } else {
+        APP_STATE.currentUser = null;
+        APP_STATE.currentUserData = null;
+        showLoginScreen();
+    }
+});
+
+async function initializeData() {
+    try {
+        await loadAppStatus();
+        await loadGeneralSettings();
+        await loadDynamicFields();
+        await loadCascades();
+        await loadColumnLabels();
+        await loadOverviewStats();
+    } catch (e) { console.error(e); }
+}
+
+async function loadAppStatus() {
+    try {
+        const ref = doc(db, 'settings', 'appStatus');
+        const snap = await getDoc(ref);
+        if (snap.exists()) APP_STATE.appStatus = snap.data();
+        else {
+            const defaults = { isAppOpen: true, closureTitle: 'النظام مغلق مؤقتاً', closureMessage: 'سيتم الإعلان قريباً.', closureDisplayMode: 'message', reopenDate: null, updatedAt: serverTimestamp() };
+            await setDoc(ref, defaults);
+            APP_STATE.appStatus = defaults;
+        }
+        updateAppStatusUI(APP_STATE.appStatus);
+    } catch (e) { console.error(e); }
+}
+
+function updateAppStatusUI(status) {
+    const isOpen = status.isAppOpen === true;
+    const pill = document.getElementById('appStatusPill');
+    const text = document.getElementById('appStatusText');
+    if (pill) pill.className = 'status-pill ' + (isOpen ? 'open' : 'closed');
+    if (text) text.textContent = isOpen ? 'الرابط مفتوح' : 'الرابط مغلق';
+    const card = document.getElementById('appStatusCard');
+    const icon = document.getElementById('appStatusIcon');
+    const title = document.getElementById('appStatusTitle');
+    const desc = document.getElementById('appStatusDesc');
+    if (card) card.className = 'status-card ' + (isOpen ? 'open' : 'closed');
+    if (icon) icon.textContent = isOpen ? '🔓' : '🔒';
+    if (title) title.textContent = isOpen ? 'الرابط مفتوح' : 'الرابط مغلق';
+    if (desc) desc.textContent = isOpen ? 'المعلمون يمكنهم الإدخال الآن' : 'المعلمون يرون رسالة الإغلاق';
+    const stat = document.getElementById('statAppStatus');
+    if (stat) stat.textContent = isOpen ? 'مفتوح' : 'مغلق';
+    const badge = document.getElementById('navAppStatusBadge');
+    if (badge) badge.style.display = isOpen ? 'none' : 'inline-block';
+}
+window.updateAppStatusUI = updateAppStatusUI;
+
+async function loadGeneralSettings() {
+    try {
+        const ref = doc(db, 'settings', 'generalSettings');
+        const snap = await getDoc(ref);
+        if (snap.exists()) APP_STATE.generalSettings = { ...APP_STATE.generalSettings, ...snap.data() };
+        else await setDoc(ref, { ...APP_STATE.generalSettings, updatedAt: serverTimestamp() });
+    } catch (e) { console.error(e); }
+}
+
+async function loadDynamicFields() {
+    try {
+        const ref = doc(db, 'settings', 'dynamicFields');
+        const snap = await getDoc(ref);
+        if (snap.exists()) {
+            const data = snap.data();
+            APP_STATE.dynamicFields = data.fields || [];
+            APP_STATE.dynamicSections = data.sections || [];
+        }
+    } catch (e) { console.error(e); }
+}
+
+async function loadCascades() {
+    try {
+        const ref = doc(db, 'settings', 'cascades');
+        const snap = await getDoc(ref);
+        APP_STATE.cascadesData = snap.exists() ? (snap.data().data || {}) : {};
+    } catch (e) { APP_STATE.cascadesData = {}; }
+}
+
+async function loadColumnLabels() {
+    try {
+        const ref = doc(db, 'settings', 'columnLabels');
+        const snap = await getDoc(ref);
+        APP_STATE.columnLabels = snap.exists() ? (snap.data() || {}) : {};
+    } catch (e) { APP_STATE.columnLabels = {}; }
+}
+
+async function loadOverviewStats() {
+    try {
+        const t = await getDocs(collection(db, 'teachers'));
+        document.getElementById('statTeachers').textContent = t.size;
+        const s = await getDocs(collection(db, 'schools'));
+        document.getElementById('statSchools').textContent = s.size;
+        const q = query(collection(db, 'users'), where('role', '==', 'school_admin'));
+        const a = await getDocs(q);
+        document.getElementById('statAdmins').textContent = a.size;
+    } catch (e) { console.error(e); }
+}
+  
+/* ============================================
+   إدارة المستخدمين
+============================================ */
+window.loadUsersPage = async function() {
+    const tbody = document.getElementById('usersTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding:30px;">⏳ جاري التحميل...</td></tr>';
+    try {
+        const snap = await getDocs(collection(db, 'users'));
+        const users = [];
+        snap.forEach(d => users.push({ uid: d.id, ...d.data() }));
+        users.sort((a, b) => {
+            if (a.role === 'owner') return -1;
+            if (b.role === 'owner') return 1;
+            return (a.fullName || '').localeCompare(b.fullName || '', 'ar');
+        });
+        APP_STATE.users = users;
+        APP_STATE.filteredUsers = [...users];
+        renderUsersTable();
+    } catch (e) {
+        console.error(e);
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger" style="padding:30px;">❌ ' + e.message + '</td></tr>';
+    }
+};
+
+function renderUsersTable() {
+    const tbody = document.getElementById('usersTableBody');
+    if (!tbody) return;
+    const users = APP_STATE.filteredUsers;
+    if (users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="padding:40px;text-align:center;"><div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">لا يوجد مستخدمون</div></div></td></tr>';
+        return;
+    }
+    tbody.innerHTML = users.map((u, i) => {
+        const roleLabel = ROLE_LABELS[u.role] || u.role;
+        const roleBadge = ROLE_BADGES[u.role] || 'badge-teacher';
+        const statusBadge = u.isActive !== false ? '<span class="badge badge-active">مفعّل</span>' : '<span class="badge badge-inactive">معطّل</span>';
+        const isOwner = u.role === 'owner';
+        const actions = isOwner
+            ? '<span class="text-muted" style="font-size:0.8rem;">—</span>'
+            : `<div class="table-actions">
+                <button class="btn btn-icon btn-outline" title="تعديل" onclick="editUser('${u.uid}')">✏️</button>
+                <button class="btn btn-icon btn-outline" title="كلمة المرور" onclick="resetUserPassword('${u.uid}')">🔑</button>
+                <button class="btn btn-icon btn-outline" title="${u.isActive !== false ? 'تعطيل' : 'تفعيل'}" onclick="toggleUserActive('${u.uid}', ${u.isActive !== false})">${u.isActive !== false ? '🚫' : '✅'}</button>
+                <button class="btn btn-icon btn-outline" title="حذف" onclick="deleteUser('${u.uid}')">🗑️</button>
+            </div>`;
+        return `<tr>
+            <td>${i + 1}</td>
+            <td class="ltr">${u.username || '—'}</td>
+            <td>${u.fullName || '—'}</td>
+            <td><span class="badge ${roleBadge}">${roleLabel}</span></td>
+            <td>${u.schoolName || '—'}</td>
+            <td>${statusBadge}</td>
+            <td>${actions}</td>
+        </tr>`;
+    }).join('');
+}
+
+window.filterUsersTable = function() {
+    const q = (document.getElementById('usersSearch')?.value || '').toLowerCase().trim();
+    if (!q) APP_STATE.filteredUsers = [...APP_STATE.users];
+    else APP_STATE.filteredUsers = APP_STATE.users.filter(u =>
+        (u.username || '').toLowerCase().includes(q) ||
+        (u.fullName || '').toLowerCase().includes(q) ||
+        (u.schoolName || '').toLowerCase().includes(q)
+    );
+    renderUsersTable();
+};
+
+window.openAddUserModal = async function() {
+    document.getElementById('newUserUsername').value = '';
+    document.getElementById('newUserFullName').value = '';
+    document.getElementById('newUserPassword').value = '';
+    document.getElementById('newUserPhone').value = '';
+    document.getElementById('newUserActive').value = 'true';
+    await populateSchoolSelect();
+    generatePassword();
+    openModal('modalAddUser');
+    setTimeout(() => document.getElementById('newUserUsername')?.focus(), 300);
+};
+
+async function populateSchoolSelect() {
+    const select = document.getElementById('newUserSchool');
+    if (!select) return;
+    select.innerHTML = '<option value="">⏳ جاري التحميل...</option>';
+    try {
+        const snap = await getDocs(collection(db, 'schools'));
+        const schools = [];
+        snap.forEach(d => schools.push({ id: d.id, ...d.data() }));
+        schools.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ar'));
+        APP_STATE.schools = schools;
+        if (schools.length === 0) {
+            select.innerHTML = '<option value="">— لا توجد مدارس —</option>';
+            return;
+        }
+        select.innerHTML = '<option value="">— اختر مدرسة —</option>' +
+            schools.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    } catch (e) { select.innerHTML = '<option value="">❌ فشل</option>'; }
+}
+
+window.generatePassword = function() {
+    const length = APP_STATE.generalSettings.passwordLength || 12;
+    const upper = 'ABCDEFGHJKMNPQRSTUVWXYZ';
+    const lower = 'abcdefghjkmnpqrstuvwxyz';
+    const digits = '23456789';
+    const symbols = '!@#$%&*';
+    const all = upper + lower + digits + symbols;
+    let password = '';
+    password += upper[Math.floor(Math.random() * upper.length)];
+    password += lower[Math.floor(Math.random() * lower.length)];
+    password += digits[Math.floor(Math.random() * digits.length)];
+    password += symbols[Math.floor(Math.random() * symbols.length)];
+    for (let i = password.length; i < length; i++) password += all[Math.floor(Math.random() * all.length)];
+    password = password.split('').sort(() => Math.random() - 0.5).join('');
+    const field = document.getElementById('newUserPassword');
+    if (field) field.value = password;
+};
+
+window.saveNewUser = async function() {
+    const username = (document.getElementById('newUserUsername')?.value || '').trim().toLowerCase();
+    const fullName = (document.getElementById('newUserFullName')?.value || '').trim();
+    const password = (document.getElementById('newUserPassword')?.value || '').trim();
+    const schoolId = document.getElementById('newUserSchool')?.value || '';
+    const phone = (document.getElementById('newUserPhone')?.value || '').trim();
+    const isActive = document.getElementById('newUserActive')?.value === 'true';
+
+    if (!username) { window.showToast('⚠️ أدخل اسم المستخدم', 'warning'); return; }
+    if (!/^[a-z0-9._]{3,20}$/.test(username)) { window.showToast('⚠️ اسم المستخدم بأحرف إنجليزية', 'warning'); return; }
+    if (!fullName) { window.showToast('⚠️ أدخل الاسم الكامل', 'warning'); return; }
+    if (!password || password.length < 8) { window.showToast('⚠️ كلمة المرور 8 أحرف على الأقل', 'warning'); return; }
+    if (!schoolId) { window.showToast('⚠️ اختر المدرسة', 'warning'); return; }
+
+    const email = usernameToEmail(username);
+    try {
+        const existing = await getDoc(doc(db, 'usernames', username));
+        if (existing.exists()) { window.showToast('❌ اسم المستخدم محجوز', 'error'); return; }
+    } catch (e) { }
+
+    const school = APP_STATE.schools.find(s => s.id === schoolId);
+
+    confirmAction('إنشاء حساب', `سيتم إنشاء "${username}" لمدرسة "${school?.name}". متابعة؟`, async () => {
+        const btn = document.getElementById('btnSaveUser');
+        if (btn) { btn.disabled = true; btn.textContent = '⏳...'; }
+        showLoading('⏳ جاري الإنشاء...');
+        try {
+            const secondaryApp = initializeApp(firebaseConfig, 'Secondary' + Date.now());
+            const secondaryAuth = getAuth(secondaryApp);
+            let newUid;
+            try {
+                const cred = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+                newUid = cred.user.uid;
+                await signOut(secondaryAuth);
+            } finally {
+                try { await secondaryApp.delete(); } catch (e) {}
+            }
+            await setDoc(doc(db, 'users', newUid), {
+                uid: newUid, username, email, internalEmail: email, fullName,
+                role: 'school_admin', schoolId, schoolName: school?.name || '',
+                phone: phone || '', isActive,
+                mustChangePassword: APP_STATE.generalSettings.requirePasswordChange === true,
+                createdAt: serverTimestamp(),
+                createdBy: APP_STATE.currentUser?.uid || null,
+                createdByName: APP_STATE.currentUserData?.fullName || ''
+            });
+            await setDoc(doc(db, 'usernames', username), { uid: newUid, email, role: 'school_admin', isActive });
+            if (schoolId) {
+                try { await updateDoc(doc(db, 'schools', schoolId), { principalUid: newUid, principalUsername: username, principalName: fullName }); } catch (e) {}
+            }
+            try { await addDoc(collection(db, 'auditLog'), { action: 'create_user', userId: APP_STATE.currentUser?.uid, userName: APP_STATE.currentUserData?.fullName, targetId: newUid, targetName: fullName, timestamp: serverTimestamp() }); } catch (e) {}
+            closeModal('modalAddUser');
+            hideLoading();
+            document.getElementById('credUsername').value = username;
+            document.getElementById('credPassword').value = password;
+            document.getElementById('credEmail').value = email;
+            openModal('modalCredentials');
+            if (APP_STATE.generalSettings.autoCopyCreds) setTimeout(() => copyCredentials(), 500);
+            window.showToast('✅ تم إنشاء الحساب', 'success');
+            await loadUsersPage();
+            await loadOverviewStats();
+        } catch (error) {
+            hideLoading();
+            let msg = 'فشل';
+            if (error.code === 'auth/email-already-in-use') msg = 'البريد مستخدم';
+            else if (error.code === 'auth/weak-password') msg = 'كلمة مرور ضعيفة';
+            else if (error.code === 'permission-denied') msg = 'لا صلاحية (Rules)';
+            else msg += ': ' + error.message;
+            window.showToast('❌ ' + msg, 'error', 6000);
+        } finally {
+            if (btn) { btn.disabled = false; btn.textContent = '💾 إنشاء الحساب'; }
+        }
+    }, 'إنشاء', false);
+};
+
+window.copyCredentials = function() {
+    const u = document.getElementById('credUsername')?.value || '';
+    const p = document.getElementById('credPassword')?.value || '';
+    const e = document.getElementById('credEmail')?.value || '';
+    const text = `بيانات الدخول\n━━━━━━━━━━━━\nاسم المستخدم: ${u}\nكلمة المرور: ${p}\nالبريد: ${e}\nرابط: admin.html`;
+    if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => window.showToast('📋 تم النسخ', 'success'));
+    else {
+        const ta = document.createElement('textarea');
+        ta.value = text; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); window.showToast('📋 تم النسخ', 'success'); } catch (e) {}
+        document.body.removeChild(ta);
+    }
+};
+
+window.editUser = async function(uid) {
+    const user = APP_STATE.users.find(u => u.uid === uid);
+    if (!user) return;
+    const newName = prompt('الاسم الكامل:', user.fullName || '');
+    if (newName === null) return;
+    const newPhone = prompt('رقم الهاتف:', user.phone || '');
+    if (newPhone === null) return;
+    try {
+        showLoading('⏳...');
+        await updateDoc(doc(db, 'users', uid), { fullName: newName.trim() || user.fullName, phone: newPhone.trim(), updatedAt: serverTimestamp() });
+        if (user.schoolId && newName.trim()) { try { await updateDoc(doc(db, 'schools', user.schoolId), { principalName: newName.trim() }); } catch (e) {} }
+        window.showToast('✅ تم التحديث', 'success');
+        await loadUsersPage();
+    } catch (e) { window.showToast('❌ ' + e.message, 'error'); }
+    finally { hideLoading(); }
+};
+
+window.resetUserPassword = function(uid) {
+    const user = APP_STATE.users.find(u => u.uid === uid);
+    if (!user) return;
+    window.showToast('ℹ️ لإعادة كلمة المرور: Firebase Console → Authentication → اختر المستخدم → Reset password', 'info', 8000);
+};
+
+window.toggleUserActive = function(uid, isActive) {
+    const user = APP_STATE.users.find(u => u.uid === uid);
+    if (!user) return;
+    const action = isActive ? 'تعطيل' : 'تفعيل';
+    confirmAction(`${action}`, `هل تريد ${action} "${user.username}"؟`, async () => {
+        try {
+            showLoading('⏳...');
+            await updateDoc(doc(db, 'users', uid), { isActive: !isActive, updatedAt: serverTimestamp() });
+            try { await updateDoc(doc(db, 'usernames', user.username), { isActive: !isActive }); } catch (e) {}
+            window.showToast(`✅ تم ${action}`, 'success');
+            await loadUsersPage();
+        } catch (e) { window.showToast('❌ ' + e.message, 'error'); }
+        finally { hideLoading(); }
+    }, action, isActive);
+};
+
+window.deleteUser = function(uid) {
+    const user = APP_STATE.users.find(u => u.uid === uid);
+    if (!user) return;
+    if (user.role === 'owner') { window.showToast('❌ لا يمكن حذف المالك', 'error'); return; }
+    confirmAction('حذف', `⚠️ حذف "${user.username}"؟`, async () => {
+        try {
+            showLoading('⏳...');
+            await deleteDoc(doc(db, 'users', uid));
+            try { await deleteDoc(doc(db, 'usernames', user.username)); } catch (e) {}
+            if (user.schoolId) { try { await updateDoc(doc(db, 'schools', user.schoolId), { principalUid: null, principalUsername: null, principalName: null }); } catch (e) {} }
+            window.showToast('✅ تم الحذف', 'success');
+            await loadUsersPage();
+            await loadOverviewStats();
+        } catch (e) { window.showToast('❌ ' + e.message, 'error'); }
+        finally { hideLoading(); }
+    }, 'حذف', true);
+};
+
+/* ============================================
+   إدارة المدارس
+============================================ */
+window.loadSchoolsPage = async function() {
+    const tbody = document.getElementById('schoolsTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:30px;">⏳ جاري التحميل...</td></tr>';
+    try {
+        const snap = await getDocs(collection(db, 'schools'));
+        const schools = [];
+        snap.forEach(d => schools.push({ id: d.id, ...d.data() }));
+        schools.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ar'));
+        APP_STATE.schools = schools;
+        APP_STATE.filteredSchools = [...schools];
+        renderSchoolsTable();
+    } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger" style="padding:30px;">❌ ' + e.message + '</td></tr>';
+    }
+};
+
+function renderSchoolsTable() {
+    const tbody = document.getElementById('schoolsTableBody');
+    if (!tbody) return;
+    const schools = APP_STATE.filteredSchools;
+    if (schools.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="padding:40px;text-align:center;"><div class="empty-state"><div class="empty-icon">🏫</div><div class="empty-title">لا توجد مدارس</div></div></td></tr>';
+        return;
+    }
+    tbody.innerHTML = schools.map((s, i) => {
+        const badge = s.isActive !== false ? '<span class="badge badge-active">مفعّلة</span>' : '<span class="badge badge-inactive">معطّلة</span>';
+        return `<tr>
+            <td>${i + 1}</td>
+            <td>${s.name || '—'}</td>
+            <td>${s.region || s.regionName || '—'}</td>
+            <td>${s.principalName || '—'}</td>
+            <td>${badge}</td>
+            <td><div class="table-actions">
+                <button class="btn btn-icon btn-outline" onclick="editSchool('${s.id}')" title="تعديل">✏️</button>
+                <button class="btn btn-icon btn-outline" onclick="deleteSchool('${s.id}')" title="حذف">🗑️</button>
+            </div></td>
+        </tr>`;
+    }).join('');
+}
+
+window.filterSchoolsTable = function() {
+    const q = (document.getElementById('schoolsSearch')?.value || '').toLowerCase().trim();
+    if (!q) APP_STATE.filteredSchools = [...APP_STATE.schools];
+    else APP_STATE.filteredSchools = APP_STATE.schools.filter(s =>
+        (s.name || '').toLowerCase().includes(q) || (s.region || '').toLowerCase().includes(q)
+    );
+    renderSchoolsTable();
+};
+
+window.openAddSchoolModal = async function() {
+    document.getElementById('newSchoolName').value = '';
+    document.getElementById('newSchoolRegion').value = '';
+    document.getElementById('newSchoolActive').value = 'true';
+    await populatePrincipalSelect();
+    openModal('modalAddSchool');
+    setTimeout(() => document.getElementById('newSchoolName')?.focus(), 300);
+};
+
+async function populatePrincipalSelect() {
+    const select = document.getElementById('newSchoolPrincipal');
+    if (!select) return;
+    select.innerHTML = '<option value="">⏳...</option>';
+    try {
+        const q = query(collection(db, 'users'), where('role', '==', 'school_admin'));
+        const snap = await getDocs(q);
+        const admins = [];
+        snap.forEach(d => admins.push({ uid: d.id, ...d.data() }));
+        admins.sort((a, b) => (a.fullName || '').localeCompare(b.fullName || '', 'ar'));
+        select.innerHTML = '<option value="">— بدون مدير —</option>' +
+            admins.map(a => `<option value="${a.uid}">${a.fullName || a.username}</option>`).join('');
+    } catch (e) { select.innerHTML = '<option value="">— بدون مدير —</option>'; }
+}
+
+window.saveNewSchool = async function() {
+    const name = (document.getElementById('newSchoolName')?.value || '').trim();
+    const region = (document.getElementById('newSchoolRegion')?.value || '').trim();
+    const principalUid = document.getElementById('newSchoolPrincipal')?.value || '';
+    const isActive = document.getElementById('newSchoolActive')?.value === 'true';
+    if (!name) { window.showToast('⚠️ أدخل اسم المدرسة', 'warning'); return; }
+    if (!region) { window.showToast('⚠️ أدخل المنطقة', 'warning'); return; }
+    try {
+        showLoading('⏳...');
+        const id = 'school_' + Date.now();
+        const data = { name, region, regionName: region, isActive, teacherCount: 0, principalUid: principalUid || null, createdAt: serverTimestamp(), createdBy: APP_STATE.currentUser?.uid || null };
+        if (principalUid) {
+            const admin = APP_STATE.users.find(u => u.uid === principalUid);
+            if (admin) { data.principalUsername = admin.username; data.principalName = admin.fullName; }
+        }
+        await setDoc(doc(db, 'schools', id), data);
+        if (principalUid) { try { await updateDoc(doc(db, 'users', principalUid), { schoolId: id, schoolName: name }); } catch (e) {} }
+        window.showToast('✅ تم الحفظ', 'success');
+        closeModal('modalAddSchool');
+        await loadSchoolsPage();
+        await loadOverviewStats();
+    } catch (e) { window.showToast('❌ ' + e.message, 'error'); }
+    finally { hideLoading(); }
+};
+
+window.editSchool = function(id) {
+    const school = APP_STATE.schools.find(s => s.id === id);
+    if (!school) return;
+    const newName = prompt('اسم المدرسة:', school.name || '');
+    if (newName === null) return;
+    const newRegion = prompt('المنطقة:', school.region || '');
+    if (newRegion === null) return;
+    (async () => {
+        try {
+            showLoading('⏳...');
+            await updateDoc(doc(db, 'schools', id), { name: newName.trim() || school.name, region: newRegion.trim() || school.region, regionName: newRegion.trim() || school.region, updatedAt: serverTimestamp() });
+            window.showToast('✅ تم التحديث', 'success');
+            await loadSchoolsPage();
+        } catch (e) { window.showToast('❌ ' + e.message, 'error'); }
+        finally { hideLoading(); }
+    })();
+};
+
+window.deleteSchool = function(id) {
+    const school = APP_STATE.schools.find(s => s.id === id);
+    if (!school) return;
+    confirmAction('حذف', `⚠️ حذف "${school.name}"؟`, async () => {
+        try {
+            showLoading('⏳...');
+            if (school.principalUid) { try { await updateDoc(doc(db, 'users', school.principalUid), { schoolId: null, schoolName: null }); } catch (e) {} }
+            await deleteDoc(doc(db, 'schools', id));
+            window.showToast('✅ تم الحذف', 'success');
+            await loadSchoolsPage();
+            await loadOverviewStats();
+        } catch (e) { window.showToast('❌ ' + e.message, 'error'); }
+        finally { hideLoading(); }
+    }, 'حذف', true);
+};
+
+/* ============================================
+   حالة الرابط
+============================================ */
+window.loadAppStatusPage = async function() {
+    try {
+        const ref = doc(db, 'settings', 'appStatus');
+        const snap = await getDoc(ref);
+        if (snap.exists()) APP_STATE.appStatus = snap.data();
+        const s = APP_STATE.appStatus || {};
+        document.getElementById('closureTitle').value = s.closureTitle || 'النظام مغلق مؤقتاً';
+        document.getElementById('closureMessage').value = s.closureMessage || 'سيتم الإعلان قريباً.';
+        document.getElementById('closureDisplayMode').value = s.closureDisplayMode || 'message';
+        if (s.reopenDate) {
+            try {
+                const dt = s.reopenDate.toDate ? s.reopenDate.toDate() : new Date(s.reopenDate);
+                const iso = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+                document.getElementById('reopenDate').value = iso;
+            } catch (e) {}
+        }
+        updateReopenDateVisibility();
+        updateClosureMsgCount();
+        updateAppStatusUI(s);
+    } catch (e) { console.error(e); }
+};
+
+function updateReopenDateVisibility() {
+    const mode = document.getElementById('closureDisplayMode')?.value;
+    const group = document.getElementById('reopenDateGroup');
+    if (group) group.classList.toggle('hidden', mode !== 'countdown');
+}
+function updateClosureMsgCount() {
+    const msg = document.getElementById('closureMessage')?.value || '';
+    const counter = document.getElementById('closureMsgCount');
+    if (counter) counter.textContent = msg.length;
+}
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('closureDisplayMode')?.addEventListener('change', updateReopenDateVisibility);
+    document.getElementById('closureMessage')?.addEventListener('input', updateClosureMsgCount);
+});
+
+window.openTeacherApp = function() {
+    confirmAction('فتح', 'سيمكن جميع المعلمين من الإدخال. متابعة؟', async () => {
+        try {
+            showLoading('⏳...');
+            await updateDoc(doc(db, 'settings', 'appStatus'), { isAppOpen: true, updatedAt: serverTimestamp(), updatedBy: APP_STATE.currentUser?.uid });
+            if (APP_STATE.appStatus) APP_STATE.appStatus.isAppOpen = true;
+            updateAppStatusUI(APP_STATE.appStatus);
+            try { await addDoc(collection(db, 'auditLog'), { action: 'open_app', userId: APP_STATE.currentUser?.uid, userName: APP_STATE.currentUserData?.fullName, timestamp: serverTimestamp() }); } catch (e) {}
+            window.showToast('✅ تم الفتح', 'success');
+        } catch (e) { window.showToast('❌ ' + e.message, 'error'); }
+        finally { hideLoading(); }
+    }, 'فتح', false);
+};
+
+window.closeTeacherApp = function() {
+    const title = document.getElementById('closureTitle')?.value?.trim() || 'النظام مغلق مؤقتاً';
+    const msg = document.getElementById('closureMessage')?.value?.trim() || 'سيتم الإعلان قريباً.';
+    confirmAction('إغلاق', `سيُغلق الرابط بالرسالة:\n"${title}"`, async () => {
+        try {
+            showLoading('⏳...');
+            const data = {
+                isAppOpen: false, closureTitle: title, closureMessage: msg,
+                closureDisplayMode: document.getElementById('closureDisplayMode')?.value || 'message',
+                updatedAt: serverTimestamp(), updatedBy: APP_STATE.currentUser?.uid
+            };
+            const mode = data.closureDisplayMode;
+            const dateVal = document.getElementById('reopenDate')?.value;
+            data.reopenDate = (mode === 'countdown' && dateVal) ? new Date(dateVal) : null;
+            await updateDoc(doc(db, 'settings', 'appStatus'), data);
+            if (APP_STATE.appStatus) APP_STATE.appStatus = { ...APP_STATE.appStatus, ...data };
+            updateAppStatusUI(APP_STATE.appStatus);
+            try { await addDoc(collection(db, 'auditLog'), { action: 'close_app', userId: APP_STATE.currentUser?.uid, userName: APP_STATE.currentUserData?.fullName, timestamp: serverTimestamp() }); } catch (e) {}
+            window.showToast('🔒 تم الإغلاق', 'success');
+        } catch (e) { window.showToast('❌ ' + e.message, 'error'); }
+        finally { hideLoading(); }
+    }, 'إغلاق', true);
+};
+
+window.saveClosureSettings = async function() {
+    const title = document.getElementById('closureTitle')?.value?.trim() || 'النظام مغلق مؤقتاً';
+    const msg = document.getElementById('closureMessage')?.value?.trim() || 'سيتم الإعلان قريباً.';
+    const mode = document.getElementById('closureDisplayMode')?.value || 'message';
+    const dateVal = document.getElementById('reopenDate')?.value;
+    try {
+        showLoading('⏳...');
+        const data = { closureTitle: title, closureMessage: msg, closureDisplayMode: mode, updatedAt: serverTimestamp(), updatedBy: APP_STATE.currentUser?.uid };
+        data.reopenDate = (mode === 'countdown' && dateVal) ? new Date(dateVal) : null;
+        await updateDoc(doc(db, 'settings', 'appStatus'), data);
+        if (APP_STATE.appStatus) APP_STATE.appStatus = { ...APP_STATE.appStatus, ...data };
+        window.showToast('✅ تم الحفظ', 'success');
+    } catch (e) { window.showToast('❌ ' + e.message, 'error'); }
+    finally { hideLoading(); }
+};
+
+window.previewClosureScreen = function() {
+    const title = document.getElementById('closureTitle')?.value?.trim() || 'النظام مغلق مؤقتاً';
+    const msg = document.getElementById('closureMessage')?.value?.trim() || 'سيتم الإعلان قريباً.';
+    const mode = document.getElementById('closureDisplayMode')?.value || 'message';
+    const dateVal = document.getElementById('reopenDate')?.value;
+    const w = window.open('', '_blank', 'width=700,height=700');
+    if (!w) { window.showToast('❌ اسمح بالنوافذ', 'error'); return; }
+    let countdownHTML = '';
+    if (mode === 'countdown' && dateVal) countdownHTML = `<div id="cd" style="display:flex; justify-content:center; gap:12px; margin:25px 0; flex-wrap:wrap;"></div>`;
+    w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>معاينة</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box;margin:0;padding:0;font-family:'Tajawal',sans-serif}
+body{min-height:100vh;background:linear-gradient(135deg,#34495e 0%,#5d6d7e 100%);display:flex;justify-content:center;align-items:center;padding:20px}
+.card{background:white;border-radius:18px;padding:45px 35px;max-width:540px;width:100%;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.35)}
+.icon{font-size:5rem;margin-bottom:20px}
+.title{font-size:1.7rem;font-weight:800;color:#1a3a5c;margin-bottom:18px}
+.msg{font-size:1.05rem;color:#555;line-height:1.9;margin-bottom:25px;white-space:pre-wrap}
+.cd-unit{background:#f0f7ff;border-radius:12px;padding:15px 18px;min-width:75px;text-align:center}
+.cd-val{font-size:1.7rem;font-weight:800;color:#1a3a5c}
+.cd-lab{font-size:0.72rem;color:#7f8c8d;margin-top:5px}
+.retry{padding:13px 30px;background:linear-gradient(135deg,#2d7dd2,#1a3a5c);color:white;border:none;border-radius:10px;font-size:1rem;font-weight:700;font-family:inherit;cursor:pointer}
+</style></head><body><div class="card">
+<div class="icon">🔒</div><div class="title">${title.replace(/</g,'&lt;')}</div><div class="msg">${msg.replace(/</g,'&lt;')}</div>${countdownHTML}
+<button class="retry" onclick="location.reload()">🔄 إعادة المحاولة</button>
+<div style="margin-top:20px;font-size:0.8rem;color:#95a5a6">معاينة — أغلق النافذة للعودة</div>
+</div>${mode === 'countdown' && dateVal ? `<script>
+var target = new Date("${dateVal}").getTime();
+function tick(){var el=document.getElementById('cd');if(!el)return;var d=Math.max(0,target-Date.now());
+var days=Math.floor(d/86400000),h=Math.floor((d%86400000)/3600000),m=Math.floor((d%3600000)/60000),s=Math.floor((d%60000)/1000);
+el.innerHTML=[{v:days,l:'يوم'},{v:h,l:'ساعة'},{v:m,l:'دقيقة'},{v:s,l:'ثانية'}].map(function(x){return '<div class="cd-unit"><div class="cd-val">'+x.v+'</div><div class="cd-lab">'+x.l+'</div></div>'}).join('');}
+tick();setInterval(tick,1000);<\/script>` : ''}
+</body></html>`);
+    w.document.close();
+};
+
+/* ============================================
+   الإعدادات العامة
+============================================ */
+window.loadSettingsPage = async function() {
+    try {
+        const ref = doc(db, 'settings', 'generalSettings');
+        const snap = await getDoc(ref);
+        if (snap.exists()) APP_STATE.generalSettings = { ...APP_STATE.generalSettings, ...snap.data() };
+        const s = APP_STATE.generalSettings;
+        document.getElementById('setInternalDomain').value = s.internalDomain || 'school.local';
+        document.getElementById('setPasswordLength').value = String(s.passwordLength || 12);
+        document.getElementById('setRequirePasswordChange').checked = s.requirePasswordChange !== false;
+        document.getElementById('setAutoCopyCreds').checked = s.autoCopyCreds !== false;
+    } catch (e) { console.error(e); }
+};
+
+window.saveGeneralSettings = async function() {
+    const data = {
+        internalDomain: document.getElementById('setInternalDomain')?.value?.trim() || 'school.local',
+        passwordLength: parseInt(document.getElementById('setPasswordLength')?.value || '12'),
+        requirePasswordChange: document.getElementById('setRequirePasswordChange')?.checked === true,
+        autoCopyCreds: document.getElementById('setAutoCopyCreds')?.checked === true,
+        updatedAt: serverTimestamp(),
+        updatedBy: APP_STATE.currentUser?.uid
+    };
+    try {
+        showLoading('⏳...');
+        await setDoc(doc(db, 'settings', 'generalSettings'), data, { merge: true });
+        APP_STATE.generalSettings = { ...APP_STATE.generalSettings, ...data };
+        window.showToast('✅ تم الحفظ', 'success');
+    } catch (e) { window.showToast('❌ ' + e.message, 'error'); }
+    finally { hideLoading(); }
+};
+
+/* ============================================
+   سجلات المعلمين
+============================================ */
+window.loadTeachersPage = async function() {
+    const tbody = document.getElementById('teachersTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:30px;">⏳ جاري التحميل...</td></tr>';
+    try {
+        const snap = await getDocs(collection(db, 'teachers'));
+        const teachers = [];
+        snap.forEach(d => teachers.push({ firebaseId: d.id, ...d.data() }));
+        teachers.sort((a, b) => (a.fullName || '').localeCompare(b.fullName || '', 'ar'));
+        APP_STATE.teachers = teachers;
+        APP_STATE.filteredTeachers = [...teachers];
+        renderTeachersTable();
+    } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger" style="padding:30px;">❌ ' + e.message + '</td></tr>';
+    }
+};
+
+function renderTeachersTable() {
+    const tbody = document.getElementById('teachersTableBody');
+    if (!tbody) return;
+    const teachers = APP_STATE.filteredTeachers;
+    if (teachers.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="padding:40px;text-align:center;"><div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">لا توجد سجلات</div></div></td></tr>';
+        return;
+    }
+    tbody.innerHTML = teachers.map((t, i) => `<tr>
+        <td>${i + 1}</td>
+        <td>${escapeHTML(t.fullName || '—')}</td>
+        <td class="ltr">${escapeHTML(t.selfNumber || '—')}</td>
+        <td>${escapeHTML(t.school || '—')}</td>
+        <td>${escapeHTML(t.jobStatus || '—')}</td>
+        <td><div class="table-actions">
+            <button class="btn btn-icon btn-outline" onclick="viewTeacherDetails('${t.firebaseId}')" title="عرض">👁️</button>
+        </div></td>
+    </tr>`).join('');
+}
+
+window.filterTeachersTable = function() {
+    const q = (document.getElementById('teachersSearch')?.value || '').toLowerCase().trim();
+    if (!q) APP_STATE.filteredTeachers = [...APP_STATE.teachers];
+    else APP_STATE.filteredTeachers = APP_STATE.teachers.filter(t =>
+        (t.fullName || '').toLowerCase().includes(q) ||
+        (t.selfNumber || '').toLowerCase().includes(q) ||
+        (t.school || '').toLowerCase().includes(q)
+    );
+    renderTeachersTable();
+};
+
+window.viewTeacherDetails = function(id) {
+    const t = APP_STATE.teachers.find(x => x.firebaseId === id);
+    if (!t) return;
+    const skip = ['firebaseId', 'createdAt', 'createdAtLocal', 'createdByUid', 'createdByRole'];
+    const rows = Object.keys(t).filter(k => !skip.includes(k)).map(k => {
+        let val = t[k];
+        if (val === null || val === undefined || val === '') val = '—';
+        if (typeof val === 'object' && val.toDate) { try { val = val.toDate().toLocaleString('ar-EG'); } catch (e) { val = '—'; } }
+        return `<tr><td style="padding:10px;border-bottom:1px solid #e8eef5;background:#f9fafc;font-weight:700;width:40%;">${escapeHTML(k)}</td><td style="padding:10px;border-bottom:1px solid #e8eef5;">${escapeHTML(String(val))}</td></tr>`;
+    }).join('');
+    const w = window.open('', '_blank', 'width=800,height=700');
+    if (!w) { window.showToast('❌ اسمح بالنوافذ', 'error'); return; }
+    w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>${escapeHTML(t.fullName)}</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box;margin:0;padding:0;font-family:'Tajawal',sans-serif}body{background:#eef2f7;padding:20px}
+.card{background:white;border-radius:14px;padding:25px;max-width:900px;margin:0 auto;box-shadow:0 10px 30px rgba(0,0,0,0.08)}
+h1{color:#1a3a5c;font-size:1.4rem;margin-bottom:6px;text-align:center}.sub{text-align:center;color:#7f8c8d;font-size:0.9rem;margin-bottom:25px}
+table{width:100%;border-collapse:collapse}td{padding:10px;border-bottom:1px solid #e8eef5;font-size:0.9rem}
+.print{margin:25px auto 0;display:block;padding:12px 30px;background:#2d7dd2;color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-family:inherit;font-size:1rem}
+@media print{body{background:white;padding:0}.card{box-shadow:none;padding:0}.print{display:none}}</style></head><body>
+<div class="card"><h1>سجل: ${escapeHTML(t.fullName || '')}</h1><div class="sub">${escapeHTML(t.selfNumber || '')}</div>
+<table>${rows}</table><button class="print" onclick="window.print()">🖨️ طباعة</button></div></body></html>`);
+    w.document.close();
+};
+
+function escapeHTML(str) {
+    return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+window.escapeHTML = escapeHTML;
+
+/* ============================================
+   تصدير Excel
+============================================ */
+window.exportTeachersExcel = function() {
+    const teachers = APP_STATE.filteredTeachers.length > 0 ? APP_STATE.filteredTeachers : APP_STATE.teachers;
+    if (teachers.length === 0) { window.showToast('لا توجد بيانات', 'warning'); return; }
+    try {
+        const data = teachers.map(t => {
+            const row = {};
+            row['الاسم الكامل'] = t.fullName || '';
+            row['الرقم الذاتي'] = t.selfNumber || '';
+            row['المدرسة'] = t.school || '';
+            row['المنطقة'] = t.region || '';
+            row['الوضع الوظيفي'] = t.jobStatus || '';
+            Object.keys(t).forEach(k => {
+                if (['firebaseId','fullName','selfNumber','school','region','jobStatus','createdAt','createdAtLocal'].includes(k)) return;
+                if (row[k] !== undefined) return;
+                let val = t[k];
+                if (val === null || val === undefined) val = '';
+                if (typeof val === 'object' && val.toDate) { try { val = val.toDate().toLocaleDateString('ar-EG'); } catch (e) { val = ''; } }
+                row[k] = String(val);
+            });
+            return row;
+        });
+        const ws = XLSX.utils.json_to_sheet(data);
+        const headers = Object.keys(data[0]);
+        const range = XLSX.utils.decode_range(ws['!ref']);
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+            const addr = XLSX.utils.encode_cell({ r: 0, c: C });
+            if (!ws[addr]) continue;
+            ws[addr].s = { font: { name: 'Tajawal', sz: 12, color: { rgb: 'FFFFFFFF' }, bold: true }, fill: { fgColor: { rgb: 'FF1A3A5C' } }, alignment: { horizontal: 'center', vertical: 'center', wrapText: true, readingOrder: 2 }, border: { top: { style: 'thin', color: { rgb: 'FF888888' } }, bottom: { style: 'thin', color: { rgb: 'FF888888' } }, left: { style: 'thin', color: { rgb: 'FF888888' } }, right: { style: 'thin', color: { rgb: 'FF888888' } } } };
+        }
+        for (let R = 1; R <= range.e.r; ++R) {
+            const bg = R % 2 === 0 ? 'FFEAF3FB' : 'FFFFFFFF';
+            for (let C = range.s.c; C <= range.e.c; ++C) {
+                const addr = XLSX.utils.encode_cell({ r: R, c: C });
+                if (!ws[addr]) ws[addr] = { t: 's', v: '' };
+                ws[addr].s = { font: { name: 'Tajawal', sz: 11, color: { rgb: 'FF000000' } }, fill: { fgColor: { rgb: bg } }, alignment: { horizontal: 'center', vertical: 'center', wrapText: true, readingOrder: 2 }, border: { top: { style: 'thin', color: { rgb: 'FF888888' } }, bottom: { style: 'thin', color: { rgb: 'FF888888' } }, left: { style: 'thin', color: { rgb: 'FF888888' } }, right: { style: 'thin', color: { rgb: 'FF888888' } } } };
+            }
+        }
+        ws['!cols'] = headers.map(h => { let m = h.length; data.forEach(r => { const l = String(r[h] || '').length; if (l > m) m = l; }); return { wch: Math.min(Math.max(m + 2, 12), 40) }; });
+        ws['!rows'] = [{ hpt: 26 }];
+        for (let i = 1; i <= data.length; i++) ws['!rows'].push({ hpt: 22 });
+        const wb = XLSX.utils.book_new();
+        wb.Workbook = wb.Workbook || {};
+        wb.Workbook.Views = [{ RTL: true }];
+        XLSX.utils.book_append_sheet(wb, ws, 'المعلمون');
+        XLSX.writeFile(wb, `سجل_المعلمين_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        window.showToast('✅ تم التصدير', 'success');
+    } catch (e) { window.showToast('❌ ' + e.message, 'error'); }
+};
+
+/* ============================================
+   سجل التغييرات
+============================================ */
+window.loadAuditPage = async function() {
+    const container = document.getElementById('auditLogContainer');
+    if (!container) return;
+    container.innerHTML = '<div class="text-center text-muted" style="padding:30px;">⏳ جاري التحميل...</div>';
+    try {
+        const q = query(collection(db, 'auditLog'), orderBy('timestamp', 'desc'), limit(100));
+        const snap = await getDocs(q);
+        const logs = [];
+        snap.forEach(d => logs.push({ id: d.id, ...d.data() }));
+        if (logs.length === 0) {
+            container.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">لا توجد سجلات</div></div>';
+            return;
+        }
+        const actionLabels = { create_user: 'إنشاء مستخدم', delete_user: 'حذف مستخدم', open_app: 'فتح الرابط', close_app: 'إغلاق الرابط', save_settings: 'حفظ إعدادات', update_teacher: 'تعديل معلم' };
+        container.innerHTML = '<div class="table-wrap"><table class="data-table"><thead><tr><th>#</th><th>العملية</th><th>المستخدم</th><th>الهدف</th><th>التاريخ</th></tr></thead><tbody>' +
+            logs.map((l, i) => {
+                let dateStr = '—';
+                try { if (l.timestamp?.toDate) dateStr = l.timestamp.toDate().toLocaleString('ar-EG'); } catch (e) {}
+                return `<tr><td>${i + 1}</td><td>${escapeHTML(actionLabels[l.action] || l.action || '—')}</td><td>${escapeHTML(l.userName || '—')}</td><td>${escapeHTML(l.targetName || '—')}</td><td>${dateStr}</td></tr>`;
+            }).join('') + '</tbody></table></div>';
+    } catch (e) {
+        container.innerHTML = '<div class="text-center text-danger" style="padding:30px;">❌ ' + e.message + '</div>';
+    }
+};
+  
+/* ============================================
+   إدارة الحقول الديناميكية
+============================================ */
+let fieldsDirty = false;
+
+window.loadFieldsPage = async function() {
+    await reloadFieldsData(true);
+};
+
+window.reloadFieldsData = async function(silent) {
+    if (!silent) showLoading('⏳ جاري التحميل...');
+    try {
+        await loadDynamicFields();
+        await loadCascades();
+        await loadColumnLabels();
+        renderFieldsTab();
+        renderSectionsTab();
+        renderCascadesTab();
+        renderLabelsTab();
+        fieldsDirty = false;
+    } catch (e) {
+        window.showToast('❌ ' + e.message, 'error');
+    } finally {
+        if (!silent) hideLoading();
+    }
+};
+
+window.switchFieldsTab = function(tab, btn) {
+    document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    ['fields', 'sections', 'cascades', 'labels'].forEach(t => {
+        const el = document.getElementById('fieldsTab-' + t);
+        if (el) el.style.display = (t === tab) ? 'block' : 'none';
+    });
+};
+
+/* ========== تبويب الحقول ========== */
+function renderFieldsTab() {
+    const container = document.getElementById('fieldsTab-fields');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (APP_STATE.dynamicFields.length === 0 && APP_STATE.dynamicSections.length === 0) {
+        container.innerHTML = '<div class="info-box warning"><span>⚠️</span><div>لا توجد حقول. أضف حقلاً جديداً للبدء.</div></div>';
+        return;
+    }
+
+    const sortedSections = [...APP_STATE.dynamicSections].sort((a, b) => (a.order || 0) - (b.order || 0));
+
+    sortedSections.forEach(section => {
+        const sectionFields = APP_STATE.dynamicFields
+            .filter(f => f.section === section.id)
+            .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+        const accordion = document.createElement('div');
+        accordion.className = 'section-accordion';
+        const header = document.createElement('div');
+        header.className = 'section-header';
+        header.innerHTML = `<span>📁 ${escapeHTML(section.label)} <span style="color: #888; font-size: 0.85rem;">(${sectionFields.length} حقل)</span></span><span class="section-icon">▶</span>`;
+        header.onclick = () => {
+            header.classList.toggle('open');
+            body.classList.toggle('open');
+        };
+        accordion.appendChild(header);
+
+        const body = document.createElement('div');
+        body.className = 'section-body';
+
+        const headRow = document.createElement('div');
+        headRow.className = 'field-row header';
+        headRow.innerHTML = `<div>#</div><div>الاسم</div><div>النوع</div><div>إلزامي</div><div>سجل</div><div>Excel</div><div>إجراءات</div>`;
+        body.appendChild(headRow);
+
+        if (sectionFields.length === 0) {
+            body.innerHTML += '<div style="padding:20px; text-align:center; color:#95a5a6;">لا توجد حقول في هذا القسم</div>';
+        } else {
+            sectionFields.forEach((field, idx) => {
+                const row = document.createElement('div');
+                row.className = 'field-row';
+                const typeBadge = `<span class="badge badge-${field.type}">${getTypeLabel(field.type)}</span>`;
+                const requiredBadge = field.required ? '<span class="badge badge-required">إلزامي</span>' : '—';
+                row.innerHTML = `
+                    <div>${idx + 1}</div>
+                    <div><strong>${escapeHTML(field.label)}</strong><br><small style="color:#888; direction:ltr;">${escapeHTML(field.key)}</small></div>
+                    <div>${typeBadge}${field.type === 'cascade' ? ' <small>(م' + (field.cascadeLevel || '?') + ')</small>' : ''}</div>
+                    <div>${requiredBadge}</div>
+                    <div>${field.showIn?.record !== false ? '✅' : '❌'}</div>
+                    <div>${field.showIn?.excel !== false ? '✅' : '❌'}</div>
+                    <div class="actions">
+                        <button class="btn btn-icon btn-outline btn-sm" onclick="openFieldEditModal('${field.id}')" title="تعديل">✏️</button>
+                        <button class="btn btn-icon btn-outline btn-sm" onclick="deleteField('${field.id}')" title="حذف">🗑️</button>
+                    </div>`;
+                body.appendChild(row);
+            });
+        }
+
+        accordion.appendChild(body);
+        container.appendChild(accordion);
+    });
+}
+
+function getTypeLabel(type) {
+    const t = { text: 'نص', number: 'رقم', date: 'تاريخ', select: 'قائمة', textarea: 'نص طويل', boolean: 'نعم/لا', cascade: 'مترابط' };
+    return t[type] || type;
+}
+
+/* ========== تبويب الأقسام ========== */
+function renderSectionsTab() {
+    const container = document.getElementById('fieldsTab-sections');
+    if (!container) return;
+    const sorted = [...APP_STATE.dynamicSections].sort((a, b) => (a.order || 0) - (b.order || 0));
+    container.innerHTML = `
+        <div class="info-box info"><span>💡</span><div>يمكنك تعديل اسم القسم وترتيبه. لن تتمكن من حذف قسم يحتوي على حقول.</div></div>
+        <div style="display:grid; grid-template-columns: 2fr 1fr 80px 60px; gap:10px; padding:12px; background:var(--primary); color:white; border-radius:8px; font-weight:700;">
+            <div>اسم القسم</div><div>المعرّف</div><div>الترتيب</div><div></div>
+        </div>
+        ${sorted.map(s => `
+            <div style="display:grid; grid-template-columns: 2fr 1fr 80px 60px; gap:10px; padding:8px 12px; border-bottom:1px solid #eef2f7; align-items:center;">
+                <input type="text" value="${escapeHTML(s.label)}" onchange="updateSectionLabel('${s.id}', this.value)" style="padding:8px 12px; border:1.5px solid var(--border); border-radius:8px;">
+                <input type="text" value="${escapeHTML(s.id)}" disabled style="direction:ltr; background:#f0f0f0; padding:8px 12px; border:1.5px solid var(--border); border-radius:8px;">
+                <input type="number" value="${s.order || 1}" min="1" onchange="updateSectionOrder('${s.id}', this.value)" style="padding:8px; border:1.5px solid var(--border); border-radius:8px;">
+                <button class="btn btn-icon btn-outline" onclick="deleteSection('${s.id}')" title="حذف">🗑️</button>
+            </div>
+        `).join('')}
+        <div class="d-flex gap-1 mt-2">
+            <button class="btn btn-primary" onclick="addSection()">➕ إضافة قسم</button>
+            <button class="btn btn-success" onclick="saveDynamicFields()">💾 حفظ التغييرات</button>
+        </div>
+    `;
+}
+
+window.updateSectionLabel = function(id, val) {
+    const s = APP_STATE.dynamicSections.find(x => x.id === id);
+    if (s) { s.label = val; fieldsDirty = true; }
+};
+
+window.updateSectionOrder = function(id, val) {
+    const s = APP_STATE.dynamicSections.find(x => x.id === id);
+    if (s) { s.order = parseInt(val) || 1; fieldsDirty = true; }
+};
+
+window.addSection = function() {
+    const label = prompt('اسم القسم الجديد:');
+    if (!label || !label.trim()) return;
+    const id = 'section_' + Date.now();
+    APP_STATE.dynamicSections.push({ id, label: label.trim(), order: APP_STATE.dynamicSections.length + 1 });
+    fieldsDirty = true;
+    renderSectionsTab();
+    window.showToast('✅ تمت الإضافة — اضغط حفظ', 'success');
+};
+
+window.deleteSection = function(id) {
+    const hasFields = APP_STATE.dynamicFields.some(f => f.section === id);
+    if (hasFields) { window.showToast('❌ لا يمكن حذف قسم يحتوي على حقول', 'error'); return; }
+    if (!confirm('حذف القسم؟')) return;
+    APP_STATE.dynamicSections = APP_STATE.dynamicSections.filter(s => s.id !== id);
+    fieldsDirty = true;
+    renderSectionsTab();
+    window.showToast('✅ تم الحذف — اضغط حفظ', 'success');
+};
+
+/* ========== تبويب العلاقات المترابطة ========== */
+function renderCascadesTab() {
+    const container = document.getElementById('fieldsTab-cascades');
+    if (!container) return;
+
+    const level1Field = APP_STATE.dynamicFields.find(f => f.type === 'cascade' && f.cascadeLevel === 1);
+    const level2Field = APP_STATE.dynamicFields.find(f => f.type === 'cascade' && f.cascadeLevel === 2);
+    const level3Field = APP_STATE.dynamicFields.find(f => f.type === 'cascade' && f.cascadeLevel === 3);
+
+    if (!level1Field) {
+        container.innerHTML = '<div class="info-box warning"><span>⚠️</span><div>لا توجد حقول مترابطة. أضف حقلاً بنوع "قائمة مترابطة" أولاً من تبويب الحقول.</div></div>';
+        return;
+    }
+
+    const level1Data = APP_STATE.cascadesData[level1Field.key] || {};
+    const level2Data = level2Field ? (APP_STATE.cascadesData[level2Field.key] || {}) : {};
+
+    let html = '<div class="info-box info"><span>💡</span><div>إدارة شجرة: محافظة ← منطقة ← مدرسة. التغييرات تُحفظ فوراً.</div></div>';
+    html += '<div class="cascade-tree">';
+
+    if (Object.keys(level1Data).length === 0) {
+        html += '<div style="text-align:center; padding:30px; color:#95a5a6;">لا توجد محافظات بعد</div>';
+    }
+
+    Object.keys(level1Data).forEach(l1 => {
+        html += `<div class="tree-level-1">
+            <div class="tree-item">
+                <span class="label">🏛️ ${escapeHTML(l1)}</span>
+                <div class="actions">
+                    <button class="btn-mini-add" onclick="addCascadeItem('${level1Field.key}', '${escapeHTML(l1)}', 2)">➕ منطقة</button>
+                    <button class="btn-mini-edit" onclick="renameCascadeItem('${level1Field.key}', '${escapeHTML(l1)}')">✏️</button>
+                    <button class="btn-mini-del" onclick="deleteCascadeItem('${level1Field.key}', '${escapeHTML(l1)}')">🗑️</button>
+                </div>
+            </div>`;
+        const l2List = level1Data[l1] || [];
+        l2List.forEach(l2 => {
+            html += `<div class="tree-level-2">
+                <div class="tree-item">
+                    <span class="label">🏘️ ${escapeHTML(l2)}</span>
+                    <div class="actions">
+                        ${level3Field ? `<button class="btn-mini-add" onclick="addCascadeItem('${level2Field.key}', '${escapeHTML(l2)}', 3)">➕ مدرسة</button>` : ''}
+                        <button class="btn-mini-edit" onclick="renameCascadeItem('${level2Field.key}', '${escapeHTML(l2)}')">✏️</button>
+                        <button class="btn-mini-del" onclick="deleteCascadeItem('${level2Field.key}', '${escapeHTML(l2)}')">🗑️</button>
+                    </div>
+                </div>`;
+            if (level3Field) {
+                const l3List = level2Data[l2] || [];
+                l3List.forEach(l3 => {
+                    html += `<div class="tree-level-3">
+                        <div class="tree-item">
+                            <span class="label">🏫 ${escapeHTML(l3)}</span>
+                            <div class="actions">
+                                <button class="btn-mini-edit" onclick="renameCascadeItem('${level3Field.key}', '${escapeHTML(l3)}')">✏️</button>
+                                <button class="btn-mini-del" onclick="deleteCascadeItem('${level3Field.key}', '${escapeHTML(l3)}')">🗑️</button>
+                            </div>
+                        </div>
+                    </div>`;
+                });
+            }
+            html += '</div>';
+        });
+        html += '</div>';
+    });
+    html += '</div>';
+    html += `<button class="btn btn-add mt-2" onclick="addCascadeItem('${level1Field.key}', null, 1)">➕ إضافة محافظة</button>`;
+    container.innerHTML = html;
+}
+
+window.addCascadeItem = async function(parentKey, parentValue, level) {
+    const name = prompt(level === 1 ? 'اسم المحافظة:' : (level === 2 ? 'اسم المنطقة:' : 'اسم المدرسة:'));
+    if (!name || !name.trim()) return;
+    const trimmed = name.trim();
+    if (!APP_STATE.cascadesData[parentKey]) APP_STATE.cascadesData[parentKey] = {};
+    if (level === 1) {
+        if (APP_STATE.cascadesData[parentKey][trimmed]) { window.showToast('⚠️ موجود مسبقاً', 'warning'); return; }
+        APP_STATE.cascadesData[parentKey][trimmed] = [];
+    } else {
+        if (!APP_STATE.cascadesData[parentKey][parentValue]) APP_STATE.cascadesData[parentKey][parentValue] = [];
+        if (APP_STATE.cascadesData[parentKey][parentValue].includes(trimmed)) { window.showToast('⚠️ موجود مسبقاً', 'warning'); return; }
+        APP_STATE.cascadesData[parentKey][parentValue].push(trimmed);
+    }
+    await saveCascades();
+    renderCascadesTab();
+    window.showToast('✅ تمت الإضافة', 'success');
+};
+
+window.renameCascadeItem = async function(parentKey, oldName) {
+    const newName = prompt('الاسم الجديد:', oldName);
+    if (!newName || newName === oldName) return;
+    const data = APP_STATE.cascadesData[parentKey] || {};
+    const newData = {};
+    Object.keys(data).forEach(k => newData[k === oldName ? newName : k] = data[k]);
+    APP_STATE.cascadesData[parentKey] = newData;
+    await saveCascades();
+    renderCascadesTab();
+    window.showToast('✅ تم التعديل', 'success');
+};
+
+window.deleteCascadeItem = async function(parentKey, name) {
+    if (!confirm(`حذف "${name}"؟`)) return;
+    if (APP_STATE.cascadesData[parentKey]) delete APP_STATE.cascadesData[parentKey][name];
+    await saveCascades();
+    renderCascadesTab();
+    window.showToast('✅ تم الحذف', 'success');
+};
+
+async function saveCascades() {
+    try {
+        await setDoc(doc(db, 'settings', 'cascades'), { data: APP_STATE.cascadesData, version: 1, updatedAt: new Date().toISOString() });
+    } catch (e) { window.showToast('❌ ' + e.message, 'error'); }
+}
+
+/* ========== تبويب التسميات ========== */
+function renderLabelsTab() {
+    const container = document.getElementById('fieldsTab-labels');
+    if (!container) return;
+
+    if (APP_STATE.dynamicFields.length === 0) {
+        container.innerHTML = '<div class="info-box warning"><span>⚠️</span><div>لا توجد حقول.</div></div>';
+        return;
+    }
+
+    const sorted = [...APP_STATE.dynamicFields].sort((a, b) => (a.order || 0) - (b.order || 0));
+
+    container.innerHTML = `
+        <div class="info-box info"><span>💡</span><div>هذه تسميات <strong>معروضة فقط</strong>. لا تغيّر المفاتيح أو البنية. اتركها فارغة لاستخدام الاسم الأصلي.</div></div>
+        ${sorted.map(f => `
+            <div style="display:grid; grid-template-columns:1fr 2fr; gap:10px; padding:8px 12px; border-bottom:1px solid #eef2f7; align-items:center;">
+                <div style="font-size:0.85rem; color:#666; font-weight:600;">${escapeHTML(f.label)} <small style="color:#aaa;">(${escapeHTML(f.key)})</small></div>
+                <input type="text" id="lbl_${f.key}" value="${escapeHTML(APP_STATE.columnLabels[f.key] || '')}" placeholder="${escapeHTML(f.label)}" style="padding:8px 12px; border:1.5px solid var(--border); border-radius:8px;">
+            </div>
+        `).join('')}
+        <div class="d-flex gap-1 mt-2">
+            <button class="btn btn-primary" onclick="saveColumnLabels()">💾 حفظ التسميات</button>
+            <button class="btn btn-outline" onclick="resetColumnLabels()">🔄 إعادة تعيين</button>
+        </div>
+    `;
+}
+
+window.saveColumnLabels = async function() {
+    const newLabels = {};
+    APP_STATE.dynamicFields.forEach(f => {
+        const input = document.getElementById('lbl_' + f.key);
+        if (input) {
+            const val = input.value.trim();
+            if (val && val !== f.label) newLabels[f.key] = val;
+        }
+    });
+    try {
+        showLoading('⏳...');
+        await setDoc(doc(db, 'settings', 'columnLabels'), newLabels);
+        APP_STATE.columnLabels = newLabels;
+        window.showToast('✅ تم حفظ التسميات', 'success');
+    } catch (e) { window.showToast('❌ ' + e.message, 'error'); }
+    finally { hideLoading(); }
+};
+
+window.resetColumnLabels = function() {
+    if (!confirm('حذف جميع التسميات المخصصة؟')) return;
+    APP_STATE.dynamicFields.forEach(f => {
+        const input = document.getElementById('lbl_' + f.key);
+        if (input) input.value = '';
+    });
+    window.showToast('تم الحذف — اضغط حفظ', 'info');
+};
+
+/* ========== نافذة تعديل حقل ========== */
+window.openFieldEditModal = function(fieldId) {
+    APP_STATE.editingFieldId = fieldId;
+    const isNew = !fieldId;
+    document.getElementById('fieldEditIcon').textContent = isNew ? '➕' : '✏️';
+    document.getElementById('fieldEditTitle').textContent = isNew ? 'إضافة حقل جديد' : 'تعديل حقل';
+
+    const sectionSelect = document.getElementById('fldSection');
+    sectionSelect.innerHTML = [...APP_STATE.dynamicSections]
+        .sort((a, b) => (a.order || 0) - (b.order || 0))
+        .map(s => `<option value="${s.id}">${escapeHTML(s.label)}</option>`).join('');
+
+    if (isNew) {
+        document.getElementById('fldLabel').value = '';
+        document.getElementById('fldKey').value = '';
+        document.getElementById('fldType').value = 'text';
+        document.getElementById('fldOrder').value = (APP_STATE.dynamicFields.length + 1);
+        document.getElementById('fldRequired').value = 'false';
+        document.getElementById('fldLtr').value = 'false';
+        document.getElementById('fldHint').value = '';
+        document.getElementById('fldOptionsList').innerHTML = '';
+        document.getElementById('fldCascadeLevel').value = '1';
+        document.getElementById('fldShowForm').checked = true;
+        document.getElementById('fldShowRecord').checked = true;
+        document.getElementById('fldShowExcel').checked = true;
+    } else {
+        const field = APP_STATE.dynamicFields.find(f => f.id === fieldId);
+        if (!field) return;
+        document.getElementById('fldLabel').value = field.label || '';
+        document.getElementById('fldKey').value = field.key || '';
+        document.getElementById('fldType').value = field.type || 'text';
+        sectionSelect.value = field.section || '';
+        document.getElementById('fldOrder').value = field.order || 1;
+        document.getElementById('fldRequired').value = field.required ? 'true' : 'false';
+        document.getElementById('fldLtr').value = field.ltr ? 'true' : 'false';
+        document.getElementById('fldHint').value = field.hint || '';
+        document.getElementById('fldCascadeLevel').value = field.cascadeLevel || '1';
+        document.getElementById('fldShowForm').checked = field.showIn?.form !== false;
+        document.getElementById('fldShowRecord').checked = field.showIn?.record !== false;
+        document.getElementById('fldShowExcel').checked = field.showIn?.excel !== false;
+        const list = document.getElementById('fldOptionsList');
+        list.innerHTML = '';
+        (field.options || []).forEach(opt => addOptionRow(opt));
+    }
+
+    onFieldTypeChange();
+    onCascadeLevelChange();
+    openModal('modalFieldEdit');
+};
+
+window.closeFieldEditModal = function() {
+    closeModal('modalFieldEdit');
+    APP_STATE.editingFieldId = null;
+};
+
+window.onFieldTypeChange = function() {
+    const type = document.getElementById('fldType').value;
+    document.getElementById('fldOptionsGroup').style.display = (type === 'select') ? 'block' : 'none';
+    document.getElementById('fldCascadeGroup').style.display = (type === 'cascade') ? 'block' : 'none';
+    if (type === 'select' && document.getElementById('fldOptionsList').children.length === 0) {
+        addOptionRow('');
+        addOptionRow('');
+    }
+    onCascadeLevelChange();
+};
+
+window.onCascadeLevelChange = function() {
+    const type = document.getElementById('fldType').value;
+    if (type !== 'cascade') { document.getElementById('fldParentGroup').style.display = 'none'; return; }
+    const level = parseInt(document.getElementById('fldCascadeLevel').value);
+    const parentGroup = document.getElementById('fldParentGroup');
+    if (level === 1) { parentGroup.style.display = 'none'; }
+    else {
+        parentGroup.style.display = 'block';
+        const targetLevel = level - 1;
+        const parentSelect = document.getElementById('fldParentKey');
+        const candidates = APP_STATE.dynamicFields.filter(f => f.type === 'cascade' && f.cascadeLevel === targetLevel);
+        parentSelect.innerHTML = '<option value="">اختر...</option>' + candidates.map(f => `<option value="${f.key}">${escapeHTML(f.label)} (${f.key})</option>`).join('');
+        if (APP_STATE.editingFieldId) {
+            const field = APP_STATE.dynamicFields.find(f => f.id === APP_STATE.editingFieldId);
+            if (field && field.parentKey) parentSelect.value = field.parentKey;
+        }
+    }
+};
+
+window.addOptionRow = function(val) {
+    const list = document.getElementById('fldOptionsList');
+    const item = document.createElement('div');
+    item.className = 'option-item';
+    item.innerHTML = `<input type="text" value="${escapeHTML(val || '')}" placeholder="اكتب الخيار..."><button type="button" onclick="this.parentElement.remove()">✕</button>`;
+    list.appendChild(item);
+};
+
+window.saveSingleField = function() {
+    const label = document.getElementById('fldLabel').value.trim();
+    let key = document.getElementById('fldKey').value.trim();
+    const type = document.getElementById('fldType').value;
+
+    if (!label) { window.showToast('⚠️ أدخل اسم الحقل', 'warning'); return; }
+    if (!key) { window.showToast('⚠️ أدخل المفتاح', 'warning'); return; }
+    key = key.replace(/[^a-zA-Z0-9_]/g, '');
+    if (!key) { window.showToast('⚠️ المفتاح أحرف إنجليزية', 'warning'); return; }
+
+    const duplicate = APP_STATE.dynamicFields.find(f => f.key === key && f.id !== APP_STATE.editingFieldId);
+    if (duplicate) { window.showToast('⚠️ المفتاح مستخدم', 'warning'); return; }
+
+    const options = [];
+    if (type === 'select') {
+        document.querySelectorAll('#fldOptionsList .option-item input').forEach(inp => {
+            const v = inp.value.trim();
+            if (v) options.push(v);
+        });
+    }
+
+    const fieldData = {
+        id: APP_STATE.editingFieldId || 'field_' + Date.now(),
+        key, label, type,
+        section: document.getElementById('fldSection').value,
+        order: parseInt(document.getElementById('fldOrder').value) || 1,
+        required: document.getElementById('fldRequired').value === 'true',
+        ltr: document.getElementById('fldLtr').value === 'true',
+        hint: document.getElementById('fldHint').value.trim(),
+        options,
+        showIn: {
+            form: document.getElementById('fldShowForm').checked,
+            record: document.getElementById('fldShowRecord').checked,
+            excel: document.getElementById('fldShowExcel').checked
+        }
+    };
+
+    if (type === 'cascade') {
+        fieldData.cascadeLevel = parseInt(document.getElementById('fldCascadeLevel').value);
+        fieldData.parentKey = fieldData.cascadeLevel > 1 ? document.getElementById('fldParentKey').value : null;
+    }
+
+    if (APP_STATE.editingFieldId) {
+        const idx = APP_STATE.dynamicFields.findIndex(f => f.id === APP_STATE.editingFieldId);
+        if (idx > -1) APP_STATE.dynamicFields[idx] = fieldData;
+    } else {
+        APP_STATE.dynamicFields.push(fieldData);
+    }
+
+    fieldsDirty = true;
+    closeFieldEditModal();
+    renderFieldsTab();
+    window.showToast('✅ تم الحفظ — اضغط "حفظ التغييرات"', 'success');
+};
+
+window.deleteField = function(fieldId) {
+    const field = APP_STATE.dynamicFields.find(f => f.id === fieldId);
+    if (!field) return;
+    confirmAction('حذف الحقل', `⚠️ حذف "${field.label}"؟\nالبيانات لن تُحذف من السجلات.`, () => {
+        APP_STATE.dynamicFields = APP_STATE.dynamicFields.filter(f => f.id !== fieldId);
+        fieldsDirty = true;
+        renderFieldsTab();
+        window.showToast('✅ تم الحذف — اضغط حفظ', 'success');
+    }, 'حذف', true);
+};
+
+window.saveDynamicFields = async function() {
+    try {
+        showLoading('⏳ جاري الحفظ...');
+        await setDoc(doc(db, 'settings', 'dynamicFields'), {
+            sections: APP_STATE.dynamicSections,
+            fields: APP_STATE.dynamicFields,
+            version: 1,
+            updatedAt: new Date().toISOString()
+        });
+        fieldsDirty = false;
+        window.showToast('✅ تم حفظ جميع التغييرات', 'success');
+    } catch (e) { window.showToast('❌ ' + e.message, 'error'); }
+    finally { hideLoading(); }
+};
+
+/* ============================================
+   إغلاق النوافذ + Escape
+============================================ */
+document.addEventListener('click', (e) => {
+    if (e.target.classList && e.target.classList.contains('modal')) e.target.classList.remove('active');
+});
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') document.querySelectorAll('.modal.active').forEach(m => m.classList.remove('active'));
+});
+
+/* ============================================
+   تسجيل خروج تلقائي
+============================================ */
+let inactivityTimer = null;
+function resetInactivityTimer() {
+    if (inactivityTimer) clearTimeout(inactivityTimer);
+    if (APP_STATE.currentUser) {
+        inactivityTimer = setTimeout(() => {
+            if (APP_STATE.currentUser) {
+                window.showToast('⏳ انتهت الجلسة', 'warning', 5000);
+                setTimeout(() => signOut(auth), 3000);
+            }
+        }, 30 * 60 * 1000);
+    }
+}
+['click', 'keydown', 'mousemove', 'touchstart'].forEach(evt => document.addEventListener(evt, resetInactivityTimer, { passive: true }));
+onAuthStateChanged(auth, (user) => { if (user) resetInactivityTimer(); else if (inactivityTimer) clearTimeout(inactivityTimer); });
+
+/* ============================================
+   نهاية owner.html
+============================================ */
+console.log('✅ owner.html — تم التحميل بنجاح — النسخة الكاملة');
+</script>
+
+</body>
+</html>
+  

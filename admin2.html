@@ -1,0 +1,1771 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة مدير المدرسة - نظام سجل المعلمين</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@400;600;700;800&family=Amiri:wght@400;700&family=Almarai:wght@400;700;800&family=Noto+Naskh+Arabic:wght@400;700&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+
+<style>
+:root {
+    --primary: #1a3a5c;
+    --primary-light: #234a72;
+    --secondary: #2d7dd2;
+    --secondary-light: #4a94e0;
+    --accent: #27ae60;
+    --accent-dark: #1e8449;
+    --danger: #e74c3c;
+    --danger-dark: #c0392b;
+    --warning: #f39c12;
+    --info: #3498db;
+    --bg-body: #eef2f7;
+    --bg-card: #ffffff;
+    --bg-sidebar: #1a3a5c;
+    --bg-hover: #f1f5fa;
+    --bg-input: #fafbfc;
+    --text-main: #2c3e50;
+    --text-light: #7f8c8d;
+    --text-muted: #95a5a6;
+    --border: #d0d8e0;
+    --border-light: #e8eef5;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 10px 30px rgba(0,0,0,0.12);
+    --shadow-xl: 0 20px 60px rgba(0,0,0,0.15);
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 18px;
+    --transition: all 0.25s ease;
+    --sidebar-width: 260px;
+    --topbar-height: 64px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Tajawal', sans-serif; }
+html, body { height: 100%; background: var(--bg-body); color: var(--text-main); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+button { font-family: inherit; cursor: pointer; }
+input, select, textarea { font-family: inherit; }
+
+/* شاشة التحميل */
+#splash {
+    position: fixed; inset: 0;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    gap: 20px; color: white; z-index: 9999; transition: opacity 0.4s;
+}
+#splash.hidden { opacity: 0; pointer-events: none; }
+.splash-spinner {
+    width: 64px; height: 64px;
+    border: 5px solid rgba(255,255,255,0.25);
+    border-top-color: white; border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.splash-text { font-size: 1.1rem; font-weight: 600; }
+
+/* شاشة الدخول */
+#loginScreen {
+    position: fixed; inset: 0;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    display: none; justify-content: center; align-items: center;
+    padding: 20px; z-index: 100;
+}
+#loginScreen.active { display: flex; }
+.login-card {
+    background: white; border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-xl); padding: 40px;
+    width: 100%; max-width: 420px;
+    animation: slideUp 0.4s ease;
+}
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.login-logo {
+    width: 80px; height: 80px;
+    background: linear-gradient(135deg, var(--secondary), var(--accent));
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px; font-size: 2.2rem; color: white;
+    box-shadow: 0 10px 25px rgba(45,125,210,0.3);
+}
+.login-title { text-align: center; color: var(--primary); font-size: 1.5rem; font-weight: 800; margin-bottom: 6px; }
+.login-subtitle { text-align: center; color: var(--text-light); font-size: 0.9rem; margin-bottom: 30px; }
+.login-field { margin-bottom: 18px; }
+.login-field label { display: block; font-size: 0.88rem; font-weight: 600; color: var(--text-main); margin-bottom: 6px; }
+.login-field input {
+    width: 100%; padding: 12px 16px;
+    border: 1.5px solid var(--border); border-radius: var(--radius-md);
+    font-size: 1rem; background: var(--bg-input); transition: var(--transition);
+}
+.login-field input:focus {
+    outline: none; border-color: var(--secondary);
+    background: white; box-shadow: 0 0 0 4px rgba(45,125,210,0.1);
+}
+.login-field input.ltr { direction: ltr; text-align: left; }
+.password-wrap { position: relative; }
+.password-wrap input { padding-left: 45px; }
+.password-toggle {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; font-size: 1.1rem; color: var(--text-light);
+    padding: 4px; cursor: pointer;
+}
+.login-btn {
+    width: 100%; padding: 13px;
+    background: linear-gradient(135deg, var(--secondary), var(--primary));
+    color: white; border: none; border-radius: var(--radius-md);
+    font-size: 1rem; font-weight: 700; margin-top: 8px;
+    transition: var(--transition);
+}
+.login-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(45,125,210,0.35); }
+.login-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.login-error {
+    display: none; background: #fdecea; color: #922b21;
+    padding: 12px 16px; border-radius: var(--radius-md);
+    border-right: 4px solid var(--danger); font-size: 0.88rem; margin-bottom: 15px;
+}
+.login-error.show { display: block; }
+.login-footer { text-align: center; margin-top: 20px; font-size: 0.8rem; color: var(--text-muted); }
+
+/* التخطيط */
+#appLayout { display: none; min-height: 100vh; }
+#appLayout.active { display: flex; }
+
+.sidebar {
+    width: var(--sidebar-width);
+    background: var(--bg-sidebar); color: white;
+    display: flex; flex-direction: column;
+    position: fixed; top: 0; right: 0; bottom: 0;
+    z-index: 50; transition: var(--transition); overflow-y: auto;
+}
+.sidebar-header {
+    padding: 22px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    display: flex; align-items: center; gap: 12px;
+}
+.sidebar-logo {
+    width: 42px; height: 42px;
+    background: linear-gradient(135deg, var(--secondary), var(--accent));
+    border-radius: var(--radius-md);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; flex-shrink: 0;
+}
+.sidebar-title { font-size: 1rem; font-weight: 800; line-height: 1.2; }
+.sidebar-role { font-size: 0.72rem; color: rgba(255,255,255,0.6); margin-top: 2px; }
+.sidebar-nav { flex: 1; padding: 15px 0; overflow-y: auto; }
+.nav-section-title {
+    padding: 12px 20px 6px; font-size: 0.72rem;
+    color: rgba(255,255,255,0.4); font-weight: 700;
+    letter-spacing: 0.5px; text-transform: uppercase;
+}
+.nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 20px; color: rgba(255,255,255,0.85);
+    cursor: pointer; transition: var(--transition);
+    border: none; background: none; width: 100%;
+    text-align: right; font-size: 0.92rem; font-weight: 500;
+    border-right: 3px solid transparent;
+}
+.nav-item:hover { background: rgba(255,255,255,0.06); color: white; }
+.nav-item.active {
+    background: rgba(45,125,210,0.2); color: white;
+    border-right-color: var(--secondary); font-weight: 700;
+}
+.nav-icon { font-size: 1.15rem; width: 24px; text-align: center; flex-shrink: 0; }
+.sidebar-footer {
+    padding: 15px 20px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+.user-card {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px; background: rgba(255,255,255,0.06);
+    border-radius: var(--radius-md); margin-bottom: 10px;
+}
+.user-avatar {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--secondary), var(--accent));
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 0.95rem; color: white; flex-shrink: 0;
+}
+.user-info { flex: 1; min-width: 0; }
+.user-name {
+    font-size: 0.88rem; font-weight: 700; color: white;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.user-role { font-size: 0.72rem; color: rgba(255,255,255,0.6); }
+.logout-btn {
+    width: 100%; padding: 10px;
+    background: rgba(231,76,60,0.15); color: #ffb3aa;
+    border: 1px solid rgba(231,76,60,0.3); border-radius: var(--radius-md);
+    font-size: 0.88rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px; transition: var(--transition);
+}
+.logout-btn:hover { background: rgba(231,76,60,0.3); color: white; }
+
+.main-content {
+    flex: 1; margin-right: var(--sidebar-width);
+    transition: var(--transition); min-height: 100vh;
+    display: flex; flex-direction: column;
+}
+.topbar {
+    height: var(--topbar-height); background: white;
+    border-bottom: 1px solid var(--border-light);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 25px; position: sticky; top: 0; z-index: 40;
+    box-shadow: var(--shadow-sm);
+}
+.topbar-title {
+    font-size: 1.15rem; font-weight: 800; color: var(--primary);
+    display: flex; align-items: center; gap: 10px;
+}
+.topbar-title .icon { font-size: 1.3rem; }
+.topbar-actions { display: flex; gap: 10px; align-items: center; }
+.school-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 20px;
+    font-size: 0.82rem; font-weight: 700;
+    background: #e3f2fd; color: #1565c0;
+}
+.hamburger {
+    display: none; background: none; border: none;
+    font-size: 1.5rem; color: var(--primary); padding: 8px; cursor: pointer;
+}
+.content-area { flex: 1; padding: 25px; }
+
+.page { display: none; }
+.page.active { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.page-header { margin-bottom: 22px; }
+.page-title { font-size: 1.5rem; font-weight: 800; color: var(--primary); margin-bottom: 4px; }
+.page-subtitle { font-size: 0.9rem; color: var(--text-light); }
+
+.card {
+    background: var(--bg-card); border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm); padding: 22px;
+    margin-bottom: 20px; border: 1px solid var(--border-light);
+}
+.card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 18px; padding-bottom: 14px;
+    border-bottom: 1px solid var(--border-light);
+    flex-wrap: wrap; gap: 10px;
+}
+.card-title {
+    font-size: 1.05rem; font-weight: 800; color: var(--primary);
+    display: flex; align-items: center; gap: 8px;
+}
+.card-title .icon { font-size: 1.2rem; }
+
+.btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 8px; padding: 10px 18px;
+    border: none; border-radius: var(--radius-md);
+    font-size: 0.9rem; font-weight: 700;
+    transition: var(--transition); white-space: nowrap;
+}
+.btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.btn:active { transform: translateY(0); }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+.btn-lg { padding: 13px 26px; font-size: 1rem; }
+.btn-primary { background: var(--secondary); color: white; }
+.btn-primary:hover { background: var(--secondary-light); }
+.btn-success { background: var(--accent); color: white; }
+.btn-success:hover { background: var(--accent-dark); }
+.btn-danger { background: var(--danger); color: white; }
+.btn-outline { background: white; color: var(--primary); border: 1.5px solid var(--border); }
+.btn-outline:hover { border-color: var(--secondary); color: var(--secondary); }
+.btn-ghost { background: transparent; color: var(--text-light); }
+.btn-ghost:hover { background: var(--bg-hover); color: var(--text-main); }
+.btn-icon { padding: 8px; width: 36px; height: 36px; border-radius: var(--radius-md); }
+
+.stats-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px; margin-bottom: 22px;
+}
+.stat-card {
+    background: white; border-radius: var(--radius-lg);
+    padding: 20px; box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-light);
+    display: flex; align-items: center; gap: 15px;
+    transition: var(--transition);
+}
+.stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+.stat-icon {
+    width: 52px; height: 52px; border-radius: var(--radius-md);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; flex-shrink: 0;
+}
+.stat-icon.blue { background: #e3f2fd; color: #1565c0; }
+.stat-icon.green { background: #e8f5e9; color: #2e7d32; }
+.stat-icon.orange { background: #fff3e0; color: #e65100; }
+.stat-icon.purple { background: #f3e5f5; color: #6a1b9a; }
+.stat-value { font-size: 1.8rem; font-weight: 800; color: var(--primary); line-height: 1; margin-bottom: 4px; }
+.stat-label { font-size: 0.85rem; color: var(--text-light); font-weight: 600; }
+
+.table-wrap {
+    overflow-x: auto; border-radius: var(--radius-md);
+    border: 1px solid var(--border-light);
+}
+table.data-table { width: 100%; border-collapse: collapse; min-width: 700px; }
+table.data-table th {
+    background: var(--primary); color: white;
+    padding: 13px 15px; text-align: right;
+    font-size: 0.85rem; font-weight: 700; white-space: nowrap;
+}
+table.data-table td {
+    padding: 12px 15px; border-bottom: 1px solid var(--border-light);
+    font-size: 0.88rem; color: var(--text-main); text-align: right;
+}
+table.data-table tbody tr { transition: var(--transition); }
+table.data-table tbody tr:hover { background: var(--bg-hover); }
+table.data-table tbody tr:last-child td { border-bottom: none; }
+table.data-table td.ltr {
+    direction: ltr; text-align: right; unicode-bidi: embed;
+    font-family: 'Courier New', monospace; font-weight: 600; letter-spacing: 0.5px;
+}
+.table-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.badge {
+    display: inline-block; padding: 4px 10px;
+    border-radius: 12px; font-size: 0.75rem;
+    font-weight: 700; white-space: nowrap;
+}
+.badge-active { background: #d4edda; color: #155724; }
+.badge-inactive { background: #f8d7da; color: #721c24; }
+
+.search-bar { position: relative; margin-bottom: 15px; }
+.search-bar input {
+    width: 100%; padding: 12px 45px 12px 16px;
+    border: 1.5px solid var(--border); border-radius: var(--radius-md);
+    font-size: 0.95rem; background: white; transition: var(--transition);
+}
+.search-bar input:focus {
+    outline: none; border-color: var(--secondary);
+    box-shadow: 0 0 0 3px rgba(45,125,210,0.1);
+}
+.search-bar .search-icon {
+    position: absolute; right: 15px; top: 50%;
+    transform: translateY(-50%); color: var(--text-muted);
+    font-size: 1.1rem; pointer-events: none;
+}
+
+.empty-state { text-align: center; padding: 50px 20px; color: var(--text-light); }
+.empty-icon { font-size: 3rem; margin-bottom: 15px; opacity: 0.5; }
+.empty-title { font-size: 1.05rem; font-weight: 700; color: var(--text-main); margin-bottom: 6px; }
+.empty-desc { font-size: 0.88rem; color: var(--text-light); }
+
+.modal {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6); z-index: 1000;
+    justify-content: center; align-items: flex-start;
+    padding: 20px; overflow-y: auto;
+}
+.modal.active { display: flex; }
+.modal-content {
+    background: white; border-radius: var(--radius-xl);
+    width: 100%; max-width: 700px;
+    box-shadow: var(--shadow-xl); margin: auto;
+    animation: slideUp 0.3s ease;
+    max-height: calc(100vh - 40px);
+    display: flex; flex-direction: column;
+}
+.modal-content.lg { max-width: 900px; }
+.modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border-light);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+}
+.modal-title {
+    font-size: 1.15rem; font-weight: 800; color: var(--primary);
+    display: flex; align-items: center; gap: 8px;
+}
+.modal-close {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: #f5f5f5; border: none; font-size: 1.1rem;
+    color: var(--text-light); display: flex; align-items: center; justify-content: center;
+    transition: var(--transition);
+}
+.modal-close:hover { background: var(--danger); color: white; transform: rotate(90deg); }
+.modal-body { padding: 24px; overflow-y: auto; flex: 1; }
+.modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border-light);
+    display: flex; justify-content: flex-end; gap: 10px;
+    flex-shrink: 0; flex-wrap: wrap;
+}
+
+.form-row {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 15px; margin-bottom: 15px;
+}
+.form-group { display: flex; flex-direction: column; }
+.form-group.full { grid-column: 1 / -1; }
+.form-group label {
+    font-size: 0.88rem; font-weight: 700;
+    color: var(--text-main); margin-bottom: 6px;
+}
+.form-group label .req { color: var(--danger); }
+.form-group input,
+.form-group select,
+.form-group textarea {
+    padding: 11px 14px;
+    border: 1.5px solid var(--border); border-radius: var(--radius-md);
+    font-size: 0.92rem; background: white; transition: var(--transition);
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none; border-color: var(--secondary);
+    box-shadow: 0 0 0 3px rgba(45,125,210,0.1);
+}
+.form-group input.ltr { direction: ltr; text-align: left; }
+.form-group textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+.form-group small.hint { color: var(--text-muted); font-size: 0.78rem; margin-top: 4px; }
+
+#toastContainer {
+    position: fixed; top: 20px; left: 20px;
+    z-index: 2000; display: flex; flex-direction: column;
+    gap: 10px; pointer-events: none;
+}
+.toast {
+    background: white; border-radius: var(--radius-md);
+    padding: 14px 18px; box-shadow: var(--shadow-lg);
+    display: flex; align-items: center; gap: 12px;
+    min-width: 280px; max-width: 400px;
+    border-right: 4px solid var(--info);
+    animation: toastIn 0.3s ease; pointer-events: auto;
+}
+@keyframes toastIn {
+    from { opacity: 0; transform: translateX(-30px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+.toast.success { border-right-color: var(--accent); }
+.toast.error { border-right-color: var(--danger); }
+.toast.warning { border-right-color: var(--warning); }
+.toast-icon { font-size: 1.3rem; }
+.toast-msg { font-size: 0.9rem; font-weight: 600; color: var(--text-main); flex: 1; }
+
+.loading-overlay {
+    position: fixed; inset: 0;
+    background: rgba(255,255,255,0.9);
+    display: none; justify-content: center; align-items: center;
+    flex-direction: column; gap: 15px; z-index: 9000;
+}
+.loading-overlay.active { display: flex; }
+.loading-overlay .spinner {
+    width: 50px; height: 50px;
+    border: 4px solid var(--border); border-top-color: var(--secondary);
+    border-radius: 50%; animation: spin 1s linear infinite;
+}
+.loading-overlay p { color: var(--primary); font-weight: 700; }
+
+@media (max-width: 1024px) {
+    .sidebar { transform: translateX(100%); width: 260px; }
+    .sidebar.open { transform: translateX(0); }
+    .main-content { margin-right: 0; }
+    .hamburger { display: block; }
+    .sidebar-overlay {
+        display: none; position: fixed; inset: 0;
+        background: rgba(0,0,0,0.5); z-index: 45;
+    }
+    .sidebar-overlay.active { display: block; }
+}
+@media (max-width: 768px) {
+    .content-area { padding: 18px; }
+    .topbar { padding: 0 15px; }
+    .page-title { font-size: 1.25rem; }
+    .card { padding: 16px; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .stat-card { padding: 14px; }
+    .stat-icon { width: 42px; height: 42px; font-size: 1.2rem; }
+    .stat-value { font-size: 1.4rem; }
+}
+@media (max-width: 480px) {
+    .stats-grid { grid-template-columns: 1fr; }
+    .login-card { padding: 25px; }
+}
+
+.hidden { display: none !important; }
+.text-center { text-align: center; }
+.text-muted { color: var(--text-muted); }
+.text-danger { color: var(--danger); }
+.mb-1 { margin-bottom: 8px; }
+.mb-2 { margin-bottom: 16px; }
+.d-flex { display: flex; }
+.gap-1 { gap: 8px; }
+.gap-2 { gap: 16px; }
+.flex-wrap { flex-wrap: wrap; }
+.align-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-body); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+</style>
+</head>
+
+<body>
+
+<div id="splash">
+    <div class="splash-spinner"></div>
+    <div class="splash-text">⏳ جاري التحقق...</div>
+</div>
+
+<div id="loginScreen">
+    <div class="login-card">
+        <div class="login-logo">🏫</div>
+        <div class="login-title">لوحة مدير المدرسة</div>
+        <div class="login-subtitle">نظام سجل المعلمين</div>
+        <div class="login-error" id="loginError"></div>
+        <form id="loginForm" onsubmit="handleLogin(event); return false;">
+            <div class="login-field">
+                <label>اسم المستخدم</label>
+                <input type="text" id="loginUsername" class="ltr" placeholder="username" autocomplete="username" required>
+            </div>
+            <div class="login-field">
+                <label>كلمة المرور</label>
+                <div class="password-wrap">
+                    <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" required>
+                    <button type="button" class="password-toggle" onclick="togglePassword()" tabindex="-1">👁️</button>
+                </div>
+            </div>
+            <button type="submit" class="login-btn" id="loginBtn">🔓 تسجيل الدخول</button>
+        </form>
+        <div class="login-footer">نظام سجل المعلمين — لوحة المدير</div>
+    </div>
+</div>
+
+<div id="appLayout">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">🏫</div>
+            <div>
+                <div class="sidebar-title">لوحة المدير</div>
+                <div class="sidebar-role" id="sidebarSchool">—</div>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section-title">الرئيسية</div>
+            <button class="nav-item active" data-page="overview" onclick="navigateTo('overview')">
+                <span class="nav-icon">📊</span><span>نظرة عامة</span>
+            </button>
+            <div class="nav-section-title">المعلمون</div>
+            <button class="nav-item" data-page="teachers" onclick="navigateTo('teachers')">
+                <span class="nav-icon">👨‍🏫</span><span>معلمو مدرستي</span>
+            </button>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-card">
+                <div class="user-avatar" id="userAvatar">م</div>
+                <div class="user-info">
+                    <div class="user-name" id="userName">المدير</div>
+                    <div class="user-role">مدير مدرسة</div>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="handleLogout()">
+                <span>🚪</span><span>تسجيل الخروج</span>
+            </button>
+        </div>
+    </aside>
+
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div class="d-flex align-center gap-1">
+                <button class="hamburger" onclick="toggleSidebar()">☰</button>
+                <div class="topbar-title">
+                    <span class="icon" id="topbarIcon">📊</span>
+                    <span id="topbarTitle">نظرة عامة</span>
+                </div>
+            </div>
+            <div class="topbar-actions">
+                <div class="school-pill">
+                    <span>🏫</span>
+                    <span id="topbarSchool">—</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="content-area">
+
+            <section class="page active" id="page-overview">
+                <div class="page-header">
+                    <h1 class="page-title">📊 نظرة عامة</h1>
+                    <p class="page-subtitle">ملخص معلمي مدرستك</p>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon blue">👨‍🏫</div>
+                        <div>
+                            <div class="stat-value" id="statTotal">0</div>
+                            <div class="stat-label">إجمالي المعلمين</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green">✅</div>
+                        <div>
+                            <div class="stat-value" id="statRecent">0</div>
+                            <div class="stat-label">آخر 30 يوماً</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon orange">📋</div>
+                        <div>
+                            <div class="stat-value" id="statToday">0</div>
+                            <div class="stat-label">اليوم</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <span class="icon">🆕</span>
+                            <span>أحدث الإدخالات</span>
+                        </div>
+                    </div>
+                    <div id="recentTeachers">
+                        <div class="empty-state">
+                            <div class="empty-icon">📭</div>
+                            <div class="empty-title">لا توجد سجلات بعد</div>
+                            <div class="empty-desc">ستظهر هنا أحدث السجلات</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="page" id="page-teachers">
+                <div class="page-header d-flex justify-between align-center flex-wrap gap-1">
+                    <div>
+                        <h1 class="page-title">👨‍🏫 معلمو مدرستي</h1>
+                        <p class="page-subtitle">قائمة جميع معلمي مدرستك</p>
+                    </div>
+                    <button class="btn btn-success" onclick="exportExcel()">
+                        <span>📊</span><span>تصدير Excel</span>
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="search-bar">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="teachersSearch" placeholder="ابحث بالاسم أو الرقم الذاتي..." oninput="filterTeachers()">
+                    </div>
+
+                    <div class="table-wrap">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>الاسم</th>
+                                    <th>الرقم الذاتي</th>
+                                    <th>الوضع الوظيفي</th>
+                                    <th>تاريخ الإدخال</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="teachersTableBody">
+                                <tr><td colspan="6" class="text-center text-muted" style="padding:30px;">⏳ جاري التحميل...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+</div>
+
+<div class="modal" id="modalTeacherDetails">
+    <div class="modal-content lg">
+        <div class="modal-header">
+            <div class="modal-title"><span>👤</span><span id="detailTitle">سجل المعلم</span></div>
+            <button class="modal-close" onclick="closeModal('modalTeacherDetails')">✕</button>
+        </div>
+        <div class="modal-body" id="detailBody">
+            <div class="text-center text-muted">⏳ جاري التحميل...</div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('modalTeacherDetails')">إغلاق</button>
+            <button class="btn btn-primary" onclick="editCurrentTeacher()">✏️ تعديل</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="modalEditTeacher">
+    <div class="modal-content xl">
+        <div class="modal-header">
+            <div class="modal-title"><span>✏️</span><span>تعديل بيانات المعلم</span></div>
+            <button class="modal-close" onclick="closeModal('modalEditTeacher')">✕</button>
+        </div>
+        <div class="modal-body" id="editBody">
+            <div class="text-center text-muted">⏳ جاري التحميل...</div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('modalEditTeacher')">إلغاء</button>
+            <button class="btn btn-primary" onclick="saveTeacherEdit()">💾 حفظ التعديلات</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="modalConfirm">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title"><span id="confirmIcon">⚠️</span><span id="confirmTitle">تأكيد</span></div>
+            <button class="modal-close" onclick="closeModal('modalConfirm')">✕</button>
+        </div>
+        <div class="modal-body">
+            <p id="confirmMessage" style="font-size:0.95rem; line-height:1.7;"></p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('modalConfirm')">إلغاء</button>
+            <button class="btn btn-danger" id="confirmBtn">تأكيد</button>
+        </div>
+    </div>
+</div>
+
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <p id="loadingText">⏳ جاري التنفيذ...</p>
+</div>
+
+<div id="toastContainer"></div>
+  
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+    getAuth,
+    signInWithEmailAndPassword,
+    signOut,
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+    getFirestore,
+    collection,
+    doc,
+    getDoc,
+    getDocs,
+    updateDoc,
+    query,
+    where,
+    serverTimestamp,
+    addDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* ============================================
+   Firebase Config
+============================================ */
+const firebaseConfig = {
+    apiKey: "AIzaSyC31P3GxbtuFEl34czIe0KFuuKNv3JDKBU",
+    authDomain: "khitmaty1.firebaseapp.com",
+    projectId: "khitmaty1",
+    storageBucket: "khitmaty1.firebasestorage.app",
+    messagingSenderId: "555189930690",
+    appId: "1:555189930690:web:8bbd5347b7a3596923095b"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+/* ============================================
+   الحالة العامة
+============================================ */
+const APP_STATE = {
+    currentUser: null,
+    currentUserData: null,
+    schoolId: null,
+    schoolName: '',
+    teachers: [],
+    filteredTeachers: [],
+    currentTeacher: null,
+    dynamicFields: [],
+    dynamicSections: []
+};
+window.APP_STATE = APP_STATE;
+
+const PAGE_TITLES = {
+    overview: { icon: '📊', title: 'نظرة عامة' },
+    teachers: { icon: '👨‍🏫', title: 'معلمو مدرستي' }
+};
+
+/* ============================================
+   أدوات مساعدة — الإشعارات
+============================================ */
+window.showToast = function(message, type = 'info', duration = 3500) {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+
+    toast.innerHTML = `
+        <span class="toast-icon">${icons[type] || icons.info}</span>
+        <span class="toast-msg">${message}</span>
+    `;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-30px)';
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
+};
+
+window.showLoading = function(text = '⏳ جاري التنفيذ...') {
+    const overlay = document.getElementById('loadingOverlay');
+    const textEl = document.getElementById('loadingText');
+    if (textEl) textEl.textContent = text;
+    if (overlay) overlay.classList.add('active');
+};
+
+window.hideLoading = function() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) overlay.classList.remove('active');
+};
+
+window.openModal = function(id) {
+    const m = document.getElementById(id);
+    if (m) m.classList.add('active');
+};
+
+window.closeModal = function(id) {
+    const m = document.getElementById(id);
+    if (m) m.classList.remove('active');
+};
+
+window.confirmAction = function(title, message, onConfirm, confirmText = 'تأكيد', danger = true) {
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmMessage').textContent = message;
+    document.getElementById('confirmIcon').textContent = danger ? '⚠️' : '❓';
+
+    const btn = document.getElementById('confirmBtn');
+    btn.textContent = confirmText;
+    btn.className = danger ? 'btn btn-danger' : 'btn btn-primary';
+
+    const newBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(newBtn, btn);
+
+    newBtn.addEventListener('click', () => {
+        closeModal('modalConfirm');
+        if (typeof onConfirm === 'function') onConfirm();
+    });
+
+    openModal('modalConfirm');
+};
+
+window.usernameToEmail = function(username) {
+    return `${username.toLowerCase().trim()}@school.local`;
+};
+
+window.togglePassword = function() {
+    const input = document.getElementById('loginPassword');
+    const btn = document.querySelector('.password-toggle');
+    if (!input) return;
+    if (input.type === 'password') {
+        input.type = 'text';
+        if (btn) btn.textContent = '🙈';
+    } else {
+        input.type = 'password';
+        if (btn) btn.textContent = '👁️';
+    }
+};
+
+function escapeHTML(str) {
+    return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+window.escapeHTML = escapeHTML;
+
+/* ============================================
+   أخطاء تسجيل الدخول
+============================================ */
+function showLoginError(msg) {
+    const box = document.getElementById('loginError');
+    if (!box) return;
+    box.textContent = msg;
+    box.classList.add('show');
+}
+
+function hideLoginError() {
+    const box = document.getElementById('loginError');
+    if (box) box.classList.remove('show');
+}
+
+/* ============================================
+   تسجيل الدخول
+============================================ */
+window.handleLogin = async function(event) {
+    if (event) event.preventDefault();
+
+    const usernameInput = document.getElementById('loginUsername');
+    const passwordInput = document.getElementById('loginPassword');
+    const loginBtn = document.getElementById('loginBtn');
+
+    const username = usernameInput.value.trim().toLowerCase();
+    const password = passwordInput.value;
+
+    hideLoginError();
+
+    if (!username) {
+        showLoginError('⚠️ الرجاء إدخال اسم المستخدم');
+        usernameInput.focus();
+        return;
+    }
+    if (!/^[a-z0-9._]{3,20}$/.test(username)) {
+        showLoginError('⚠️ اسم المستخدم يجب أن يكون بأحرف إنجليزية');
+        usernameInput.focus();
+        return;
+    }
+    if (!password) {
+        showLoginError('⚠️ الرجاء إدخال كلمة المرور');
+        passwordInput.focus();
+        return;
+    }
+
+    loginBtn.disabled = true;
+    loginBtn.textContent = '⏳ جاري التحقق...';
+
+    try {
+        // 1) البحث عن البريد المرتبط باسم المستخدم
+        let email;
+        try {
+            const usernameSnap = await getDoc(doc(db, 'usernames', username));
+            if (usernameSnap.exists()) {
+                const data = usernameSnap.data();
+                if (data.isActive === false) {
+                    showLoginError('🚫 هذا الحساب معطّل. تواصل مع الإدارة.');
+                    return;
+                }
+                email = data.email;
+            } else {
+                email = usernameToEmail(username);
+            }
+        } catch (e) {
+            email = usernameToEmail(username);
+        }
+
+        // 2) تسجيل الدخول
+        const credential = await signInWithEmailAndPassword(auth, email, password);
+        const uid = credential.user.uid;
+
+        // 3) قراءة بيانات المستخدم
+        const userSnap = await getDoc(doc(db, 'users', uid));
+        if (!userSnap.exists()) {
+            await signOut(auth);
+            showLoginError('❌ حسابك غير مُهيَّأ في النظام.');
+            return;
+        }
+
+        const userData = userSnap.data();
+
+        if (userData.isActive === false) {
+            await signOut(auth);
+            showLoginError('🚫 حسابك معطّل. تواصل مع الإدارة.');
+            return;
+        }
+
+        if (userData.role !== 'school_admin') {
+            await signOut(auth);
+            showLoginError('⛔ هذه الصفحة مخصصة لمديري المدارس فقط.');
+            return;
+        }
+
+        if (!userData.schoolId) {
+            await signOut(auth);
+            showLoginError('❌ حسابك غير مرتبط بأي مدرسة. تواصل مع المالك.');
+            return;
+        }
+
+        // 4) تحديث آخر تسجيل دخول
+        try {
+            await updateDoc(doc(db, 'users', uid), {
+                lastLogin: serverTimestamp()
+            });
+        } catch (e) { console.warn(e); }
+
+        APP_STATE.currentUser = credential.user;
+        APP_STATE.currentUserData = userData;
+        APP_STATE.schoolId = userData.schoolId;
+        APP_STATE.schoolName = userData.schoolName || '';
+
+        loginBtn.textContent = '✅ تم الدخول';
+
+    } catch (error) {
+        console.error('Login error:', error);
+        const code = error.code || '';
+        if (code.includes('wrong-password') || code.includes('invalid-credential') || code.includes('user-not-found')) {
+            showLoginError('❌ اسم المستخدم أو كلمة المرور غير صحيحة');
+        } else if (code.includes('too-many-requests')) {
+            showLoginError('⏳ محاولات كثيرة فاشلة. حاول بعد قليل.');
+        } else if (code.includes('network')) {
+            showLoginError('🌐 تحقق من اتصالك بالإنترنت.');
+        } else {
+            showLoginError('❌ حدث خطأ: ' + (error.message || 'غير معروف'));
+        }
+    } finally {
+        loginBtn.disabled = false;
+        if (loginBtn.textContent !== '✅ تم الدخول') {
+            loginBtn.textContent = '🔓 تسجيل الدخول';
+        }
+    }
+};
+
+/* ============================================
+   تسجيل الخروج
+============================================ */
+window.handleLogout = function() {
+    confirmAction(
+        'تسجيل الخروج',
+        'هل تريد تسجيل الخروج من لوحة المدير؟',
+        async () => {
+            try {
+                await signOut(auth);
+                window.showToast('تم تسجيل الخروج', 'success');
+            } catch (e) {
+                window.showToast('فشل تسجيل الخروج', 'error');
+            }
+        },
+        'تسجيل الخروج',
+        true
+    );
+};
+
+/* ============================================
+   التنقل
+============================================ */
+window.navigateTo = function(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const target = document.getElementById('page-' + pageId);
+    if (target) target.classList.add('active');
+
+    document.querySelectorAll('.nav-item').forEach(n => {
+        n.classList.toggle('active', n.dataset.page === pageId);
+    });
+
+    const meta = PAGE_TITLES[pageId] || { icon: '📄', title: pageId };
+    const titleEl = document.getElementById('topbarTitle');
+    const iconEl = document.getElementById('topbarIcon');
+    if (titleEl) titleEl.textContent = meta.title;
+    if (iconEl) iconEl.textContent = meta.icon;
+
+    closeSidebar();
+
+    if (pageId === 'teachers') loadTeachersPage();
+};
+
+window.toggleSidebar = function() {
+    const s = document.getElementById('sidebar');
+    const o = document.getElementById('sidebarOverlay');
+    if (s) s.classList.toggle('open');
+    if (o) o.classList.toggle('active');
+};
+
+window.closeSidebar = function() {
+    const s = document.getElementById('sidebar');
+    const o = document.getElementById('sidebarOverlay');
+    if (s) s.classList.remove('open');
+    if (o) o.classList.remove('active');
+};
+
+/* ============================================
+   إظهار/إخفاء الشاشات
+============================================ */
+function showLoginScreen() {
+    document.getElementById('splash')?.classList.add('hidden');
+    document.getElementById('loginScreen')?.classList.add('active');
+    document.getElementById('appLayout')?.classList.remove('active');
+}
+
+function showAppScreen() {
+    document.getElementById('splash')?.classList.add('hidden');
+    document.getElementById('loginScreen')?.classList.remove('active');
+    document.getElementById('appLayout')?.classList.add('active');
+}
+
+/* ============================================
+   عرض معلومات المستخدم
+============================================ */
+function renderUserInfo(userData) {
+    const name = userData.fullName || userData.username || 'المدير';
+    const schoolName = userData.schoolName || '';
+
+    const nameEl = document.getElementById('userName');
+    const avatarEl = document.getElementById('userAvatar');
+    const sidebarSchool = document.getElementById('sidebarSchool');
+    const topbarSchool = document.getElementById('topbarSchool');
+
+    if (nameEl) nameEl.textContent = name;
+    if (avatarEl) avatarEl.textContent = name.charAt(0) || 'م';
+    if (sidebarSchool) sidebarSchool.textContent = schoolName || '—';
+    if (topbarSchool) topbarSchool.textContent = schoolName || '—';
+}
+
+/* ============================================
+   onAuthStateChanged
+============================================ */
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        try {
+            const userSnap = await getDoc(doc(db, 'users', user.uid));
+
+            if (!userSnap.exists()) {
+                await signOut(auth);
+                showLoginScreen();
+                showLoginError('❌ حسابك غير مُهيَّأ.');
+                return;
+            }
+
+            const userData = userSnap.data();
+
+            if (userData.isActive === false) {
+                await signOut(auth);
+                showLoginScreen();
+                showLoginError('🚫 حسابك معطّل.');
+                return;
+            }
+
+            if (userData.role !== 'school_admin') {
+                await signOut(auth);
+                showLoginScreen();
+                showLoginError('⛔ هذه الصفحة لمديري المدارس فقط.');
+                return;
+            }
+
+            if (!userData.schoolId) {
+                await signOut(auth);
+                showLoginScreen();
+                showLoginError('❌ حسابك غير مرتبط بمدرسة.');
+                return;
+            }
+
+            APP_STATE.currentUser = user;
+            APP_STATE.currentUserData = userData;
+            APP_STATE.schoolId = userData.schoolId;
+            APP_STATE.schoolName = userData.schoolName || '';
+
+            renderUserInfo(userData);
+            showAppScreen();
+
+            // تحميل الحقول الديناميكية
+            await loadDynamicFields();
+
+            // تحميل معلمي المدرسة
+            await loadTeachers();
+
+            // تحميل الإحصائيات
+            await loadOverviewStats();
+
+        } catch (e) {
+            console.error('Auth error:', e);
+            showLoginScreen();
+            showLoginError('حدث خطأ غير متوقع.');
+        }
+    } else {
+        APP_STATE.currentUser = null;
+        APP_STATE.currentUserData = null;
+        showLoginScreen();
+    }
+});
+
+/* ============================================
+   loadDynamicFields — لمعرفة عناوين الحقول
+============================================ */
+async function loadDynamicFields() {
+    try {
+        const docRef = doc(db, 'settings', 'dynamicFields');
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+            const data = snap.data();
+            APP_STATE.dynamicFields = (data.fields || []).filter(f => f.showIn?.excel !== false);
+            APP_STATE.dynamicSections = data.sections || [];
+        }
+    } catch (e) {
+        console.warn('loadDynamicFields error:', e);
+    }
+}
+
+/* ============================================
+   loadTeachers — تحميل معلمي المدرسة فقط
+============================================ */
+window.loadTeachers = async function() {
+    const tbody = document.getElementById('teachersTableBody');
+    if (!tbody) return;
+
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:30px;">⏳ جاري التحميل...</td></tr>';
+
+    try {
+        // ⚠️ لا نستخدم where على schoolId لأن السجلات القديمة قد لا تحتوي عليه
+        // نجلب كل السجلات ثم نفلتر محلياً
+        const snap = await getDocs(collection(db, 'teachers'));
+        const allTeachers = [];
+        snap.forEach(d => allTeachers.push({ firebaseId: d.id, ...d.data() }));
+
+        // فلترة حسب مدرسة المدير
+        const schoolId = APP_STATE.schoolId;
+        const schoolName = APP_STATE.schoolName;
+
+        APP_STATE.teachers = allTeachers.filter(t => {
+            // 1) مطابقة بـ schoolId (الأحدث)
+            if (t.schoolId && t.schoolId === schoolId) return true;
+            // 2) مطابقة بـ schoolName (للقديمة)
+            if (t.school && schoolName && t.school === schoolName) return true;
+            return false;
+        });
+
+        // ترتيب حسب تاريخ الإنشاء (الأحدث أولاً)
+        APP_STATE.teachers.sort((a, b) => {
+            const aTime = a.createdAt?.toDate?.() || new Date(a.createdAtLocal || 0);
+            const bTime = b.createdAt?.toDate?.() || new Date(b.createdAtLocal || 0);
+            return bTime - aTime;
+        });
+
+        APP_STATE.filteredTeachers = [...APP_STATE.teachers];
+        renderTeachersTable();
+
+    } catch (e) {
+        console.error('loadTeachers error:', e);
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger" style="padding:30px;">❌ ' + escapeHTML(e.message) + '</td></tr>';
+    }
+};
+
+function renderTeachersTable() {
+    const tbody = document.getElementById('teachersTableBody');
+    if (!tbody) return;
+
+    const teachers = APP_STATE.filteredTeachers;
+
+    if (teachers.length === 0) {
+        tbody.innerHTML = `
+            <tr><td colspan="6" style="padding:40px; text-align:center;">
+                <div class="empty-state">
+                    <div class="empty-icon">📭</div>
+                    <div class="empty-title">لا يوجد معلمون</div>
+                    <div class="empty-desc">لم يقم أي معلم بإدخال بياناته بعد</div>
+                </div>
+            </td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = teachers.map((t, i) => {
+        let dateStr = '—';
+        try {
+            const d = t.createdAt?.toDate?.() || (t.createdAtLocal ? new Date(t.createdAtLocal) : null);
+            if (d) dateStr = d.toLocaleDateString('ar-EG');
+        } catch (e) { /* ignore */ }
+
+        return `
+            <tr>
+                <td>${i + 1}</td>
+                <td>${escapeHTML(t.fullName || '—')}</td>
+                <td class="ltr">${escapeHTML(t.selfNumber || '—')}</td>
+                <td>${escapeHTML(t.jobStatus || '—')}</td>
+                <td>${dateStr}</td>
+                <td>
+                    <div class="table-actions">
+                        <button class="btn btn-icon btn-outline" title="عرض" onclick="viewTeacher('${t.firebaseId}')">👁️</button>
+                        <button class="btn btn-icon btn-outline" title="تعديل" onclick="editTeacher('${t.firebaseId}')">✏️</button>
+                    </div>
+                </td>
+            </tr>`;
+    }).join('');
+}
+
+window.filterTeachers = function() {
+    const q = (document.getElementById('teachersSearch')?.value || '').toLowerCase().trim();
+    if (!q) {
+        APP_STATE.filteredTeachers = [...APP_STATE.teachers];
+    } else {
+        APP_STATE.filteredTeachers = APP_STATE.teachers.filter(t =>
+            (t.fullName || '').toLowerCase().includes(q) ||
+            (t.selfNumber || '').toLowerCase().includes(q) ||
+            (t.jobStatus || '').toLowerCase().includes(q)
+        );
+    }
+    renderTeachersTable();
+};
+
+/* ============================================
+   loadOverviewStats
+============================================ */
+async function loadOverviewStats() {
+    try {
+        const teachers = APP_STATE.teachers;
+        const now = new Date();
+        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        let recentCount = 0;
+        let todayCount = 0;
+
+        teachers.forEach(t => {
+            try {
+                const d = t.createdAt?.toDate?.() || (t.createdAtLocal ? new Date(t.createdAtLocal) : null);
+                if (d) {
+                    if (d >= thirtyDaysAgo) recentCount++;
+                    if (d >= todayStart) todayCount++;
+                }
+            } catch (e) { /* ignore */ }
+        });
+
+        document.getElementById('statTotal').textContent = teachers.length;
+        document.getElementById('statRecent').textContent = recentCount;
+        document.getElementById('statToday').textContent = todayCount;
+
+        // أحدث 5 إدخالات
+        const recentTeachers = teachers.slice(0, 5);
+        const container = document.getElementById('recentTeachers');
+
+        if (container) {
+            if (recentTeachers.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📭</div>
+                        <div class="empty-title">لا توجد سجلات بعد</div>
+                        <div class="empty-desc">ستظهر هنا أحدث السجلات</div>
+                    </div>`;
+            } else {
+                container.innerHTML = `
+                    <div class="table-wrap">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>الاسم</th>
+                                    <th>الرقم الذاتي</th>
+                                    <th>الوضع الوظيفي</th>
+                                    <th>إجراء</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${recentTeachers.map(t => `
+                                    <tr>
+                                        <td>${escapeHTML(t.fullName || '—')}</td>
+                                        <td class="ltr">${escapeHTML(t.selfNumber || '—')}</td>
+                                        <td>${escapeHTML(t.jobStatus || '—')}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline" onclick="viewTeacher('${t.firebaseId}')">👁️ عرض</button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>`;
+            }
+        }
+
+    } catch (e) {
+        console.error('loadOverviewStats error:', e);
+    }
+}
+
+/* ============================================
+   viewTeacher — عرض تفاصيل المعلم
+============================================ */
+window.viewTeacher = function(firebaseId) {
+    const teacher = APP_STATE.teachers.find(t => t.firebaseId === firebaseId);
+    if (!teacher) return;
+
+    APP_STATE.currentTeacher = teacher;
+
+    // ترتيب الحقول حسب الأقسام
+    const sections = [...APP_STATE.dynamicSections].sort((a, b) => (a.order || 0) - (b.order || 0));
+    const fields = APP_STATE.dynamicFields;
+
+    let html = '';
+
+    if (fields.length === 0) {
+        // في حال عدم وجود حقول ديناميكية، نعرض كل الحقول مباشرة
+        html = buildRawDetailsTable(teacher);
+    } else {
+        sections.forEach(section => {
+            const sectionFields = fields
+                .filter(f => f.section === section.id && f.showIn?.record !== false)
+                .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+            if (sectionFields.length === 0) return;
+
+            html += `<div style="margin-bottom:20px;">
+                <h4 style="color:#1a3a5c; padding:10px 15px; background:#eaf3fb; border-radius:8px; margin-bottom:12px; font-size:0.95rem;">
+                    📋 ${escapeHTML(section.label)}
+                </h4>
+                <table style="width:100%; border-collapse:collapse;">
+                    ${sectionFields.map(f => {
+                        let val = teacher[f.key];
+                        if (val === null || val === undefined || val === '') val = '—';
+                        if (typeof val === 'object' && val.toDate) {
+                            try { val = val.toDate().toLocaleString('ar-EG'); } catch (e) { val = '—'; }
+                        }
+                        const ltr = f.ltr ? 'direction:ltr; unicode-bidi:embed; text-align:right;' : '';
+                        return `
+                            <tr>
+                                <td style="padding:10px 15px; border-bottom:1px solid #e8eef5; width:40%; background:#f9fafc; font-weight:700; font-size:0.88rem;">${escapeHTML(f.label)}</td>
+                                <td style="padding:10px 15px; border-bottom:1px solid #e8eef5; font-size:0.9rem; ${ltr}">${escapeHTML(String(val))}</td>
+                            </tr>`;
+                    }).join('')}
+                </table>
+            </div>`;
+        });
+    }
+
+    document.getElementById('detailTitle').textContent = 'سجل: ' + (teacher.fullName || 'معلم');
+    document.getElementById('detailBody').innerHTML = html;
+
+    openModal('modalTeacherDetails');
+};
+
+function buildRawDetailsTable(teacher) {
+    const skip = ['firebaseId', 'createdAt', 'createdAtLocal', 'createdByUid', 'createdByRole', 'schoolId'];
+    const rows = Object.keys(teacher)
+        .filter(k => !skip.includes(k))
+        .map(k => {
+            let val = teacher[k];
+            if (val === null || val === undefined || val === '') val = '—';
+            if (typeof val === 'object' && val.toDate) {
+                try { val = val.toDate().toLocaleString('ar-EG'); } catch (e) { val = '—'; }
+            }
+            return `<tr>
+                <td style="padding:10px 15px; border-bottom:1px solid #e8eef5; width:40%; background:#f9fafc; font-weight:700;">${escapeHTML(k)}</td>
+                <td style="padding:10px 15px; border-bottom:1px solid #e8eef5;">${escapeHTML(String(val))}</td>
+            </tr>`;
+        }).join('');
+    return `<table style="width:100%; border-collapse:collapse;">${rows}</table>`;
+}
+
+/* ============================================
+   editTeacher — فتح نموذج التعديل
+============================================ */
+window.editTeacher = function(firebaseId) {
+    const teacher = APP_STATE.teachers.find(t => t.firebaseId === firebaseId);
+    if (!teacher) return;
+
+    APP_STATE.currentTeacher = teacher;
+
+    const sections = [...APP_STATE.dynamicSections].sort((a, b) => (a.order || 0) - (b.order || 0));
+    const fields = APP_STATE.dynamicFields;
+
+    let html = '';
+
+    if (fields.length === 0) {
+        html = buildRawEditForm(teacher);
+    } else {
+        sections.forEach(section => {
+            const sectionFields = fields
+                .filter(f => f.section === section.id && f.showIn?.form !== false)
+                .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+            if (sectionFields.length === 0) return;
+
+            html += `<div style="margin-bottom:22px; padding-bottom:18px; border-bottom:1px dashed #e8eef5;">
+                <h4 style="color:#2d7dd2; padding:8px 12px; background:#eaf3fb; border-radius:8px; margin-bottom:15px; font-size:0.95rem;">
+                    📋 ${escapeHTML(section.label)}
+                </h4>
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:15px;">
+                    ${sectionFields.map(f => buildEditField(f, teacher)).join('')}
+                </div>
+            </div>`;
+        });
+    }
+
+    document.getElementById('editBody').innerHTML = html;
+    openModal('modalEditTeacher');
+};
+
+function buildEditField(field, teacher) {
+    const val = teacher[field.key] ?? '';
+    const label = escapeHTML(field.label || field.key);
+    const req = field.required ? '<span style="color:#e74c3c;">*</span>' : '';
+    const ltrClass = field.ltr ? 'style="direction:ltr; text-align:left;"' : '';
+
+    let inputHTML = '';
+
+    if (field.type === 'select' || field.type === 'boolean') {
+        const opts = field.type === 'boolean' ? ['نعم', 'لا'] : (field.options || []);
+        inputHTML = `<select id="edit_${field.key}" style="padding:10px 14px; border:1.5px solid #d0d8e0; border-radius:10px; font-size:0.92rem; background:white; width:100%;">
+            <option value="">اختر...</option>
+            ${opts.map(o => `<option value="${escapeHTML(o)}" ${val === o ? 'selected' : ''}>${escapeHTML(o)}</option>`).join('')}
+        </select>`;
+    } else if (field.type === 'textarea') {
+        inputHTML = `<textarea id="edit_${field.key}" style="padding:10px 14px; border:1.5px solid #d0d8e0; border-radius:10px; font-size:0.92rem; background:white; width:100%; min-height:80px; resize:vertical;">${escapeHTML(String(val))}</textarea>`;
+    } else {
+        const inputType = field.type === 'number' ? 'number' : (field.type === 'date' ? 'date' : 'text');
+        inputHTML = `<input type="${inputType}" id="edit_${field.key}" value="${escapeHTML(String(val))}" ${ltrClass} style="padding:10px 14px; border:1.5px solid #d0d8e0; border-radius:10px; font-size:0.92rem; background:white; width:100%;">`;
+    }
+
+    return `
+        <div style="display:flex; flex-direction:column; gap:5px;">
+            <label style="font-size:0.88rem; font-weight:700; color:#2c3e50;">${label} ${req}</label>
+            ${inputHTML}
+        </div>`;
+}
+
+function buildRawEditForm(teacher) {
+    const skip = ['firebaseId', 'createdAt', 'createdAtLocal', 'createdByUid', 'createdByRole'];
+    const keys = Object.keys(teacher).filter(k => !skip.includes(k));
+    return `
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:15px;">
+            ${keys.map(k => `
+                <div style="display:flex; flex-direction:column; gap:5px;">
+                    <label style="font-size:0.88rem; font-weight:700;">${escapeHTML(k)}</label>
+                    <input type="text" id="edit_${k}" value="${escapeHTML(String(teacher[k] ?? ''))}" style="padding:10px 14px; border:1.5px solid #d0d8e0; border-radius:10px; font-size:0.92rem; background:white;">
+                </div>
+            `).join('')}
+        </div>`;
+}
+
+/* ============================================
+   editCurrentTeacher — من نافذة العرض
+============================================ */
+window.editCurrentTeacher = function() {
+    if (!APP_STATE.currentTeacher) return;
+    const id = APP_STATE.currentTeacher.firebaseId;
+    closeModal('modalTeacherDetails');
+    setTimeout(() => editTeacher(id), 200);
+};
+
+/* ============================================
+   saveTeacherEdit — حفظ التعديلات
+============================================ */
+window.saveTeacherEdit = async function() {
+    const teacher = APP_STATE.currentTeacher;
+    if (!teacher) return;
+
+    const updates = {};
+
+    // جمع القيم من الحقول
+    document.querySelectorAll('#editBody [id^="edit_"]').forEach(el => {
+        const key = el.id.replace('edit_', '');
+        let val = el.value;
+
+        // تجاهل createdAt وغيرها
+        if (['firebaseId', 'createdAt', 'createdAtLocal'].includes(key)) return;
+
+        updates[key] = val;
+    });
+
+    if (Object.keys(updates).length === 0) {
+        window.showToast('⚠️ لا توجد تغييرات', 'warning');
+        return;
+    }
+
+    updates.updatedAt = serverTimestamp();
+    updates.updatedBy = APP_STATE.currentUser?.uid || '';
+    updates.updatedByName = APP_STATE.currentUserData?.fullName || '';
+
+    confirmAction(
+        'حفظ التعديلات',
+        `سيتم حفظ ${Object.keys(updates).length} حقل في سجل "${teacher.fullName}". هل تريد المتابعة؟`,
+        async () => {
+            try {
+                showLoading('⏳ جاري الحفظ...');
+                await updateDoc(doc(db, 'teachers', teacher.firebaseId), updates);
+
+                try {
+                    await addDoc(collection(db, 'auditLog'), {
+                        action: 'update_teacher',
+                        userId: APP_STATE.currentUser?.uid || '',
+                        userName: APP_STATE.currentUserData?.fullName || '',
+                        userRole: 'school_admin',
+                        targetId: teacher.firebaseId,
+                        targetName: teacher.fullName,
+                        timestamp: serverTimestamp()
+                    });
+                } catch (e) { console.warn(e); }
+
+                window.showToast('✅ تم حفظ التعديلات', 'success');
+                closeModal('modalEditTeacher');
+                await loadTeachers();
+                await loadOverviewStats();
+
+            } catch (e) {
+                console.error(e);
+                window.showToast('❌ فشل الحفظ: ' + e.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        },
+        'حفظ',
+        false
+    );
+};
+
+/* ============================================
+   exportExcel — تصدير معلمي المدرسة
+============================================ */
+window.exportExcel = function() {
+    const teachers = APP_STATE.filteredTeachers.length > 0
+        ? APP_STATE.filteredTeachers
+        : APP_STATE.teachers;
+
+    if (teachers.length === 0) {
+        window.showToast('لا توجد بيانات للتصدير', 'warning');
+        return;
+    }
+
+    try {
+        const fields = APP_STATE.dynamicFields;
+        const sections = [...APP_STATE.dynamicSections].sort((a, b) => (a.order || 0) - (b.order || 0));
+
+        const data = teachers.map(t => {
+            const row = {};
+            if (fields.length > 0) {
+                sections.forEach(section => {
+                    const sectionFields = fields
+                        .filter(f => f.section === section.id && f.showIn?.excel !== false)
+                        .sort((a, b) => (a.order || 0) - (b.order || 0));
+                    sectionFields.forEach(f => {
+                        let val = t[f.key];
+                        if (val === null || val === undefined || val === '') val = '';
+                        if (typeof val === 'object' && val.toDate) {
+                            try { val = val.toDate().toLocaleDateString('ar-EG'); } catch (e) { val = ''; }
+                        }
+                        row[f.label || f.key] = String(val);
+                    });
+                });
+            } else {
+                Object.keys(t).forEach(k => {
+                    if (['firebaseId', 'createdAt', 'createdAtLocal'].includes(k)) return;
+                    let val = t[k];
+                    if (val === null || val === undefined) val = '';
+                    if (typeof val === 'object' && val.toDate) {
+                        try { val = val.toDate().toLocaleDateString('ar-EG'); } catch (e) { val = ''; }
+                    }
+                    row[k] = String(val);
+                });
+            }
+            return row;
+        });
+
+        if (Object.keys(data[0]).length === 0) {
+            window.showToast('لا توجد حقول للتصدير', 'warning');
+            return;
+        }
+
+        const ws = XLSX.utils.json_to_sheet(data);
+        const headers = Object.keys(data[0]);
+        const range = XLSX.utils.decode_range(ws['!ref']);
+
+        // تنسيق الرؤوس
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+            const addr = XLSX.utils.encode_cell({ r: 0, c: C });
+            if (!ws[addr]) continue;
+            ws[addr].s = {
+                font: { name: 'Tajawal', sz: 12, color: { rgb: 'FFFFFFFF' }, bold: true },
+                fill: { fgColor: { rgb: 'FF1A3A5C' } },
+                alignment: { horizontal: 'center', vertical: 'center', wrapText: true, readingOrder: 2 },
+                border: {
+                    top: { style: 'thin', color: { rgb: 'FF888888' } },
+                    bottom: { style: 'thin', color: { rgb: 'FF888888' } },
+                    left: { style: 'thin', color: { rgb: 'FF888888' } },
+                    right: { style: 'thin', color: { rgb: 'FF888888' } }
+                }
+            };
+        }
+
+        // تنسيق الصفوف
+        for (let R = 1; R <= range.e.r; ++R) {
+            const isAlt = R % 2 === 0;
+            const bg = isAlt ? 'FFEAF3FB' : 'FFFFFFFF';
+            for (let C = range.s.c; C <= range.e.c; ++C) {
+                const addr = XLSX.utils.encode_cell({ r: R, c: C });
+                if (!ws[addr]) ws[addr] = { t: 's', v: '' };
+                ws[addr].s = {
+                    font: { name: 'Tajawal', sz: 11, color: { rgb: 'FF000000' } },
+                    fill: { fgColor: { rgb: bg } },
+                    alignment: { horizontal: 'center', vertical: 'center', wrapText: true, readingOrder: 2 },
+                    border: {
+                        top: { style: 'thin', color: { rgb: 'FF888888' } },
+                        bottom: { style: 'thin', color: { rgb: 'FF888888' } },
+                        left: { style: 'thin', color: { rgb: 'FF888888' } },
+                        right: { style: 'thin', color: { rgb: 'FF888888' } }
+                    }
+                };
+            }
+        }
+
+        ws['!cols'] = headers.map(h => {
+            let max = h.length;
+            data.forEach(row => {
+                const len = String(row[h] || '').length;
+                if (len > max) max = len;
+            });
+            return { wch: Math.min(Math.max(max + 2, 12), 40) };
+        });
+
+        ws['!rows'] = [{ hpt: 26 }];
+        for (let i = 1; i <= data.length; i++) ws['!rows'].push({ hpt: 22 });
+
+        const wb = XLSX.utils.book_new();
+        wb.Workbook = wb.Workbook || {};
+        wb.Workbook.Views = [{ RTL: true }];
+        XLSX.utils.book_append_sheet(wb, ws, 'المعلمون');
+
+        const schoolName = (APP_STATE.schoolName || 'مدرسة').replace(/[\\/:*?"<>|]/g, '_');
+        const filename = `${schoolName}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        XLSX.writeFile(wb, filename);
+        window.showToast('✅ تم التصدير', 'success');
+
+    } catch (e) {
+        console.error(e);
+        window.showToast('❌ فشل التصدير: ' + e.message, 'error');
+    }
+};
+
+/* ============================================
+   إغلاق النوافذ بالنقر خارجها + Escape
+============================================ */
+document.addEventListener('click', (e) => {
+    if (e.target.classList && e.target.classList.contains('modal')) {
+        e.target.classList.remove('active');
+    }
+});
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.modal.active').forEach(m => m.classList.remove('active'));
+    }
+});
+
+/* ============================================
+   تسجيل خروج تلقائي بعد 30 دقيقة
+============================================ */
+let inactivityTimer = null;
+function resetInactivityTimer() {
+    if (inactivityTimer) clearTimeout(inactivityTimer);
+    if (APP_STATE.currentUser) {
+        inactivityTimer = setTimeout(() => {
+            if (APP_STATE.currentUser) {
+                window.showToast('⏳ انتهت الجلسة', 'warning', 5000);
+                setTimeout(() => signOut(auth), 3000);
+            }
+        }, 30 * 60 * 1000);
+    }
+}
+
+['click', 'keydown', 'mousemove', 'touchstart'].forEach(evt => {
+    document.addEventListener(evt, resetInactivityTimer, { passive: true });
+});
+
+onAuthStateChanged(auth, (user) => {
+    if (user) resetInactivityTimer();
+    else if (inactivityTimer) clearTimeout(inactivityTimer);
+});
+
+console.log('✅ admin.html — تم التحميل بنجاح');
+</script>
+
+</body>
+</html>

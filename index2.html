@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>السجل الشخصي للمعلم</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@400;600;700&family=Amiri:wght@400;700&family=Almarai:wght@400;700;800&family=Noto+Naskh+Arabic:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+    --primary-color: #1a3a5c;
+    --secondary-color: #2d7dd2;
+    --accent-color: #27ae60;
+    --bg-color: #eef2f7;
+    --card-bg: #ffffff;
+    --text-color: #2c3e50;
+    --border-color: #d0d8e0;
+    --danger: #e74c3c;
+    --warning: #f39c12;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Tajawal', sans-serif; }
+body { background-color: var(--bg-color); display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; padding: 20px; }
+.container { background-color: var(--card-bg); width: 100%; max-width: 950px; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); overflow: hidden; }
+
+.progress-container { width: 100%; background-color: #e0e0e0; height: 6px; }
+.progress-bar { height: 100%; background: linear-gradient(90deg, var(--secondary-color), var(--accent-color)); width: 0%; transition: width 0.4s ease; }
+
+.header { background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; padding: 25px; text-align: center; }
+.header h1 { font-size: 1.6rem; margin-bottom: 5px; }
+.header p { font-size: 0.9rem; opacity: 0.9; }
+
+.form-step { display: none; padding: 30px 35px; animation: fadeIn 0.5s ease; }
+.form-step.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+.step-header { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid var(--bg-color); }
+.step-number { background: var(--secondary-color); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem; flex-shrink: 0; }
+.step-title { font-size: 1.25rem; color: var(--primary-color); font-weight: 700; }
+
+.section-title { font-size: 0.95rem; color: white; background: var(--secondary-color); padding: 8px 15px; border-radius: 6px; margin: 20px 0 15px 0; font-weight: 700; display: inline-block; }
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.form-group { display: flex; flex-direction: column; }
+.form-group.full-width { grid-column: span 2; }
+.form-group label { margin-bottom: 6px; font-weight: 500; color: var(--text-color); font-size: 0.9rem; }
+.form-group label .required { color: var(--danger); }
+.form-group input, .form-group select, .form-group textarea {
+    padding: 11px 14px; border: 1.5px solid var(--border-color); border-radius: 8px;
+    font-size: 0.95rem; background-color: #fafbfc; font-family: 'Tajawal', sans-serif;
+    transition: all 0.3s;
+}
+.form-group textarea { resize: vertical; min-height: 75px; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none; border-color: var(--secondary-color); background-color: #fff;
+    box-shadow: 0 0 0 3px rgba(45,125,210,0.1);
+}
+.form-group input.ltr { direction: ltr; text-align: right; unicode-bidi: embed; font-family: 'Courier New', monospace; font-weight: 600; letter-spacing: 0.5px; }
+.form-group small.hint { color: #888; font-size: 0.78rem; margin-top: 3px; }
+
+.hidden { display: none !important; }
+
+.buttons-container { display: flex; justify-content: space-between; align-items: center; padding: 20px 35px; background-color: #f9fafc; border-top: 1px solid var(--border-color); }
+.btn { padding: 12px 28px; border: none; border-radius: 8px; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.3s; font-family: 'Tajawal', sans-serif; }
+.btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.15); }
+.btn:active { transform: translateY(0); }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.btn-prev { background-color: #e0e0e0; color: #555; }
+.btn-next, .btn-submit { background: linear-gradient(135deg, var(--secondary-color), var(--primary-color)); color: white; }
+.btn-submit { background: linear-gradient(135deg, var(--accent-color), #1e8449); display: none; }
+.btn-draft { background: #f39c12; color: white; padding: 8px 16px; font-size: 0.82rem; }
+
+.step-indicator { font-size: 0.85rem; color: #7f8c8d; }
+
+.success-message { display: none; text-align: center; padding: 60px 30px; }
+.success-message .check-icon { width: 80px; height: 80px; background: var(--accent-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 20px; }
+.success-message h2 { color: var(--accent-color); margin-bottom: 10px; }
+.success-message p { color: #666; margin-bottom: 20px; }
+
+.loading-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.3rem; flex-direction: column; gap: 15px; }
+.spinner { width: 50px; height: 50px; border: 5px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.init-overlay {
+    position: fixed; inset: 0; background: linear-gradient(135deg, #1a3a5c, #2d7dd2);
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    gap: 20px; color: white; z-index: 10000; transition: opacity 0.5s;
+}
+.init-overlay.hidden { opacity: 0; pointer-events: none; }
+.init-spinner { width: 60px; height: 60px; border: 5px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite; }
+.init-overlay p { font-size: 1.1rem; font-weight: 600; }
+
+.error-box {
+    display: none; padding: 30px; background: #fdecea; border-right: 4px solid var(--danger);
+    border-radius: 12px; color: #922b21; margin: 20px; font-size: 0.95rem; line-height: 1.7;
+}
+.error-box.show { display: block; }
+.error-box h3 { margin-bottom: 10px; }
+
+/* ============ شاشة الإغلاق ============ */
+#closureScreen {
+    display: none;
+    position: fixed; inset: 0;
+    background: linear-gradient(135deg, #1a3a5c 0%, #2d7dd2 100%);
+    z-index: 9500;
+    justify-content: center; align-items: center;
+    padding: 20px;
+    overflow-y: auto;
+}
+#closureScreen.active { display: flex; }
+#closureScreen.theme-calm { background: linear-gradient(135deg, #34495e 0%, #5d6d7e 100%); }
+#closureScreen.theme-dark { background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 100%); }
+#closureScreen.theme-light { background: linear-gradient(135deg, #dfe6e9 0%, #b2bec3 100%); }
+#closureScreen.theme-light .closure-card { color: #2c3e50; }
+
+.closure-card {
+    background: white;
+    border-radius: 18px;
+    padding: 45px 35px;
+    max-width: 540px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.35);
+    animation: pop 0.5s ease;
+}
+@keyframes pop {
+    from { opacity: 0; transform: scale(0.92); }
+    to { opacity: 1; transform: scale(1); }
+}
+.closure-icon {
+    font-size: 5rem;
+    margin-bottom: 20px;
+    display: block;
+    animation: pulse 2s infinite;
+}
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+.closure-title {
+    font-size: 1.7rem;
+    font-weight: 800;
+    color: #1a3a5c;
+    margin-bottom: 18px;
+    line-height: 1.3;
+}
+.closure-message {
+    font-size: 1.05rem;
+    color: #555;
+    line-height: 1.9;
+    margin-bottom: 25px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+.closure-countdown {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 25px 0;
+    flex-wrap: wrap;
+}
+.closure-countdown-unit {
+    background: #f0f7ff;
+    border-radius: 12px;
+    padding: 15px 18px;
+    min-width: 75px;
+    text-align: center;
+    border: 2px solid #e3f2fd;
+}
+.closure-countdown-value {
+    font-size: 1.7rem;
+    font-weight: 800;
+    color: #1a3a5c;
+    line-height: 1;
+}
+.closure-countdown-label {
+    font-size: 0.72rem;
+    color: #7f8c8d;
+    margin-top: 5px;
+    font-weight: 600;
+}
+.closure-retry-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 13px 30px;
+    background: linear-gradient(135deg, #2d7dd2, #1a3a5c);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.3s;
+    margin-top: 10px;
+}
+.closure-retry-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(45,125,210,0.4);
+}
+.closure-footer {
+    margin-top: 25px;
+    font-size: 0.82rem;
+    color: #95a5a6;
+    line-height: 1.6;
+}
+
+/* ============ شريط المسودة ============ */
+#draftBar {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    max-width: 500px;
+    margin: 0 auto;
+    background: #fff8e1;
+    border: 2px solid #f39c12;
+    border-radius: 12px;
+    padding: 14px 18px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    z-index: 100;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    animation: slideUpDraft 0.4s ease;
+}
+#draftBar.show { display: flex; }
+@keyframes slideUpDraft {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.draft-text { flex: 1; font-size: 0.88rem; color: #7d5b00; font-weight: 600; }
+.draft-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.draft-btn {
+    padding: 7px 14px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+}
+.draft-btn-primary { background: #f39c12; color: white; }
+.draft-btn-secondary { background: white; color: #7d5b00; border: 1.5px solid #f39c12; }
+.draft-btn:hover { transform: translateY(-1px); opacity: 0.95; }
+
+/* ============ شارة حالة الحفظ ============ */
+#saveStatus {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    background: rgba(39, 174, 96, 0.95);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    z-index: 200;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+}
+#saveStatus.show { opacity: 1; }
+
+@media (max-width: 700px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .form-group.full-width { grid-column: span 1; }
+    .form-step { padding: 20px; }
+    .buttons-container { padding: 15px 20px; flex-wrap: wrap; gap: 10px; }
+    .closure-card { padding: 30px 22px; }
+    .closure-icon { font-size: 4rem; }
+    .closure-title { font-size: 1.4rem; }
+    .closure-countdown-unit { min-width: 60px; padding: 10px 12px; }
+    .closure-countdown-value { font-size: 1.4rem; }
+    #draftBar { left: 10px; right: 10px; bottom: 10px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============ شاشة التحميل الأولية ============ -->
+<div class="init-overlay" id="initOverlay">
+    <div class="init-spinner"></div>
+    <p>⏳ جاري التحقق...</p>
+    <p style="font-size: 0.85rem; opacity: 0.8;">يرجى الانتظار قليلاً</p>
+</div>
+
+<!-- ============ شاشة الإغلاق ============ -->
+<div id="closureScreen">
+    <div class="closure-card">
+        <span class="closure-icon" id="closureIcon">🔒</span>
+        <div class="closure-title" id="closureTitle">النظام مغلق مؤقتاً</div>
+        <div class="closure-message" id="closureMessage">سيتم الإعلان عن موعد الفتح قريباً.</div>
+        <div class="closure-countdown" id="closureCountdown" style="display:none;"></div>
+        <button class="closure-retry-btn" onclick="retryCheck()">
+            <span>🔄</span>
+            <span>إعادة المحاولة</span>
+        </button>
+        <div class="closure-footer">
+            نظام سجل المعلمين
+        </div>
+    </div>
+</div>
+
+<!-- ============ شاشة الحفظ ============ -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <div>⏳ جاري حفظ البيانات...</div>
+</div>
+
+<!-- ============ شارة الحفظ ============ -->
+<div id="saveStatus">✅ تم حفظ المسودة</div>
+
+<!-- ============ شريط المسودة ============ -->
+<div id="draftBar">
+    <span class="draft-text">💾 تم العثور على مسودة محفوظة. هل تريد المتابعة؟</span>
+    <div class="draft-actions">
+        <button class="draft-btn draft-btn-primary" onclick="restoreDraft()">متابعة</button>
+        <button class="draft-btn draft-btn-secondary" onclick="discardDraft()">حذف</button>
+    </div>
+</div>
+
+<!-- ============ حاوية النموذج ============ -->
+<div class="container">
+    <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
+    <div class="header">
+        <h1>📋 السجل الشخصي للمعلم</h1>
+        <p>وزارة التربية - الجمهورية العربية السورية</p>
+    </div>
+
+    <div class="error-box" id="errorBox">
+        <h3>⚠️ تعذّر تحميل النموذج</h3>
+        <p id="errorMessage">لم يتم العثور على الحقول الديناميكية في قاعدة البيانات.</p>
+        <p style="margin-top: 10px;">💡 <strong>الحل:</strong> الرجاء التواصل مع إدارة النظام.</p>
+    </div>
+
+    <form id="teacherForm" style="display: none;">
+        <div id="stepsContainer"></div>
+
+        <div class="success-message" id="successMessage">
+            <div class="check-icon">✓</div>
+            <h2>تم حفظ البيانات بنجاح!</h2>
+            <p>شكراً لك، تم تسجيل بياناتك في قاعدة البيانات.</p>
+            <button type="button" class="btn btn-next" onclick="location.reload()">تسجيل معلم جديد</button>
+        </div>
+    </form>
+
+    <div class="buttons-container" id="navButtons" style="display: none;">
+        <button type="button" class="btn btn-prev" id="prevBtn" onclick="changeStep(-1)" style="visibility: hidden;">← السابق</button>
+        <span class="step-indicator">الخطوة <span id="currentStepNum">1</span> من <span id="totalStepsNum">1</span></span>
+        <button type="button" class="btn btn-next" id="nextBtn" onclick="changeStep(1)">التالي →</button>
+    </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, doc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* ============================================
+   Firebase Config
+============================================ */
+const firebaseConfig = {
+    apiKey: "AIzaSyC31P3GxbtuFEl34czIe0KFuuKNv3JDKBU",
+    authDomain: "khitmaty1.firebaseapp.com",
+    projectId: "khitmaty1",
+    storageBucket: "khitmaty1.firebasestorage.app",
+    messagingSenderId: "555189930690",
+    appId: "1:555189930690:web:8bbd5347b7a3596923095b"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+/* ============================================
+   الحالة العامة
+============================================ */
+const STATE = {
+    dynamicFields: [],
+    dynamicSections: [],
+    cascadesData: {},
+    columnLabels: {},
+    currentStep: 1,
+    totalSteps: 1,
+    stepMapping: [],
+    appStatus: null,
+    draftKey: 'khitmaty_teacher_draft',
+    draftTimer: null,
+    checkTimer: null,
+    isSubmitting: false
+};
+window.STATE = STATE;
+
+const form = document.getElementById('teacherForm');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const progressBar = document.getElementById('progressBar');
+const navButtons = document.getElementById('navButtons');
+const successMessage = document.getElementById('successMessage');
+const loadingOverlay = document.getElementById('loadingOverlay');
+const currentStepNum = document.getElementById('currentStepNum');
+const totalStepsNum = document.getElementById('totalStepsNum');
+
+/* ============================================
+   فحص حالة الرابط
+============================================ */
+async function checkAppStatus() {
+    try {
+        const snap = await getDoc(doc(db, 'settings', 'appStatus'));
+        if (snap.exists()) {
+            STATE.appStatus = snap.data();
+        } else {
+            // إذا لم توجد الوثيقة، نعتبر النظام مفتوحاً
+            STATE.appStatus = { isAppOpen: true };
+        }
+        return STATE.appStatus;
+    } catch (e) {
+        console.error('checkAppStatus error:', e);
+        // في حال فشل الاتصال، نعيد آخر حالة معروفة
+        try {
+            const cached = localStorage.getItem('khitmaty_last_status');
+            if (cached) return JSON.parse(cached);
+        } catch (err) { /* ignore */ }
+        // افتراضياً: مفتوح
+        return { isAppOpen: true };
+    }
+}
+
+function saveLastStatus(status) {
+    try {
+        localStorage.setItem('khitmaty_last_status', JSON.stringify(status));
+    } catch (e) { /* ignore */ }
+}
+
+/* ============================================
+   إظهار شاشة الإغلاق
+============================================ */
+function showClosureScreen(status) {
+    // إخفاء شاشة التحميل
+    document.getElementById('initOverlay')?.classList.add('hidden');
+    document.getElementById('loadingOverlay').style.display = 'none';
+
+    // إخفاء النموذج
+    document.querySelector('.container').style.display = 'none';
+
+    // إخفاء شريط المسودة
+    document.getElementById('draftBar')?.classList.remove('show');
+
+    // إظهار شاشة الإغلاق
+    const screen = document.getElementById('closureScreen');
+    screen.classList.add('active');
+
+    // تطبيق الثيم
+    const theme = status.closureTheme || 'calm';
+    screen.className = '';
+    screen.classList.add('active');
+    if (theme !== 'calm') {
+        screen.classList.add('theme-' + theme);
+    } else {
+        screen.classList.add('theme-calm');
+    }
+
+    // العنوان والرسالة
+    document.getElementById('closureTitle').textContent = status.closureTitle || 'النظام مغلق مؤقتاً';
+    document.getElementById('closureMessage').textContent = status.closureMessage || 'سيتم الإعلان عن موعد الفتح قريباً.';
+
+    // الأيقونة
+    document.getElementById('closureIcon').textContent = '🔒';
+
+    // العدّاد التنازلي
+    const countdownEl = document.getElementById('closureCountdown');
+    const mode = status.closureDisplayMode || 'message';
+
+    if (mode === 'countdown' && status.reopenDate) {
+        countdownEl.style.display = 'flex';
+        startCountdown(status.reopenDate);
+    } else {
+        countdownEl.style.display = 'none';
+        stopCountdown();
+    }
+}
+
+/* ============================================
+   إخفاء شاشة الإغلاق
+============================================ */
+function hideClosureScreen() {
+    document.getElementById('closureScreen')?.classList.remove('active');
+    document.querySelector('.container').style.display = 'block';
+}
+
+/* ============================================
+   العدّاد التنازلي
+============================================ */
+let countdownInterval = null;
+
+function startCountdown(reopenDate) {
+    stopCountdown();
+
+    let targetTime;
+    try {
+        if (reopenDate && typeof reopenDate.toDate === 'function') {
+            targetTime = reopenDate.toDate().getTime();
+        } else if (reopenDate && reopenDate.seconds) {
+            targetTime = reopenDate.seconds * 1000;
+        } else {
+            targetTime = new Date(reopenDate).getTime();
+        }
+    } catch (e) {
+        console.error('Countdown date error:', e);
+        return;
+    }
+
+    function tick() {
+        const el = document.getElementById('closureCountdown');
+        if (!el) return;
+
+        const diff = Math.max(0, targetTime - Date.now());
+
+        if (diff === 0) {
+            el.innerHTML = '<div style="font-size:1.1rem; color:#27ae60; font-weight:700; padding:15px;">🎉 الوقت المتوقع للفتح قد حان — أعد المحاولة</div>';
+            return;
+        }
+
+        const days = Math.floor(diff / 86400000);
+        const hours = Math.floor((diff % 86400000) / 3600000);
+        const minutes = Math.floor((diff % 3600000) / 60000);
+        const seconds = Math.floor((diff % 60000) / 1000);
+
+        const units = [
+            { value: days, label: 'يوم' },
+            { value: hours, label: 'ساعة' },
+            { value: minutes, label: 'دقيقة' },
+            { value: seconds, label: 'ثانية' }
+        ];
+
+        el.innerHTML = units.map(u =>
+            `<div class="closure-countdown-unit">
+                <div class="closure-countdown-value">${u.value}</div>
+                <div class="closure-countdown-label">${u.label}</div>
+            </div>`
+        ).join('');
+    }
+
+    tick();
+    countdownInterval = setInterval(tick, 1000);
+}
+
+function stopCountdown() {
+    if (countdownInterval) {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+    }
+}
+
+/* ============================================
+   retryCheck — إعادة المحاولة
+============================================ */
+window.retryCheck = async function() {
+    const status = await checkAppStatus();
+    saveLastStatus(status);
+
+    if (status.isAppOpen === true) {
+        hideClosureScreen();
+        stopCountdown();
+        // إعادة التحميل لتهيئة النموذج
+        window.location.reload();
+    } else {
+        showClosureScreen(status);
+    }
+};
+
+/* ============================================
+   فحص دوري كل 30 ثانية
+============================================ */
+function startPeriodicCheck() {
+    if (STATE.checkTimer) clearInterval(STATE.checkTimer);
+
+    STATE.checkTimer = setInterval(async () => {
+        if (STATE.isSubmitting) return;
+
+        try {
+            const status = await checkAppStatus();
+            if (status.isAppOpen !== true && STATE.appStatus?.isAppOpen === true) {
+                // تم الإغلاق الآن
+                STATE.appStatus = status;
+                saveLastStatus(status);
+
+                // حفظ المسودة تلقائياً قبل الإغلاق
+                saveDraft();
+
+                // إظهار شاشة الإغلاق
+                showClosureScreen(status);
+            }
+        } catch (e) { /* ignore */ }
+    }, 30000);
+}
+
+/* ============================================
+   المسودة — الحفظ والاستعادة
+============================================ */
+function saveDraft() {
+    if (!form || form.style.display === 'none') return;
+    if (STATE.isSubmitting) return;
+
+    try {
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        // إذا كانت فارغة تماماً، لا نحفظ
+        const hasValue = Object.values(data).some(v => v && String(v).trim() !== '');
+        if (!hasValue) return;
+
+        const draft = {
+            data,
+            currentStep: STATE.currentStep,
+            savedAt: new Date().toISOString()
+        };
+
+        localStorage.setItem(STATE.draftKey, JSON.stringify(draft));
+        showSaveStatus();
+    } catch (e) {
+        console.warn('saveDraft error:', e);
+    }
+}
+
+function showSaveStatus() {
+    const el = document.getElementById('saveStatus');
+    if (!el) return;
+    el.textContent = '💾 تم حفظ المسودة';
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 1500);
+}
+
+function startAutoDraft() {
+    if (STATE.draftTimer) clearInterval(STATE.draftTimer);
+    STATE.draftTimer = setInterval(() => {
+        saveDraft();
+    }, 10000);
+}
+
+function stopAutoDraft() {
+    if (STATE.draftTimer) {
+        clearInterval(STATE.draftTimer);
+        STATE.draftTimer = null;
+    }
+}
+
+function hasDraft() {
+    try {
+        const raw = localStorage.getItem(STATE.draftKey);
+        if (!raw) return null;
+        const draft = JSON.parse(raw);
+        if (!draft || !draft.data) return null;
+        const hasValue = Object.values(draft.data).some(v => v && String(v).trim() !== '');
+        return hasValue ? draft : null;
+    } catch (e) {
+        return null;
+    }
+}
+
+window.restoreDraft = function() {
+    const draft = hasDraft();
+    if (!draft) {
+        document.getElementById('draftBar')?.classList.remove('show');
+        return;
+    }
+
+    // تعبئة الحقول
+    Object.keys(draft.data).forEach(key => {
+        const el = document.getElementById(`field_${key}`);
+        if (el) {
+            el.value = draft.data[key] || '';
+        }
+    });
+
+    // استعادة الخطوة
+    if (draft.currentStep && draft.currentStep > 0 && draft.currentStep <= STATE.totalSteps) {
+        STATE.currentStep = draft.currentStep;
+    }
+
+    // إخفاء الشريط
+    document.getElementById('draftBar')?.classList.remove('show');
+
+    // تحديث العرض
+    if (typeof updateStepDisplay === 'function') updateStepDisplay();
+    if (typeof initCascades === 'function') initCascades();
+    if (typeof toggleSpouseSection === 'function') toggleSpouseSection();
+    if (typeof toggleConditionalField === 'function') toggleConditionalField();
+
+    showSaveStatus();
+};
+
+window.discardDraft = function() {
+    if (!confirm('هل تريد حذف المسودة؟')) return;
+    try {
+        localStorage.removeItem(STATE.draftKey);
+    } catch (e) { /* ignore */ }
+    document.getElementById('draftBar')?.classList.remove('show');
+};
+
+function clearDraft() {
+    try {
+        localStorage.removeItem(STATE.draftKey);
+    } catch (e) { /* ignore */ }
+}
+window.clearDraft = clearDraft;
+
+/* ============================================
+   مراقبة النموذج لحفظ المسودة
+============================================ */
+function attachDraftListeners() {
+    if (!form) return;
+    form.addEventListener('input', () => {
+        // حفظ بعد 1.5 ثانية من آخر تعديل
+        clearTimeout(form._draftTimeout);
+        form._draftTimeout = setTimeout(saveDraft, 1500);
+    });
+    form.addEventListener('change', () => {
+        clearTimeout(form._draftTimeout);
+        form._draftTimeout = setTimeout(saveDraft, 1500);
+    });
+}
+
+/* ============================================
+   ملاحظة: بقية المنطق في الدفعة 2
+============================================ */
+  
+/* ============================================
+   تحميل البيانات من Firestore
+============================================ */
+async function loadAllData() {
+    try {
+        // 1. تحميل الحقول
+        const fieldsDoc = await getDoc(doc(db, 'settings', 'dynamicFields'));
+        if (!fieldsDoc.exists()) {
+            showError('لم يتم العثور على الحقول الديناميكية في قاعدة البيانات.');
+            return false;
+        }
+
+        const data = fieldsDoc.data();
+        STATE.dynamicFields = data.fields || [];
+        STATE.dynamicSections = (data.sections || []).sort((a, b) => (a.order || 0) - (b.order || 0));
+
+        if (STATE.dynamicFields.length === 0) {
+            showError('لا توجد حقول معرفة.');
+            return false;
+        }
+
+        // 2. تحميل العلاقات المترابطة
+        try {
+            const cascadesDoc = await getDoc(doc(db, 'settings', 'cascades'));
+            STATE.cascadesData = cascadesDoc.exists() ? (cascadesDoc.data().data || {}) : {};
+        } catch (e) {
+            STATE.cascadesData = {};
+        }
+
+        // 3. تحميل التسميات المخصصة
+        try {
+            const labelsDoc = await getDoc(doc(db, 'settings', 'columnLabels'));
+            STATE.columnLabels = labelsDoc.exists() ? (labelsDoc.data() || {}) : {};
+        } catch (e) {
+            STATE.columnLabels = {};
+        }
+
+        return true;
+    } catch (e) {
+        console.error(e);
+        showError('فشل تحميل البيانات: ' + e.message);
+        return false;
+    }
+}
+
+function showError(msg) {
+    document.getElementById('errorMessage').textContent = msg;
+    document.getElementById('errorBox').classList.add('show');
+    document.getElementById('initOverlay').classList.add('hidden');
+    document.getElementById('loadingOverlay').style.display = 'none';
+}
+
+function getLabel(key) {
+    const field = STATE.dynamicFields.find(f => f.key === key);
+    if (!field) return key;
+    return STATE.columnLabels[key] || field.label || key;
+}
+
+/* ============================================
+   تقسيم الأقسام على الخطوات
+============================================ */
+function buildSteps() {
+    STATE.stepMapping = [];
+    let currentStepSections = [];
+    let stepNum = 1;
+
+    STATE.dynamicSections.forEach(section => {
+        const hasFields = STATE.dynamicFields.some(f => f.section === section.id && f.showIn?.form !== false);
+        if (!hasFields) return;
+
+        currentStepSections.push(section.id);
+
+        if (currentStepSections.length === 2) {
+            STATE.stepMapping.push({ step: stepNum, sections: [...currentStepSections] });
+            currentStepSections = [];
+            stepNum++;
+        }
+    });
+
+    if (currentStepSections.length > 0) {
+        STATE.stepMapping.push({ step: stepNum, sections: [...currentStepSections] });
+    }
+
+    STATE.stepMapping.push({ step: STATE.stepMapping.length + 1, sections: [], isSubmitStep: true });
+
+    STATE.totalSteps = STATE.stepMapping.length;
+    totalStepsNum.textContent = STATE.totalSteps;
+}
+
+/* ============================================
+   بناء النموذج
+============================================ */
+function buildForm() {
+    const container = document.getElementById('stepsContainer');
+    container.innerHTML = '';
+
+    STATE.stepMapping.forEach((mapping, idx) => {
+        const stepDiv = document.createElement('div');
+        stepDiv.className = 'form-step' + (idx === 0 ? ' active' : '');
+        stepDiv.dataset.step = mapping.step;
+
+        const header = document.createElement('div');
+        header.className = 'step-header';
+        header.innerHTML = `
+            <div class="step-number">${mapping.step}</div>
+            <div class="step-title">${mapping.isSubmitStep ? 'المعاينة والحفظ' : getStepTitle(mapping.sections)}</div>
+        `;
+        stepDiv.appendChild(header);
+
+        if (mapping.isSubmitStep) {
+            stepDiv.innerHTML += `
+                <div style="text-align: center; padding: 30px; background: #f9fafc; border-radius: 12px;">
+                    <h3 style="color: var(--primary-color); margin-bottom: 15px;">✅ أنت على وشك حفظ السجل</h3>
+                    <p style="color: #666; margin-bottom: 20px;">تأكد من صحة جميع البيانات قبل الحفظ النهائي.</p>
+                    <button type="button" class="btn btn-submit" onclick="submitForm()" style="display:inline-block; padding: 15px 40px; font-size: 1.1rem;">
+                        💾 حفظ البيانات في قاعدة البيانات
+                    </button>
+                </div>
+            `;
+        } else {
+            mapping.sections.forEach(sectionId => {
+                const section = STATE.dynamicSections.find(s => s.id === sectionId);
+                if (!section) return;
+
+                const sectionFields = STATE.dynamicFields
+                    .filter(f => f.section === sectionId && f.showIn?.form !== false)
+                    .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+                if (sectionFields.length === 0) return;
+
+                const sectionTitle = document.createElement('div');
+                sectionTitle.className = 'section-title';
+                sectionTitle.dataset.sectionId = sectionId;
+                sectionTitle.textContent = section.label;
+                stepDiv.appendChild(sectionTitle);
+
+                const grid = document.createElement('div');
+                grid.className = 'form-grid';
+
+                sectionFields.forEach(field => {
+                    grid.appendChild(buildFormField(field));
+                });
+
+                stepDiv.appendChild(grid);
+            });
+        }
+
+        container.appendChild(stepDiv);
+    });
+}
+
+function getStepTitle(sectionIds) {
+    const labels = sectionIds.map(id => STATE.dynamicSections.find(s => s.id === id)?.label).filter(Boolean);
+    return labels.join(' و ') || 'البيانات';
+}
+
+/* ============================================
+   بناء حقل واحد
+============================================ */
+function buildFormField(field) {
+    const group = document.createElement('div');
+    group.className = 'form-group';
+    group.dataset.key = field.key;
+
+    if (field.type === 'textarea') group.classList.add('full-width');
+
+    const labelText = getLabel(field.key) + (field.required ? ' <span class="required">*</span>' : '');
+    const label = document.createElement('label');
+    label.innerHTML = labelText;
+    label.dataset.field = field.key;
+    group.appendChild(label);
+
+    let input;
+
+    if (field.type === 'select' || field.type === 'boolean') {
+        input = document.createElement('select');
+        const opts = field.type === 'boolean' ? ['نعم', 'لا'] : (field.options || []);
+        input.innerHTML = '<option value="">اختر...</option>' +
+            opts.map(o => `<option value="${o}">${o}</option>`).join('');
+        if (field.required) input.required = true;
+    } else if (field.type === 'textarea') {
+        input = document.createElement('textarea');
+        if (field.required) input.required = true;
+    } else if (field.type === 'cascade') {
+        input = document.createElement('select');
+        input.innerHTML = '<option value="">اختر...</option>';
+        input.dataset.cascadeLevel = field.cascadeLevel;
+        if (field.parentKey) input.dataset.parentKey = field.parentKey;
+    } else {
+        input = document.createElement('input');
+        input.type = field.type === 'number' ? 'number' : (field.type === 'date' ? 'date' : 'text');
+        if (field.min !== undefined) input.min = field.min;
+        if (field.max !== undefined) input.max = field.max;
+        if (field.maxLength) input.maxLength = field.maxLength;
+        if (field.required) input.required = true;
+    }
+
+    input.name = field.key;
+    input.id = 'field_' + field.key;
+
+    if (field.ltr) input.classList.add('ltr');
+    if (field.key === 'cashAccount') {
+        input.placeholder = 'XXXX XXXX XXXX XXXX';
+        input.addEventListener('input', function () { formatCashAccount(this); });
+    }
+    if (field.key === 'phone' || field.key === 'wifePhone') {
+        input.placeholder = '09XXXXXXXX';
+        input.addEventListener('input', function () { validatePhone(this); });
+    }
+
+    // أحداث خاصة
+    if (field.key === 'gender') {
+        input.addEventListener('change', function () {
+            toggleSpouseSection();
+            adaptSpouseLabels(this.value);
+        });
+    }
+    if (field.key === 'maritalStatus') {
+        input.addEventListener('change', toggleSpouseSection);
+    }
+    if (field.key === 'wantsRetirement' || field.key === 'wantsTransfer') {
+        input.addEventListener('change', toggleConditionalField);
+    }
+    if (field.type === 'cascade') {
+        input.addEventListener('change', onCascadeChange);
+    }
+
+    group.appendChild(input);
+
+    if (field.hint) {
+        const hint = document.createElement('small');
+        hint.className = 'hint';
+        hint.textContent = field.hint;
+        group.appendChild(hint);
+    }
+
+    return group;
+}
+
+/* ============================================
+   القوائم المترابطة
+============================================ */
+function initCascades() {
+    const level1Fields = STATE.dynamicFields.filter(f => f.type === 'cascade' && f.cascadeLevel === 1);
+
+    level1Fields.forEach(field => {
+        const select = document.getElementById('field_' + field.key);
+        if (!select) return;
+
+        const level1Data = STATE.cascadesData[field.key] || {};
+        const options = Object.keys(level1Data);
+        const currentVal = select.value;
+
+        select.innerHTML = '<option value="">اختر...</option>' +
+            options.map(o => `<option value="${o}" ${currentVal === o ? 'selected' : ''}>${o}</option>`).join('');
+    });
+
+    const higherLevels = STATE.dynamicFields.filter(f => f.type === 'cascade' && f.cascadeLevel > 1);
+    higherLevels.forEach(field => {
+        const select = document.getElementById('field_' + field.key);
+        if (select && select.options.length <= 1) {
+            select.innerHTML = '<option value="">اختر المستوى الأعلى أولاً...</option>';
+            select.disabled = true;
+        }
+    });
+}
+
+function onCascadeChange(event) {
+    const select = event.target;
+    const selectedValue = select.value;
+    const changedKey = select.name;
+
+    const childFields = STATE.dynamicFields.filter(f => f.type === 'cascade' && f.parentKey === changedKey);
+
+    childFields.forEach(childField => {
+        const childSelect = document.getElementById('field_' + childField.key);
+        if (!childSelect) return;
+
+        if (!selectedValue) {
+            childSelect.innerHTML = '<option value="">اختر المستوى الأعلى أولاً...</option>';
+            childSelect.disabled = true;
+            resetDescendants(childField.key);
+            return;
+        }
+
+        const parentData = STATE.cascadesData[changedKey] || {};
+        const children = parentData[selectedValue] || [];
+
+        childSelect.disabled = false;
+        childSelect.innerHTML = '<option value="">اختر...</option>' +
+            children.map(c => `<option value="${c}">${c}</option>`).join('');
+
+        resetDescendants(childField.key);
+    });
+}
+
+function resetDescendants(parentKey) {
+    const descendants = STATE.dynamicFields.filter(f => f.type === 'cascade' && f.parentKey === parentKey);
+    descendants.forEach(d => {
+        const sel = document.getElementById('field_' + d.key);
+        if (sel) {
+            sel.innerHTML = '<option value="">اختر المستوى الأعلى أولاً...</option>';
+            sel.disabled = true;
+            resetDescendants(d.key);
+        }
+    });
+}
+
+/* ============================================
+   قسم الزوج/الزوجة
+============================================ */
+function toggleSpouseSection() {
+    const genderSelect = document.getElementById('field_gender');
+    const maritalSelect = document.getElementById('field_maritalStatus');
+    if (!genderSelect) return;
+
+    const gender = genderSelect.value;
+    const maritalStatus = maritalSelect ? maritalSelect.value : '';
+
+    const isMarried = maritalStatus === 'متزوج' || maritalStatus === 'متزوجة';
+    const shouldShow = maritalSelect
+        ? isMarried
+        : (gender === 'ذكر' || gender === 'أنثى');
+
+    const spouseFields = STATE.dynamicFields.filter(f => f.section === 'spouse');
+    if (spouseFields.length === 0) return;
+
+    spouseFields.forEach(f => {
+        const group = document.querySelector(`.form-group[data-key="${f.key}"]`);
+        if (!group) return;
+
+        group.classList.toggle('hidden', !shouldShow);
+
+        if (!shouldShow) {
+            const inp = group.querySelector('input, select, textarea');
+            if (inp) {
+                if (inp.tagName === 'SELECT') inp.selectedIndex = 0;
+                else inp.value = '';
+            }
+        }
+    });
+
+    const firstGroup = document.querySelector(`.form-group[data-key="${spouseFields[0].key}"]`);
+    const titleEl = firstGroup?.previousElementSibling;
+    if (titleEl && titleEl.classList.contains('section-title')) {
+        titleEl.classList.toggle('hidden', !shouldShow);
+        if (shouldShow) {
+            titleEl.textContent = gender === 'أنثى' ? 'بيانات الزوج' : 'بيانات الزوجة';
+        }
+    }
+
+    adaptSpouseLabels(gender);
+
+    if (shouldShow) {
+        initCascades();
+    }
+}
+
+function adaptSpouseLabels(gender) {
+    const spouseFields = STATE.dynamicFields.filter(f => f.section === 'spouse');
+
+    spouseFields.forEach(field => {
+        const label = document.querySelector(`label[data-field="${field.key}"]`);
+        if (!label) return;
+
+        let text = STATE.columnLabels[field.key] || field.label || field.key;
+
+        if (gender === 'أنثى') {
+            text = text
+                .replace(/الزوجة/g, 'الزوج')
+                .replace(/للزوجة/g, 'للزوج')
+                .replace(/زوجة/g, 'زوج');
+        } else if (gender === 'ذكر') {
+            text = text
+                .replace(/الزوج(?!ة)/g, 'الزوجة')
+                .replace(/للزوج(?!ة)/g, 'للزوجة');
+        }
+
+        label.innerHTML = text + (field.required ? ' <span class="required">*</span>' : '');
+    });
+}
+
+/* ============================================
+   الحقول الشرطية
+============================================ */
+function toggleConditionalField() {
+    const conditionalFields = STATE.dynamicFields.filter(
+        f => f.parentKey && f.parentValue && f.type !== 'cascade' && f.section !== 'spouse'
+    );
+
+    conditionalFields.forEach(field => {
+        const parentInput = document.getElementById('field_' + field.parentKey);
+        const group = document.querySelector(`.form-group[data-key="${field.key}"]`);
+        if (!parentInput || !group) return;
+
+        const shouldShow = parentInput.value === field.parentValue;
+        group.classList.toggle('hidden', !shouldShow);
+
+        if (!shouldShow) {
+            const input = group.querySelector('input, select, textarea');
+            if (input) {
+                if (input.tagName === 'SELECT') input.selectedIndex = 0;
+                else input.value = '';
+            }
+        }
+    });
+}
+
+/* ============================================
+   تنسيق المدخلات الخاصة
+============================================ */
+window.formatCashAccount = function (input) {
+    let value = input.value.replace(/\s/g, '').replace(/\D/g, '');
+    value = value.substring(0, 16);
+    input.value = value.replace(/(.{4})/g, '$1 ').trim();
+};
+
+window.validatePhone = function (input) {
+    let value = input.value.replace(/\D/g, '');
+    if (value.length > 0 && !value.startsWith('09')) {
+        value = '09' + value.replace(/^0+/, '');
+    }
+    input.value = value.substring(0, 10);
+};
+
+/* ============================================
+   التنقل بين الخطوات
+============================================ */
+window.changeStep = function (direction) {
+    if (direction === 1 && !validateStep(STATE.currentStep)) return;
+
+    STATE.currentStep += direction;
+    if (STATE.currentStep < 1) STATE.currentStep = 1;
+    if (STATE.currentStep > STATE.totalSteps) STATE.currentStep = STATE.totalSteps;
+    updateStepDisplay();
+    saveDraft();
+};
+
+function updateStepDisplay() {
+    document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
+    const activeStep = document.querySelector(`.form-step[data-step="${STATE.currentStep}"]`);
+    if (activeStep) activeStep.classList.add('active');
+
+    const progressPercentage = STATE.totalSteps > 1
+        ? ((STATE.currentStep - 1) / (STATE.totalSteps - 1)) * 100
+        : 0;
+    progressBar.style.width = `${progressPercentage}%`;
+    currentStepNum.textContent = STATE.currentStep;
+
+    prevBtn.style.visibility = STATE.currentStep === 1 ? 'hidden' : 'visible';
+
+    const isLastStep = STATE.currentStep === STATE.totalSteps;
+    nextBtn.style.display = isLastStep ? 'none' : 'block';
+
+    window.scrollTo(0, 0);
+}
+
+function validateStep(step) {
+    const stepEl = document.querySelector(`.form-step[data-step="${step}"]`);
+    if (!stepEl) return true;
+
+    const requiredInputs = stepEl.querySelectorAll('input[required], select[required], textarea[required]');
+    let isValid = true;
+    let firstInvalid = null;
+
+    requiredInputs.forEach(input => {
+        const group = input.closest('.form-group');
+        if (group && group.classList.contains('hidden')) return;
+
+        if (!input.value.trim()) {
+            input.style.borderColor = 'red';
+            isValid = false;
+            if (!firstInvalid) firstInvalid = input;
+        } else {
+            input.style.borderColor = '#d0d8e0';
+        }
+    });
+
+    if (!isValid) {
+        alert('⚠️ الرجاء تعبئة الحقول الإلزامية المعلّمة بـ *');
+        if (firstInvalid) firstInvalid.focus();
+    }
+    return isValid;
+}
+
+/* ============================================
+   الحفظ
+============================================ */
+window.submitForm = async function () {
+    if (STATE.isSubmitting) return;
+
+    if (!confirm('هل أنت متأكد من حفظ البيانات؟')) return;
+
+    // 1) فحص حالة الرابط
+    const status = await checkAppStatus();
+    if (status.isAppOpen !== true) {
+        STATE.appStatus = status;
+        saveLastStatus(status);
+        alert('❌ النظام مغلق حالياً. لم تُحفظ بياناتك. يُرجى المحاولة لاحقاً.');
+        showClosureScreen(status);
+        return;
+    }
+
+    // 2) التحقق من كل الخطوات
+    for (let s = 1; s < STATE.totalSteps; s++) {
+        if (!validateStep(s)) {
+            STATE.currentStep = s;
+            updateStepDisplay();
+            return;
+        }
+    }
+
+    // 3) جمع البيانات
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+
+    // إزالة حقول قسم الزوجة إذا كانت مخفية
+    const spouseFields = STATE.dynamicFields.filter(f => f.section === 'spouse');
+    const maritalStatus = data.maritalStatus;
+    const isMarried = maritalStatus === 'متزوج' || maritalStatus === 'متزوجة';
+    if (!isMarried) {
+        spouseFields.forEach(f => delete data[f.key]);
+    }
+
+    data.createdAt = serverTimestamp();
+    data.createdAtLocal = new Date().toISOString();
+
+    if (data.cashAccount) {
+        data.cashAccount = data.cashAccount.replace(/\s/g, '');
+    }
+
+    try {
+        STATE.isSubmitting = true;
+        loadingOverlay.style.display = 'flex';
+        stopAutoDraft();
+
+        await addDoc(collection(db, 'teachers'), data);
+
+        // حذف المسودة بعد الحفظ
+        clearDraft();
+
+        form.style.display = 'none';
+        navButtons.style.display = 'none';
+        successMessage.style.display = 'block';
+        progressBar.style.width = '100%';
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (error) {
+        console.error('خطأ في الحفظ:', error);
+        alert('❌ حدث خطأ أثناء الحفظ: ' + error.message);
+        STATE.isSubmitting = false;
+        startAutoDraft();
+    } finally {
+        loadingOverlay.style.display = 'none';
+    }
+};
+
+/* ============================================
+   التشغيل الأولي
+============================================ */
+(async () => {
+    try {
+        // 1) فحص حالة الرابط
+        const status = await checkAppStatus();
+        STATE.appStatus = status;
+        saveLastStatus(status);
+
+        if (status.isAppOpen !== true) {
+            showClosureScreen(status);
+            startPeriodicCheck();
+            return;
+        }
+
+        // 2) النظام مفتوح — حمّل النموذج
+        const ok = await loadAllData();
+        if (!ok) return;
+
+        buildSteps();
+        buildForm();
+        initCascades();
+        toggleSpouseSection();
+        toggleConditionalField();
+        updateStepDisplay();
+
+        form.style.display = 'block';
+        navButtons.style.display = 'flex';
+
+        // 3) إخفاء شاشة التحميل
+        document.getElementById('initOverlay').classList.add('hidden');
+
+        // 4) المسودة — عرض الشريط إن وُجدت
+        const draft = hasDraft();
+        if (draft) {
+            document.getElementById('draftBar').classList.add('show');
+        }
+
+        // 5) تفعيل مستمعات + حفظ تلقائي
+        attachDraftListeners();
+        startAutoDraft();
+
+        // 6) الفحص الدوري لحالة الرابط
+        startPeriodicCheck();
+
+    } catch (e) {
+        console.error('Init error:', e);
+        showError('حدث خطأ أثناء التحميل: ' + e.message);
+    }
+})();
+
+/* ============================================
+   حفظ المسودة قبل مغادرة الصفحة
+============================================ */
+window.addEventListener('beforeunload', () => {
+    if (!STATE.isSubmitting) {
+        saveDraft();
+    }
+});
+</script>
+
+</body>
+</html>
