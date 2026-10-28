@@ -2655,6 +2655,31 @@ document.addEventListener('click', function (e) {
     if (wrap && !wrap.contains(e.target)) window.closeExportMenu();
 });
 
+const PDF_AR_LABELS = {
+    fullName: 'الاسم الكامل', name: 'الاسم', firstName: 'الاسم الأول', lastName: 'اسم العائلة',
+    selfNumber: 'الرقم الذاتي', nationalId: 'الرقم الوطني', phone: 'رقم الهاتف', mobile: 'رقم الجوال',
+    email: 'البريد الإلكتروني', address: 'العنوان', birthDate: 'تاريخ الميلاد', gender: 'الجنس',
+    school: 'المدرسة', schoolName: 'اسم المدرسة', region: 'المنطقة', governorate: 'المحافظة',
+    directorate: 'المديرية', jobStatus: 'الوضع الوظيفي', jobTitle: 'المسمى الوظيفي',
+    specialization: 'التخصص', subject: 'المادة', stage: 'المرحلة', grade: 'الصف',
+    qualification: 'المؤهل العلمي', degree: 'الدرجة العلمية', major: 'التخصص الدقيق',
+    graduationYear: 'سنة التخرج', university: 'الجامعة', experience: 'سنوات الخبرة',
+    hireDate: 'تاريخ التعيين', yearsOfService: 'سنوات الخدمة', courses: 'الدورات التدريبية',
+    skills: 'المهارات', notes: 'ملاحظات', photo: 'الصورة', status: 'الحالة',
+    createdAtLocal: 'تاريخ الإضافة'
+};
+
+function pdfArabicLabel(key) {
+    const st = window.APP_STATE || {};
+    if (st.columnLabels && st.columnLabels[key]) return String(st.columnLabels[key]);
+    const fields = st.dynamicFields || [];
+    for (let i = 0; i < fields.length; i++) {
+        if (fields[i] && fields[i].key === key && fields[i].label) return String(fields[i].label);
+    }
+    if (PDF_AR_LABELS[key]) return PDF_AR_LABELS[key];
+    return String(key).replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').trim();
+}
+
 function pdfFieldEntries(t) {
     const out = [];
     Object.keys(t).forEach(function (k) {
@@ -2670,8 +2695,7 @@ function pdfFieldEntries(t) {
                 return;
             }
         }
-        const label = (window.APP_STATE && APP_STATE.columnLabels && APP_STATE.columnLabels[k]) || k;
-        out.push({ label: String(label), value: String(v) });
+        out.push({ label: pdfArabicLabel(k), value: String(v) });
     });
     return out;
 }
@@ -2761,6 +2785,16 @@ window.exportAllTeachersPDF = function () {
             if (w) { w.document.write(buildTeacherPrintHTML(t)); w.document.close(); }
         }, i * 700);
     });
+};
+
+/* ---- تحميل تسميات الحقول بالعربية قبل العرض/الطباعة ---- */
+const __origLoadTeachersPage = window.loadTeachersPage;
+window.loadTeachersPage = async function () {
+    try {
+        if (!(APP_STATE.dynamicFields || []).length) await loadDynamicFields();
+        if (!Object.keys(APP_STATE.columnLabels || {}).length) await loadColumnLabels();
+    } catch (e) { console.error(e); }
+    return __origLoadTeachersPage();
 };
 
 /* ---- إضافة زر طباعة في جدول المعلمين ---- */
