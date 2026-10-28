@@ -505,7 +505,7 @@ table.data-table td.ltr { direction: ltr; text-align: right; unicode-bidi: embed
                         <span class="search-icon">🔍</span>
                         <input type="text" id="usersSearch" placeholder="ابحث باسم المستخدم أو الاسم الكامل..." oninput="filterUsersTable()">
                     </div>
-                    <div class="table-wrap">
+                    <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
                         <table class="data-table">
                             <thead>
                                 <tr>
@@ -541,7 +541,7 @@ table.data-table td.ltr { direction: ltr; text-align: right; unicode-bidi: embed
                         <span class="search-icon">🔍</span>
                         <input type="text" id="schoolsSearch" placeholder="ابحث باسم المدرسة أو المنطقة..." oninput="filterSchoolsTable()">
                     </div>
-                    <div class="table-wrap">
+                    <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
                         <table class="data-table">
                             <thead>
                                 <tr>
@@ -701,7 +701,7 @@ table.data-table td.ltr { direction: ltr; text-align: right; unicode-bidi: embed
                         <span class="search-icon">🔍</span>
                         <input type="text" id="teachersSearch" placeholder="ابحث بالاسم، الرقم الذاتي، المدرسة..." oninput="filterTeachersTable()">
                     </div>
-                    <div class="table-wrap">
+                    <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
                         <table class="data-table">
                             <thead>
                                 <tr>
@@ -2011,20 +2011,33 @@ window.viewTeacherDetails = function(id) {
         let val = t[k];
         if (val === null || val === undefined || val === '') val = '—';
         if (typeof val === 'object' && val.toDate) { try { val = val.toDate().toLocaleString('ar-EG'); } catch (e) { val = '—'; } }
-        return `<tr><td style="padding:10px;border-bottom:1px solid #e8eef5;background:#f9fafc;font-weight:700;width:40%;">${escapeHTML(k)}</td><td style="padding:10px;border-bottom:1px solid #e8eef5;">${escapeHTML(String(val))}</td></tr>`;
+        return `<tr><td style="padding:12px 14px;border-bottom:1px solid #e8eef5;background:#f9fafc;font-weight:700;width:35%;font-size:0.9rem;">${escapeHTML(k)}</td><td style="padding:12px 14px;border-bottom:1px solid #e8eef5;font-size:0.9rem;word-break:break-word;">${escapeHTML(String(val))}</td></tr>`;
     }).join('');
-    const w = window.open('', '_blank', 'width=800,height=700');
-    if (!w) { window.showToast('❌ اسمح بالنوافذ', 'error'); return; }
-    w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>${escapeHTML(t.fullName)}</title>
+    const w = window.open('', '_blank', 'width=900,height=800');
+    if (!w) { window.showToast('❌ اسمح بالنوافذ المنبثقة', 'error'); return; }
+    w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${escapeHTML(t.fullName)}</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-<style>*{box-sizing:border-box;margin:0;padding:0;font-family:'Tajawal',sans-serif}body{background:#eef2f7;padding:20px}
-.card{background:white;border-radius:14px;padding:25px;max-width:900px;margin:0 auto;box-shadow:0 10px 30px rgba(0,0,0,0.08)}
-h1{color:#1a3a5c;font-size:1.4rem;margin-bottom:6px;text-align:center}.sub{text-align:center;color:#7f8c8d;font-size:0.9rem;margin-bottom:25px}
-table{width:100%;border-collapse:collapse}td{padding:10px;border-bottom:1px solid #e8eef5;font-size:0.9rem}
-.print{margin:25px auto 0;display:block;padding:12px 30px;background:#2d7dd2;color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-family:inherit;font-size:1rem}
-@media print{body{background:white;padding:0}.card{box-shadow:none;padding:0}.print{display:none}}</style></head><body>
-<div class="card"><h1>سجل: ${escapeHTML(t.fullName || '')}</h1><div class="sub">${escapeHTML(t.selfNumber || '')}</div>
-<table>${rows}</table><button class="print" onclick="window.print()">🖨️ طباعة</button></div></body></html>`);
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Tajawal',sans-serif}
+body{background:linear-gradient(135deg,#eef2f7,#f8f9fa);padding:20px;min-height:100vh}
+.card{background:white;border-radius:16px;padding:30px;max-width:950px;margin:0 auto;box-shadow:0 20px 60px rgba(0,0,0,0.12);overflow:hidden}
+.header{background:linear-gradient(135deg,#1a3a5c,#2d7dd2);color:white;padding:25px 30px;margin:-30px -30px 30px -30px;text-align:center}
+h1{font-size:1.6rem;margin-bottom:8px;font-weight:800}
+.sub{opacity:0.95;font-size:1rem}
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:10px;border:1px solid #e8eef5}
+table{width:100%;border-collapse:collapse;min-width:600px}
+td{font-size:0.92rem}
+.actions{display:flex;gap:12px;justify-content:center;margin-top:30px;flex-wrap:wrap}
+.print{padding:12px 32px;background:linear-gradient(135deg,#2d7dd2,#1a3a5c);color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-family:inherit;font-size:1rem;box-shadow:0 4px 12px rgba(45,125,210,0.3);transition:all 0.3s}
+.print:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(45,125,210,0.4)}
+@media print{body{background:white;padding:0}.card{box-shadow:none;padding:0;border-radius:0}.header{margin:0 0 20px 0;background:#1a3a5c}.print{display:none}.actions{display:none}}
+@media (max-width:768px){body{padding:10px}.card{padding:18px;border-radius:12px}.header{margin:-18px -18px 20px -18px;padding:18px}.h1{font-size:1.3rem}.sub{font-size:0.9rem}td{padding:10px 12px;font-size:0.88rem}}
+</style></head><body>
+<div class="card">
+<div class="header"><h1>سجل المعلم</h1><div class="sub">${escapeHTML(t.fullName || '')} ${t.selfNumber ? ' | الرقم الذاتي: ' + escapeHTML(t.selfNumber) : ''}</div></div>
+<div class="table-wrap"><table>${rows}</table></div>
+<div class="actions"><button class="print" onclick="window.print()">🖨️ طباعة التفاصيل</button></div>
+</div></body></html>`);
     w.document.close();
 };
 
@@ -2102,7 +2115,7 @@ window.loadAuditPage = async function() {
             return;
         }
         const actionLabels = { create_user: 'إنشاء مستخدم', delete_user: 'حذف مستخدم', open_app: 'فتح الرابط', close_app: 'إغلاق الرابط', save_settings: 'حفظ إعدادات', update_teacher: 'تعديل معلم' };
-        container.innerHTML = '<div class="table-wrap"><table class="data-table"><thead><tr><th>#</th><th>العملية</th><th>المستخدم</th><th>الهدف</th><th>التاريخ</th></tr></thead><tbody>' +
+        container.innerHTML = '<div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="data-table"><thead><tr><th>#</th><th>العملية</th><th>المستخدم</th><th>الهدف</th><th>التاريخ</th></tr></thead><tbody>' +
             logs.map((l, i) => {
                 let dateStr = '—';
                 try { if (l.timestamp?.toDate) dateStr = l.timestamp.toDate().toLocaleString('ar-EG'); } catch (e) {}
@@ -2866,6 +2879,216 @@ function buildTeacherPdfHTML(teacher) {
             .pdf-page { margin: 0; box-shadow: none; }
             .no-print { display: none !important; }
         }
+
+        /* ==================== RESPONSIVE DESIGN ==================== */
+        .mobile-menu-btn {
+            display: none;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            transition: all 0.3s ease;
+        }
+        .mobile-menu-btn:hover {
+            background: var(--bg-color);
+        }
+        .desktop-only {
+            display: flex;
+        }
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(2px);
+            z-index: 998;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .sidebar-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        @media (max-width: 1200px) {
+            .form-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .sidebar {
+                position: fixed;
+                right: 0;
+                top: 0;
+                height: 100vh;
+                z-index: 999;
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+                box-shadow: -10px 0 40px rgba(0, 0, 0, 0.3);
+            }
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+            body.sidebar-collapsed .sidebar {
+                width: 280px;
+                transform: translateX(100%);
+            }
+            body.sidebar-collapsed .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-right: 0 !important;
+            }
+            .mobile-menu-btn {
+                display: flex;
+            }
+            .desktop-only {
+                display: none !important;
+            }
+            .topbar {
+                padding: 12px 16px;
+            }
+            .content-area {
+                padding: 16px;
+            }
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            .page-header > div:first-child {
+                width: 100%;
+            }
+            .page-header .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .card {
+                padding: 16px;
+                border-radius: 12px;
+            }
+            .table-wrap {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            .data-table {
+                min-width: 600px;
+            }
+            .search-bar {
+                max-width: 100%;
+            }
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+            .form-group.full-width {
+                grid-column: span 1;
+            }
+            .d-flex {
+                flex-direction: column;
+                width: 100%;
+            }
+            .d-flex.gap-1 {
+                gap: 10px;
+            }
+            .d-flex > * {
+                width: 100%;
+            }
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .table-actions {
+                flex-wrap: nowrap;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .topbar-title {
+                font-size: 0.95rem;
+            }
+            .page-title {
+                font-size: 1.3rem;
+            }
+            .page-subtitle {
+                font-size: 0.85rem;
+            }
+            .card h3 {
+                font-size: 1.1rem;
+            }
+            .data-table th,
+            .data-table td {
+                padding: 10px 8px;
+                font-size: 0.85rem;
+            }
+            .nav-text {
+                font-size: 0.9rem;
+            }
+            .sidebar-header {
+                padding: 20px 16px;
+            }
+            .sidebar-logo {
+                width: 48px;
+                height: 48px;
+                font-size: 1.4rem;
+            }
+            .sidebar-title {
+                font-size: 1.1rem;
+            }
+            .modal-content {
+                width: 95%;
+                max-height: 95vh;
+                margin: 10px;
+            }
+            .modal-header,
+            .modal-body,
+            .modal-footer {
+                padding: 14px 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .content-area {
+                padding: 12px;
+            }
+            .card {
+                padding: 14px;
+            }
+            .topbar {
+                padding: 10px 12px;
+            }
+            .topbar-right {
+                gap: 8px;
+            }
+            .page-header {
+                padding: 0;
+            }
+            .search-bar input {
+                font-size: 0.9rem;
+            }
+            .btn {
+                font-size: 0.9rem;
+                padding: 10px 18px;
+            }
+            .data-table {
+                min-width: 500px;
+            }
+        }
+
+        /* تحسين عرض تفاصيل المعلم للجوال */
+        @media (max-width: 992px) {
+            body:has(.teacher-detail-view) .main-content {
+                margin-right: 0;
+            }
+        }
+
     </style>
 </head>
 <body>
