@@ -618,15 +618,83 @@ table.data-table td.ltr { direction: ltr; text-align: right; unicode-bidi: embed
                 </div>
             </section>
 
+
+            <section class="page" id="page-pdfprint">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">🖨️ إعدادات طباعة وتصدير PDF</h1>
+                        <p class="page-subtitle">تخصيص ألوان وطباعة بطاقات المعلم (صفحتين × ٣ أعمدة)</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3 style="margin-bottom:15px;color:var(--primary);">🎨 تخصيص الألوان</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>لون خلفية الصفحة</label>
+                            <input type="color" id="pdfPageBg" value="#ffffff" style="height:45px;">
+                        </div>
+                        <div class="form-group">
+                            <label>لون خلفية البطاقة</label>
+                            <input type="color" id="pdfCardBg" value="#ffffff" style="height:45px;">
+                        </div>
+                        <div class="form-group">
+                            <label>لون حدود البطاقة</label>
+                            <input type="color" id="pdfCardBorder" value="#d0d8e0" style="height:45px;">
+                        </div>
+                        <div class="form-group">
+                            <label>لون عنوان القسم</label>
+                            <input type="color" id="pdfSectionTitle" value="#1a3a5c" style="height:45px;">
+                        </div>
+                        <div class="form-group">
+                            <label>لون نص العنوان</label>
+                            <input type="color" id="pdfTitleText" value="#ffffff" style="height:45px;">
+                        </div>
+                        <div class="form-group">
+                            <label>لون نص الحقل</label>
+                            <input type="color" id="pdfFieldLabel" value="#2c3e50" style="height:45px;">
+                        </div>
+                        <div class="form-group">
+                            <label>لون قيمة الحقل</label>
+                            <input type="color" id="pdfFieldValue" value="#1a1a1a" style="height:45px;">
+                        </div>
+                        <div class="form-group">
+                            <label>لون خلفية عنوان البطاقة</label>
+                            <input type="color" id="pdfCardHeaderBg" value="#f8f9fa" style="height:45px;">
+                        </div>
+                        <div class="form-group">
+                            <label>لون خط الرأس (اسم المعلم)</label>
+                            <input type="color" id="pdfHeaderColor" value="#1a3a5c" style="height:45px;">
+                        </div>
+                        <div class="form-group">
+                            <label>لون خلفية صفحة ٢</label>
+                            <input type="color" id="pdfPageBg2" value="#ffffff" style="height:45px;">
+                        </div>
+                    </div>
+                    <div class="d-flex gap-1 flex-wrap mt-3">
+                        <button class="btn btn-primary" onclick="savePdfPrintSettings()">
+                            <span>💾</span><span>حفظ الإعدادات</span>
+                        </button>
+                        <button class="btn btn-outline" onclick="resetPdfPrintSettings()">
+                            <span>🔄</span><span>استعادة الافتراضي</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
             <section class="page" id="page-teachers">
                 <div class="page-header d-flex justify-between align-center flex-wrap gap-1">
                     <div>
                         <h1 class="page-title">📋 سجلات المعلمين</h1>
                         <p class="page-subtitle">عرض وإدارة جميع سجلات المعلمين</p>
                     </div>
-                    <button class="btn btn-success" onclick="exportTeachersExcel()">
-                        <span>📊</span><span>تصدير Excel</span>
-                    </button>
+                    <div class="d-flex gap-1 flex-wrap">
+                        <button class="btn btn-success" onclick="exportTeachersExcel()">
+                            <span>📊</span><span>تصدير Excel</span>
+                        </button>
+                        <button class="btn btn-primary" onclick="exportAllTeachersPDF()">
+                            <span>📄</span><span>تصدير PDF لجميع المعلمين</span>
+                        </button>
+                    </div>
                 </div>
                 <div class="card">
                     <div class="search-bar">
@@ -2582,4 +2650,307 @@ console.log('✅ owner.html — تم التحميل بنجاح — النسخة 
 
 </body>
 </html>
-  
+
+
+/* ============================================
+   إعدادات طباعة PDF
+============================================ */
+const DEFAULT_PDF_SETTINGS = {
+    pageBg: '#ffffff',
+    pageBg2: '#ffffff',
+    cardBg: '#ffffff',
+    cardBorder: '#d0d8e0',
+    sectionTitle: '#1a3a5c',
+    titleText: '#ffffff',
+    fieldLabel: '#2c3e50',
+    fieldValue: '#1a1a1a',
+    cardHeaderBg: '#f8f9fa',
+    headerColor: '#1a3a5c'
+};
+
+function getPdfSettings() {
+    try {
+        const s = localStorage.getItem('pdfPrintSettings');
+        if (s) return { ...DEFAULT_PDF_SETTINGS, ...JSON.parse(s) };
+    } catch(e) {}
+    return { ...DEFAULT_PDF_SETTINGS };
+}
+
+window.savePdfPrintSettings = function() {
+    const settings = {
+        pageBg: document.getElementById('pdfPageBg').value,
+        pageBg2: document.getElementById('pdfPageBg2').value,
+        cardBg: document.getElementById('pdfCardBg').value,
+        cardBorder: document.getElementById('pdfCardBorder').value,
+        sectionTitle: document.getElementById('pdfSectionTitle').value,
+        titleText: document.getElementById('pdfTitleText').value,
+        fieldLabel: document.getElementById('pdfFieldLabel').value,
+        fieldValue: document.getElementById('pdfFieldValue').value,
+        cardHeaderBg: document.getElementById('pdfCardHeaderBg').value,
+        headerColor: document.getElementById('pdfHeaderColor').value
+    };
+    localStorage.setItem('pdfPrintSettings', JSON.stringify(settings));
+    window.showToast('✅ تم حفظ إعدادات الطباعة', 'success');
+};
+
+window.resetPdfPrintSettings = function() {
+    localStorage.removeItem('pdfPrintSettings');
+    document.getElementById('pdfPageBg').value = DEFAULT_PDF_SETTINGS.pageBg;
+    document.getElementById('pdfPageBg2').value = DEFAULT_PDF_SETTINGS.pageBg2;
+    document.getElementById('pdfCardBg').value = DEFAULT_PDF_SETTINGS.cardBg;
+    document.getElementById('pdfCardBorder').value = DEFAULT_PDF_SETTINGS.cardBorder;
+    document.getElementById('pdfSectionTitle').value = DEFAULT_PDF_SETTINGS.sectionTitle;
+    document.getElementById('pdfTitleText').value = DEFAULT_PDF_SETTINGS.titleText;
+    document.getElementById('pdfFieldLabel').value = DEFAULT_PDF_SETTINGS.fieldLabel;
+    document.getElementById('pdfFieldValue').value = DEFAULT_PDF_SETTINGS.fieldValue;
+    document.getId('pdfCardHeaderBg').value = DEFAULT_PDF_SETTINGS.cardHeaderBg;
+    document.getElementById('pdfHeaderColor').value = DEFAULT_PDF_SETTINGS.headerColor;
+    window.showToast('✅ تم الاستعادة', 'success');
+};
+
+// Load settings on page load
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+        const s = getPdfSettings();
+        const ids = ['pdfPageBg','pdfPageBg2','pdfCardBg','pdfCardBorder','pdfSectionTitle','pdfTitleText','pdfFieldLabel','pdfFieldValue','pdfCardHeaderBg','pdfHeaderColor'];
+        ids.forEach(id => {
+            if (document.getElementById(id) && s[id.replace('pdf','').charAt(0).toLowerCase() + id.replace('pdf','').slice(1).replace(/[A-Z]/g,c=>c)]) {}
+        });
+        if (document.getElementById('pdfPageBg')) document.getElementById('pdfPageBg').value = s.pageBg;
+        if (document.getElementById('pdfPageBg2')) document.getElementById('pdfPageBg2').value = s.pageBg2;
+        if (document.getElementById('pdfCardBg')) document.getElementById('pdfCardBg').value = s.cardBg;
+        if (document.getElementById('pdfCardBorder')) document.getElementById('pdfCardBorder').value = s.cardBorder;
+        if (document.getElementById('pdfSectionTitle')) document.getElementById('pdfSectionTitle').value = s.sectionTitle;
+        if (document.getElementById('pdfTitleText')) document.getElementById('pdfTitleText').value = s.titleText;
+        if (document.getElementById('pdfFieldLabel')) document.getElementById('pdfFieldLabel').value = s.fieldLabel;
+        if (document.getElementById('pdfFieldValue')) document.getElementById('pdfFieldValue').value = s.fieldValue;
+        if (document.getElementById('pdfCardHeaderBg')) document.getElementById('pdfCardHeaderBg').value = s.cardHeaderBg;
+        if (document.getElementById('pdfHeaderColor')) document.getElementById('pdfHeaderColor').value = s.headerColor;
+    }, 500);
+});
+
+/* ============================================
+   تصدير PDF للمعلم الفردي وصفحتين + ٣ أعمدة
+============================================ */
+function buildTeacherPdfHTML(teacher) {
+    const s = getPdfSettings();
+    const skip = ['firebaseId', 'createdAt', 'createdAtLocal', 'createdByUid', 'createdByRole', 'auditLog'];
+    const entries = Object.keys(teacher).filter(k => !skip.includes(k) && teacher[k] !== null && teacher[k] !== undefined && teacher[k] !== '').map(k => {
+        let val = teacher[k];
+        if (typeof val === 'object') {
+            if (val.toDate) {
+                try { val = val.toDate().toLocaleString('ar-EG'); } catch(e) { val = ''; }
+            } else if (Array.isArray(val)) {
+                val = val.join('، ');
+            } else {
+                val = JSON.stringify(val);
+            }
+        }
+        return { key: k, value: String(val) };
+    });
+    
+    // Split into two pages
+    const mid = Math.ceil(entries.length / 2);
+    const page1 = entries.slice(0, mid);
+    const page2 = entries.slice(mid);
+    
+    const cardHTML = (items) => {
+        if (items.length === 0) return '';
+        return items.map(item => `
+            <div class="pdf-card">
+                <div class="pdf-card-header" style="background:${s.cardHeaderBg};border-bottom:2px solid ${s.cardBorder};">
+                    <div class="pdf-card-title" style="color:${s.fieldLabel};">${escapeHTML(item.key)}</div>
+                </div>
+                <div class="pdf-card-body" style="background:${s.cardBg};color:${s.fieldValue};">
+                    <div class="pdf-card-value">${escapeHTML(item.value)}</div>
+                </div>
+            </div>
+        `).join('');
+    };
+    
+    return `
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${escapeHTML(teacher.fullName || 'معلم')}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Tajawal', sans-serif; }
+        @page { size: A4; margin: 12mm; }
+        body { background: ${s.pageBg}; }
+        .pdf-page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 14mm 12mm;
+            margin: 0 auto;
+            background: ${s.pageBg};
+            page-break-after: always;
+        }
+        .pdf-page:last-child { page-break-after: auto; }
+        .pdf-page.page2 { background: ${s.pageBg2}; }
+        .pdf-header {
+            text-align: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid ${s.sectionTitle};
+        }
+        .pdf-header-title {
+            font-size: 22px;
+            font-weight: 800;
+            color: ${s.headerColor};
+            margin-bottom: 4px;
+        }
+        .pdf-header-sub {
+            font-size: 13px;
+            color: ${s.fieldLabel};
+            opacity: 0.8;
+        }
+        .pdf-section-title {
+            display: inline-block;
+            background: ${s.sectionTitle};
+            color: ${s.titleText};
+            padding: 6px 16px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 13px;
+            margin: 14px 0 12px 0;
+        }
+        .pdf-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            align-items: start;
+        }
+        .pdf-card {
+            border: 1.5px solid ${s.cardBorder};
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+        .pdf-card-header {
+            padding: 7px 10px;
+            min-height: 34px;
+            display: flex;
+            align-items: center;
+        }
+        .pdf-card-title {
+            font-weight: 700;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+        .pdf-card-body {
+            padding: 8px 10px;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+        }
+        .pdf-card-value {
+            font-size: 10.5px;
+            line-height: 1.6;
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+        .pdf-footer {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 9px;
+            color: ${s.fieldLabel};
+            opacity: 0.6;
+        }
+        @media print {
+            body { background: white; }
+            .pdf-page { margin: 0; box-shadow: none; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="pdf-page">
+        <div class="pdf-header">
+            <div class="pdf-header-title">السجل الشخصي للمعلم</div>
+            <div class="pdf-header-sub">${escapeHTML(teacher.fullName || '')} ${teacher.selfNumber ? ' | الرقم الذاتي: ' + escapeHTML(teacher.selfNumber) : ''}</div>
+        </div>
+        <div class="pdf-section-title">الصفحة الأولى / البيانات الأساسية</div>
+        <div class="pdf-grid">
+            ${cardHTML(page1)}
+        </div>
+        <div class="pdf-footer">تاريخ الطباعة: ${new Date().toLocaleString('ar-EG')}</div>
+    </div>
+    
+    <div class="pdf-page page2">
+        <div class="pdf-header">
+            <div class="pdf-header-title">السجل الشخصي للمعلم</div>
+            <div class="pdf-header-sub">${escapeHTML(teacher.fullName || '')} ${teacher.selfNumber ? ' | الرقم الذاتي: ' + escapeHTML(teacher.selfNumber) : ''}</div>
+        </div>
+        <div class="pdf-section-title">الصفحة الثانية / باقي البيانات</div>
+        <div class="pdf-grid">
+            ${cardHTML(page2)}
+        </div>
+        <div class="pdf-footer">تاريخ الطباعة: ${new Date().toLocaleString('ar-EG')}</div>
+    </div>
+    
+    <div class="no-print" style="position:fixed;bottom:20px;left:20px;right:20px;text-align:center;">
+        <button onclick="window.print()" style="padding:12px 40px;background:#1a3a5c;color:white;border:none;border-radius:10px;font-family:'Tajawal';font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.2);">🖨️ طباعة / حفظ كـ PDF</button>
+    </div>
+</body>
+</html>`;
+}
+
+window.printTeacherPDF = function(id) {
+    const t = APP_STATE.teachers.find(x => x.firebaseId === id);
+    if (!t) { window.showToast('لم يتم العثور على المعلم', 'error'); return; }
+    const html = buildTeacherPdfHTML(t);
+    const w = window.open('', '_blank', 'width=1100,height=800');
+    if (!w) { window.showToast('❌ اسمح بالنوافذ المنبثقة', 'error'); return; }
+    w.document.write(html);
+    w.document.close();
+};
+
+window.exportAllTeachersPDF = async function() {
+    const teachers = APP_STATE.filteredTeachers.length > 0 ? APP_STATE.filteredTeachers : APP_STATE.teachers;
+    if (teachers.length === 0) { window.showToast('لا توجد بيانات', 'warning'); return; }
+    if (teachers.length > 5) {
+        const ok = confirm(`سيتم فتح ${teachers.length} نافذة للطباعة واحدة تلو الأخرى. هل تريد المتابعة؟`);
+        if (!ok) return;
+    }
+    window.showToast('⏳ جاري تجهيز ملفات PDF...', 'info');
+    for (let i = 0; i < teachers.length; i++) {
+        const t = teachers[i];
+        const html = buildTeacherPdfHTML(t);
+        const w = window.open('', '_blank', 'width=1100,height=800');
+        if (w) {
+            w.document.write(html);
+            w.document.close();
+        }
+        await new Promise(r => setTimeout(r, 800));
+    }
+    window.showToast('✅ تم فتح جميع ملفات الطباعة', 'success');
+};
+
+/* إضافة زر طباعة فردي في جدول المعلمين */
+const originalRenderTeachersTable = renderTeachersTable;
+renderTeachersTable = function() {
+    const tbody = document.getElementById('teachersTableBody');
+    if (!tbody) return;
+    const teachers = APP_STATE.filteredTeachers;
+    if (teachers.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="padding:40px;text-align:center;"><div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">لا توجد سجلات</div></div></td></tr>';
+        return;
+    }
+    tbody.innerHTML = teachers.map((t, i) => `<tr>
+        <td>${i + 1}</td>
+        <td>${escapeHTML(t.fullName || '—')}</td>
+        <td class="ltr">${escapeHTML(t.selfNumber || '—')}</td>
+        <td>${escapeHTML(t.school || '—')}</td>
+        <td>${escapeHTML(t.jobStatus || '—')}</td>
+        <td><div class="table-actions">
+            <button class="btn btn-icon btn-outline" onclick="viewTeacherDetails('${t.firebaseId}')" title="عرض">👁️</button>
+            <button class="btn btn-icon btn-primary" onclick="printTeacherPDF('${t.firebaseId}')" title="طباعة PDF">🖨️</button>
+        </div></td>
+    </tr>`).join('');
+};
+
