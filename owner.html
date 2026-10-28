@@ -1909,6 +1909,12 @@ body{min-height:100vh;background:linear-gradient(135deg,#34495e 0%,#5d6d7e 100%)
 <button class="retry" onclick="location.reload()">🔄 إعادة المحاولة</button>
 <div style="margin-top:20px;font-size:0.8rem;color:#95a5a6">معاينة — أغلق النافذة للعودة</div>
 </div>${mode === 'countdown' && dateVal ? '<script>var target=new Date("'+dateVal+'").getTime();function tick(){var el=document.getElementById("cd");if(!el)return;var d=Math.max(0,target-Date.now());var days=Math.floor(d/86400000),h=Math.floor((d%86400000)/3600000),m=Math.floor((d%3600000)/60000),s=Math.floor((d%60000)/1000);el.innerHTML=[{v:days,l:"يوم"},{v:h,l:"ساعة"},{v:m,l:"دقيقة"},{v:s,l:"ثانية"}].map(function(x){return '<div class="cd-unit"><div class="cd-val">'+x.v+'</div><div class="cd-lab">'+x.l+'</div></div>'}).join("");}tick();setInterval(tick,1000);</script>' : ''}
+
+<script>
+function openMob(){ document.querySelector('.sidebar')?.classList.add('active'); document.getElementById('mobOverlay')?.classList.add('active'); }
+function closeMob(){ document.querySelector('.sidebar')?.classList.remove('active'); document.getElementById('mobOverlay')?.classList.remove('active'); }
+document.addEventListener('click', function(e){ if(e.target.classList.contains('nav-item')) closeMob(); });
+</script>
 </body></html>`);
     w.document.close();
 };
@@ -1983,6 +1989,7 @@ function renderTeachersTable() {
         <td>${escapeHTML(t.jobStatus || '—')}</td>
         <td><div class="table-actions">
             <button class="btn btn-icon btn-outline" onclick="viewTeacherDetails('${t.firebaseId}')" title="عرض">👁️</button>
+            <button class="btn btn-icon btn-primary" onclick="printTeacherPDF('${t.firebaseId}')" title="طباعة PDF">🖨️</button>
         </div></td>
     </tr>`).join('');
 }
@@ -2032,7 +2039,13 @@ td{font-size:0.92rem}
 <div class="header"><h1>سجل المعلم</h1><div class="sub">${escapeHTML(t.fullName || '')} ${t.selfNumber ? ' | الرقم الذاتي: ' + escapeHTML(t.selfNumber) : ''}</div></div>
 <div class="table-wrap"><table>${rows}</table></div>
 <div class="actions"><button class="print" onclick="window.print()">🖨️ طباعة التفاصيل</button></div>
-</div></body></html>`);
+</div>
+<script>
+function openMob(){ document.querySelector('.sidebar')?.classList.add('active'); document.getElementById('mobOverlay')?.classList.add('active'); }
+function closeMob(){ document.querySelector('.sidebar')?.classList.remove('active'); document.getElementById('mobOverlay')?.classList.remove('active'); }
+document.addEventListener('click', function(e){ if(e.target.classList.contains('nav-item')) closeMob(); });
+</script>
+</body></html>`);
     w.document.close();
 };
 
@@ -2656,6 +2669,12 @@ onAuthStateChanged(auth, (user) => { if (user) resetInactivityTimer(); else if (
 console.log('✅ owner.html — تم التحميل بنجاح — النسخة الكاملة');
 </script>
 
+
+<script>
+function openMob(){ document.querySelector('.sidebar')?.classList.add('active'); document.getElementById('mobOverlay')?.classList.add('active'); }
+function closeMob(){ document.querySelector('.sidebar')?.classList.remove('active'); document.getElementById('mobOverlay')?.classList.remove('active'); }
+document.addEventListener('click', function(e){ if(e.target.classList.contains('nav-item')) closeMob(); });
+</script>
 </body>
 </html>
 
@@ -3114,6 +3133,12 @@ function buildTeacherPdfHTML(teacher) {
     <div class="no-print" style="position:fixed;bottom:20px;left:20px;right:20px;text-align:center;">
         <button onclick="window.print()" style="padding:12px 40px;background:#1a3a5c;color:white;border:none;border-radius:10px;font-family:'Tajawal';font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.2);">🖨️ طباعة / حفظ كـ PDF</button>
     </div>
+
+<script>
+function openMob(){ document.querySelector('.sidebar')?.classList.add('active'); document.getElementById('mobOverlay')?.classList.add('active'); }
+function closeMob(){ document.querySelector('.sidebar')?.classList.remove('active'); document.getElementById('mobOverlay')?.classList.remove('active'); }
+document.addEventListener('click', function(e){ if(e.target.classList.contains('nav-item')) closeMob(); });
+</script>
 </body>
 </html>`;
 }
