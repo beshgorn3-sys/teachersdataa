@@ -327,6 +327,122 @@ table.data-table td.ltr { direction: ltr; text-align: right; unicode-bidi: embed
 ::-webkit-scrollbar-track { background: var(--bg-body); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 </style>
+
+    <style>
+        /* Mobile Responsive Fix */
+        .mobile-toggle {
+            display: none;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.3rem;
+            color: var(--text-main);
+            flex-shrink: 0;
+        }
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 99;
+        }
+        .sidebar-overlay.active {
+            display: block;
+        }
+        
+        @media (max-width: 992px) {
+            .mobile-toggle {
+                display: flex;
+            }
+            .sidebar {
+                position: fixed;
+                right: -280px;
+                top: 0;
+                height: 100vh;
+                width: 280px;
+                z-index: 100;
+                transition: right 0.3s ease;
+                box-shadow: -5px 0 30px rgba(0, 0, 0, 0.3);
+            }
+            .sidebar.open {
+                right: 0;
+            }
+            .main-content {
+                margin-right: 0 !important;
+            }
+            .topbar {
+                padding: 10px 14px;
+            }
+            .content-area {
+                padding: 14px;
+            }
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            .d-flex {
+                flex-direction: column;
+                width: 100%;
+            }
+            .d-flex.gap-1 > * {
+                width: 100%;
+            }
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .table-wrap {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                margin: 0 -14px;
+                padding: 0 14px;
+            }
+            .data-table {
+                min-width: 650px;
+            }
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .form-group.full {
+                grid-column: 1 / -1;
+            }
+            .card {
+                padding: 16px;
+            }
+            .modal-content {
+                width: 95%;
+                max-height: 95vh;
+            }
+        }
+        
+        @media (max-width: 640px) {
+            .topbar-title {
+                font-size: 0.9rem;
+            }
+            .page-title {
+                font-size: 1.25rem;
+            }
+            .content-area {
+                padding: 10px;
+            }
+            .card {
+                padding: 14px;
+                border-radius: 12px;
+            }
+            .data-table th,
+            .data-table td {
+                font-size: 0.85rem;
+                padding: 10px 8px;
+            }
+        }
+    </style>
+
 </head>
 <body>
 
@@ -505,7 +621,7 @@ table.data-table td.ltr { direction: ltr; text-align: right; unicode-bidi: embed
                         <span class="search-icon">🔍</span>
                         <input type="text" id="usersSearch" placeholder="ابحث باسم المستخدم أو الاسم الكامل..." oninput="filterUsersTable()">
                     </div>
-                    <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+                    <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
                         <table class="data-table">
                             <thead>
                                 <tr>
@@ -541,7 +657,7 @@ table.data-table td.ltr { direction: ltr; text-align: right; unicode-bidi: embed
                         <span class="search-icon">🔍</span>
                         <input type="text" id="schoolsSearch" placeholder="ابحث باسم المدرسة أو المنطقة..." oninput="filterSchoolsTable()">
                     </div>
-                    <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+                    <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
                         <table class="data-table">
                             <thead>
                                 <tr>
@@ -701,7 +817,7 @@ table.data-table td.ltr { direction: ltr; text-align: right; unicode-bidi: embed
                         <span class="search-icon">🔍</span>
                         <input type="text" id="teachersSearch" placeholder="ابحث بالاسم، الرقم الذاتي، المدرسة..." oninput="filterTeachersTable()">
                     </div>
-                    <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+                    <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
                         <table class="data-table">
                             <thead>
                                 <tr>
@@ -1904,7 +2020,123 @@ body{min-height:100vh;background:linear-gradient(135deg,#34495e 0%,#5d6d7e 100%)
 .cd-val{font-size:1.7rem;font-weight:800;color:#1a3a5c}
 .cd-lab{font-size:0.72rem;color:#7f8c8d;margin-top:5px}
 .retry{padding:13px 30px;background:linear-gradient(135deg,#2d7dd2,#1a3a5c);color:white;border:none;border-radius:10px;font-size:1rem;font-weight:700;font-family:inherit;cursor:pointer}
-</style></head><body><div class="card">
+</style>
+    <style>
+        /* Mobile Responsive Fix */
+        .mobile-toggle {
+            display: none;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.3rem;
+            color: var(--text-main);
+            flex-shrink: 0;
+        }
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 99;
+        }
+        .sidebar-overlay.active {
+            display: block;
+        }
+        
+        @media (max-width: 992px) {
+            .mobile-toggle {
+                display: flex;
+            }
+            .sidebar {
+                position: fixed;
+                right: -280px;
+                top: 0;
+                height: 100vh;
+                width: 280px;
+                z-index: 100;
+                transition: right 0.3s ease;
+                box-shadow: -5px 0 30px rgba(0, 0, 0, 0.3);
+            }
+            .sidebar.open {
+                right: 0;
+            }
+            .main-content {
+                margin-right: 0 !important;
+            }
+            .topbar {
+                padding: 10px 14px;
+            }
+            .content-area {
+                padding: 14px;
+            }
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            .d-flex {
+                flex-direction: column;
+                width: 100%;
+            }
+            .d-flex.gap-1 > * {
+                width: 100%;
+            }
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .table-wrap {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                margin: 0 -14px;
+                padding: 0 14px;
+            }
+            .data-table {
+                min-width: 650px;
+            }
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .form-group.full {
+                grid-column: 1 / -1;
+            }
+            .card {
+                padding: 16px;
+            }
+            .modal-content {
+                width: 95%;
+                max-height: 95vh;
+            }
+        }
+        
+        @media (max-width: 640px) {
+            .topbar-title {
+                font-size: 0.9rem;
+            }
+            .page-title {
+                font-size: 1.25rem;
+            }
+            .content-area {
+                padding: 10px;
+            }
+            .card {
+                padding: 14px;
+                border-radius: 12px;
+            }
+            .data-table th,
+            .data-table td {
+                font-size: 0.85rem;
+                padding: 10px 8px;
+            }
+        }
+    </style>
+
+</head><body><div class="card">
 <div class="icon">🔒</div><div class="title">${title.replace(/</g,'&lt;')}</div><div class="msg">${msg.replace(/</g,'&lt;')}</div>${countdownHTML}
 <button class="retry" onclick="location.reload()">🔄 إعادة المحاولة</button>
 <div style="margin-top:20px;font-size:0.8rem;color:#95a5a6">معاينة — أغلق النافذة للعودة</div>
@@ -2034,10 +2266,126 @@ td{font-size:0.92rem}
 .print:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(45,125,210,0.4)}
 @media print{body{background:white;padding:0}.card{box-shadow:none;padding:0;border-radius:0}.header{margin:0 0 20px 0;background:#1a3a5c}.print{display:none}.actions{display:none}}
 @media (max-width:768px){body{padding:10px}.card{padding:18px;border-radius:12px}.header{margin:-18px -18px 20px -18px;padding:18px}.h1{font-size:1.3rem}.sub{font-size:0.9rem}td{padding:10px 12px;font-size:0.88rem}}
-</style></head><body>
+</style>
+    <style>
+        /* Mobile Responsive Fix */
+        .mobile-toggle {
+            display: none;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.3rem;
+            color: var(--text-main);
+            flex-shrink: 0;
+        }
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 99;
+        }
+        .sidebar-overlay.active {
+            display: block;
+        }
+        
+        @media (max-width: 992px) {
+            .mobile-toggle {
+                display: flex;
+            }
+            .sidebar {
+                position: fixed;
+                right: -280px;
+                top: 0;
+                height: 100vh;
+                width: 280px;
+                z-index: 100;
+                transition: right 0.3s ease;
+                box-shadow: -5px 0 30px rgba(0, 0, 0, 0.3);
+            }
+            .sidebar.open {
+                right: 0;
+            }
+            .main-content {
+                margin-right: 0 !important;
+            }
+            .topbar {
+                padding: 10px 14px;
+            }
+            .content-area {
+                padding: 14px;
+            }
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            .d-flex {
+                flex-direction: column;
+                width: 100%;
+            }
+            .d-flex.gap-1 > * {
+                width: 100%;
+            }
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .table-wrap {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                margin: 0 -14px;
+                padding: 0 14px;
+            }
+            .data-table {
+                min-width: 650px;
+            }
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .form-group.full {
+                grid-column: 1 / -1;
+            }
+            .card {
+                padding: 16px;
+            }
+            .modal-content {
+                width: 95%;
+                max-height: 95vh;
+            }
+        }
+        
+        @media (max-width: 640px) {
+            .topbar-title {
+                font-size: 0.9rem;
+            }
+            .page-title {
+                font-size: 1.25rem;
+            }
+            .content-area {
+                padding: 10px;
+            }
+            .card {
+                padding: 14px;
+                border-radius: 12px;
+            }
+            .data-table th,
+            .data-table td {
+                font-size: 0.85rem;
+                padding: 10px 8px;
+            }
+        }
+    </style>
+
+</head><body>
 <div class="card">
 <div class="header"><h1>سجل المعلم</h1><div class="sub">${escapeHTML(t.fullName || '')} ${t.selfNumber ? ' | الرقم الذاتي: ' + escapeHTML(t.selfNumber) : ''}</div></div>
-<div class="table-wrap"><table>${rows}</table></div>
+<div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table>${rows}</table></div>
 <div class="actions"><button class="print" onclick="window.print()">🖨️ طباعة التفاصيل</button></div>
 </div>
 <script>
@@ -2123,7 +2471,7 @@ window.loadAuditPage = async function() {
             return;
         }
         const actionLabels = { create_user: 'إنشاء مستخدم', delete_user: 'حذف مستخدم', open_app: 'فتح الرابط', close_app: 'إغلاق الرابط', save_settings: 'حفظ إعدادات', update_teacher: 'تعديل معلم' };
-        container.innerHTML = '<div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="data-table"><thead><tr><th>#</th><th>العملية</th><th>المستخدم</th><th>الهدف</th><th>التاريخ</th></tr></thead><tbody>' +
+        container.innerHTML = '<div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;" style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="data-table"><thead><tr><th>#</th><th>العملية</th><th>المستخدم</th><th>الهدف</th><th>التاريخ</th></tr></thead><tbody>' +
             logs.map((l, i) => {
                 let dateStr = '—';
                 try { if (l.timestamp?.toDate) dateStr = l.timestamp.toDate().toLocaleString('ar-EG'); } catch (e) {}
@@ -3104,6 +3452,122 @@ function buildTeacherPdfHTML(teacher) {
         }
 
     </style>
+
+    <style>
+        /* Mobile Responsive Fix */
+        .mobile-toggle {
+            display: none;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.3rem;
+            color: var(--text-main);
+            flex-shrink: 0;
+        }
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 99;
+        }
+        .sidebar-overlay.active {
+            display: block;
+        }
+        
+        @media (max-width: 992px) {
+            .mobile-toggle {
+                display: flex;
+            }
+            .sidebar {
+                position: fixed;
+                right: -280px;
+                top: 0;
+                height: 100vh;
+                width: 280px;
+                z-index: 100;
+                transition: right 0.3s ease;
+                box-shadow: -5px 0 30px rgba(0, 0, 0, 0.3);
+            }
+            .sidebar.open {
+                right: 0;
+            }
+            .main-content {
+                margin-right: 0 !important;
+            }
+            .topbar {
+                padding: 10px 14px;
+            }
+            .content-area {
+                padding: 14px;
+            }
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            .d-flex {
+                flex-direction: column;
+                width: 100%;
+            }
+            .d-flex.gap-1 > * {
+                width: 100%;
+            }
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .table-wrap {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                margin: 0 -14px;
+                padding: 0 14px;
+            }
+            .data-table {
+                min-width: 650px;
+            }
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .form-group.full {
+                grid-column: 1 / -1;
+            }
+            .card {
+                padding: 16px;
+            }
+            .modal-content {
+                width: 95%;
+                max-height: 95vh;
+            }
+        }
+        
+        @media (max-width: 640px) {
+            .topbar-title {
+                font-size: 0.9rem;
+            }
+            .page-title {
+                font-size: 1.25rem;
+            }
+            .content-area {
+                padding: 10px;
+            }
+            .card {
+                padding: 14px;
+                border-radius: 12px;
+            }
+            .data-table th,
+            .data-table td {
+                font-size: 0.85rem;
+                padding: 10px 8px;
+            }
+        }
+    </style>
+
 </head>
 <body>
     <div class="pdf-page">
