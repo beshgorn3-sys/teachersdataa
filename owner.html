@@ -1908,12 +1908,7 @@ body{min-height:100vh;background:linear-gradient(135deg,#34495e 0%,#5d6d7e 100%)
 <div class="icon">🔒</div><div class="title">${title.replace(/</g,'&lt;')}</div><div class="msg">${msg.replace(/</g,'&lt;')}</div>${countdownHTML}
 <button class="retry" onclick="location.reload()">🔄 إعادة المحاولة</button>
 <div style="margin-top:20px;font-size:0.8rem;color:#95a5a6">معاينة — أغلق النافذة للعودة</div>
-</div>${mode === 'countdown' && dateVal ? `<script>
-var target = new Date("${dateVal}").getTime();
-function tick(){var el=document.getElementById('cd');if(!el)return;var d=Math.max(0,target-Date.now());
-var days=Math.floor(d/86400000),h=Math.floor((d%86400000)/3600000),m=Math.floor((d%3600000)/60000),s=Math.floor((d%60000)/1000);
-el.innerHTML=[{v:days,l:'يوم'},{v:h,l:'ساعة'},{v:m,l:'دقيقة'},{v:s,l:'ثانية'}].map(function(x){return '<div class="cd-unit"><div class="cd-val">'+x.v+'</div><div class="cd-lab">'+x.l+'</div></div>'}).join('');}
-tick();setInterval(tick,1000);<\/script>` : ''}
+</div>${mode === 'countdown' && dateVal ? '<script>var target=new Date("'+dateVal+'").getTime();function tick(){var el=document.getElementById("cd");if(!el)return;var d=Math.max(0,target-Date.now());var days=Math.floor(d/86400000),h=Math.floor((d%86400000)/3600000),m=Math.floor((d%3600000)/60000),s=Math.floor((d%60000)/1000);el.innerHTML=[{v:days,l:"يوم"},{v:h,l:"ساعة"},{v:m,l:"دقيقة"},{v:s,l:"ثانية"}].map(function(x){return '<div class="cd-unit"><div class="cd-val">'+x.v+'</div><div class="cd-lab">'+x.l+'</div></div>'}).join("");}tick();setInterval(tick,1000);</script>' : ''}
 </body></html>`);
     w.document.close();
 };
@@ -2716,7 +2711,7 @@ window.resetPdfPrintSettings = function() {
     document.getElementById('pdfTitleText').value = DEFAULT_PDF_SETTINGS.titleText;
     document.getElementById('pdfFieldLabel').value = DEFAULT_PDF_SETTINGS.fieldLabel;
     document.getElementById('pdfFieldValue').value = DEFAULT_PDF_SETTINGS.fieldValue;
-    document.getId('pdfCardHeaderBg').value = DEFAULT_PDF_SETTINGS.cardHeaderBg;
+    document.getElementById('pdfCardHeaderBg').value = DEFAULT_PDF_SETTINGS.cardHeaderBg;
     document.getElementById('pdfHeaderColor').value = DEFAULT_PDF_SETTINGS.headerColor;
     window.showToast('✅ تم الاستعادة', 'success');
 };
