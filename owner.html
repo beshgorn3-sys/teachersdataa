@@ -803,13 +803,23 @@ table.data-table td.ltr { direction: ltr; text-align: right; unicode-bidi: embed
                         <h1 class="page-title">📋 سجلات المعلمين</h1>
                         <p class="page-subtitle">عرض وإدارة جميع سجلات المعلمين</p>
                     </div>
-                    <div class="d-flex gap-1 flex-wrap">
-                        <button class="btn btn-success" onclick="exportTeachersExcel()">
-                            <span>📊</span><span>تصدير Excel</span>
-                        </button>
-                        <button class="btn btn-primary" onclick="exportAllTeachersPDF()">
-                            <span>📄</span><span>تصدير PDF لجميع المعلمين</span>
-                        </button>
+                    <div class="d-flex gap-1 flex-wrap align-center">
+                        <div style="position:relative;">
+                            <button class="btn btn-primary" onclick="toggleExportMenu()" id="exportMenuBtn">
+                                <span>📥</span><span>طباعة وتصدير</span><span>▼</span>
+                            </button>
+                            <div id="exportDropdown" style="display:none;position:absolute;top:110%;right:0;background:white;border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-xl);min-width:280px;z-index:100;overflow:hidden;">
+                                <button style="width:100%;text-align:right;padding:12px 16px;border:none;background:white;cursor:pointer;font-family:Tajawal;font-size:0.9rem;display:flex;align-items:center;gap:10px;" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background='white'" onclick="exportTeachersExcel();toggleExportMenu();">
+                                    <span>📊</span><span>تصدير الكل بصيغة Excel</span>
+                                </button>
+                                <button style="width:100%;text-align:right;padding:12px 16px;border:none;background:white;cursor:pointer;font-family:Tajawal;font-size:0.9rem;display:flex;align-items:center;gap:10px;border-top:1px solid #f0f0f0;" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background='white'" onclick="exportAllTeachersAsPDF();toggleExportMenu();">
+                                    <span>📄</span><span>طباعة كل معلم PDF (صفحتين × ٣ أعمدة)</span>
+                                </button>
+                                <button style="width:100%;text-align:right;padding:12px 16px;border:none;background:white;cursor:pointer;font-family:Tajawal;font-size:0.9rem;display:flex;align-items:center;gap:10px;border-top:1px solid #f0f0f0;" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background='white'" onclick="printAllTeachersSequential();toggleExportMenu();">
+                                    <span>🖨️</span><span>فتح للطباعة مباشرةً لجميع المعلمين</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="card">
@@ -2150,6 +2160,252 @@ document.addEventListener('click', function(e){ if(e.target.classList.contains('
 </body></html>`);
     w.document.close();
 };
+
+
+
+function generateTeacherPDFHTML(t) {
+    const skip = ['firebaseId', 'createdAt', 'createdAtLocal', 'createdByUid', 'createdByRole', 'auditLog', 'updatedAt'];
+    const entries = [];
+    Object.keys(t).forEach(k => {
+        if (skip.includes(k)) return;
+        let v = t[k];
+        if (v === null || v === undefined || v === '') return;
+        if (typeof v === 'object') {
+            if (v.toDate) {
+                try { v = v.toDate().toLocaleString('ar-EG'); } catch(e) { return; }
+            } else if (Array.isArray(v)) {
+                v = v.join('، ');
+            } else {
+                return;
+            }
+        }
+        entries.push({ label: k, value: String(v) });
+    });
+    
+    const mid = Math.ceil(entries.length / 2);
+    const page1 = entries.slice(0, mid);
+    const page2 = entries.slice(mid);
+    
+    const cardHTML = (items) => {
+        return items.map(item => `
+            <div class="pdf-card">
+                <div class="pdf-card-header">
+                    <div class="pdf-card-label">${escapeHTML(item.label)}</div>
+                </div>
+                <div class="pdf-card-body">
+                    <div class="pdf-card-value">${escapeHTML(item.value).replace(/\n/g, '<br>')}</div>
+                </div>
+            </div>
+        `).join('');
+    };
+    
+    return `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سجل_${escapeHTML(t.fullName || 'معلم').replace(/\s+/g, '_')}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
+        @page { size: A4 portrait; margin: 10mm; }
+        body { background: #ffffff; }
+        .pdf-page {
+            width: 210mm;
+            height: 297mm;
+            padding: 12mm 10mm;
+            margin: 0 auto 5mm auto;
+            background: #ffffff;
+            page-break-after: always;
+            position: relative;
+        }
+        .pdf-page:last-child { page-break-after: avoid; margin-bottom: 0; }
+        .pdf-header {
+            text-align: center;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #1a3a5c;
+        }
+        .pdf-header-main {
+            font-size: 20px;
+            font-weight: 800;
+            color: #1a3a5c;
+            margin-bottom: 4px;
+        }
+        .pdf-header-sub {
+            font-size: 12px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        .page-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #1a3a5c, #2d7dd2);
+            color: white;
+            padding: 5px 16px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 11px;
+            margin-bottom: 12px;
+        }
+        .pdf-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            align-items: start;
+        }
+        .pdf-card {
+            border: 1.5px solid #d0d8e0;
+            border-radius: 8px;
+            overflow: hidden;
+            background: white;
+            break-inside: avoid;
+            page-break-inside: avoid;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }
+        .pdf-card-header {
+            background: linear-gradient(to bottom, #f8f9fa, #f1f3f5);
+            padding: 7px 9px;
+            border-bottom: 1.5px solid #e0e0e0;
+            min-height: 36px;
+            display: flex;
+            align-items: center;
+        }
+        .pdf-card-label {
+            font-weight: 700;
+            font-size: 10px;
+            color: #1a3a5c;
+            line-height: 1.4;
+        }
+        .pdf-card-body {
+            padding: 8px 9px;
+            background: white;
+            min-height: 46px;
+            display: flex;
+            align-items: center;
+        }
+        .pdf-card-value {
+            font-size: 9.5px;
+            color: #1a1a1a;
+            line-height: 1.6;
+            word-break: break-word;
+            width: 100%;
+        }
+        .pdf-footer {
+            position: absolute;
+            bottom: 10mm;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 8px;
+            color: #7f8c8d;
+        }
+        .print-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+        .print-btn {
+            padding: 10px 28px;
+            background: linear-gradient(135deg, #1a3a5c, #2d7dd2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Tajawal';
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        @media print {
+            body { background: white; }
+            .pdf-page { margin: 0; }
+            .print-controls { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="pdf-page">
+        <div class="pdf-header">
+            <div class="pdf-header-main">السجل الشخصي للمعلم</div>
+            <div class="pdf-header-sub">${escapeHTML(t.fullName || '')} ${t.selfNumber ? ' • الرقم الذاتي: ' + escapeHTML(t.selfNumber) : ''}</div>
+        </div>
+        <div class="page-badge">الصفحة الأولى</div>
+        <div class="pdf-grid">
+            ${cardHTML(page1)}
+        </div>
+        <div class="pdf-footer">تاريخ الطباعة: ${new Date().toLocaleString('ar-EG')} | نظام إدارة سجلات المعلمين</div>
+    </div>
+    
+    <div class="pdf-page">
+        <div class="pdf-header">
+            <div class="pdf-header-main">السجل الشخصي للمعلم</div>
+            <div class="pdf-header-sub">${escapeHTML(t.fullName || '')} ${t.selfNumber ? ' • الرقم الذاتي: ' + escapeHTML(t.selfNumber) : ''}</div>
+        </div>
+        <div class="page-badge">الصفحة الثانية</div>
+        <div class="pdf-grid">
+            ${cardHTML(page2)}
+        </div>
+        <div class="pdf-footer">تاريخ الطباعة: ${new Date().toLocaleString('ar-EG')} | نظام إدارة سجلات المعلمين</div>
+    </div>
+    
+    <div class="print-controls">
+        <button class="print-btn" onclick="window.print()">🖨️ طباعة أو حفظ كـ PDF</button>
+        <button class="print-btn" style="background: linear-gradient(135deg, #27ae60, #1e8449);" onclick="window.close()">✖️ إغلاق</button>
+    </div>
+</body>
+</html>`;
+}
+
+window.printTeacherPDF = function(id) {
+    const t = APP_STATE.teachers.find(x => x.firebaseId === id);
+    if (!t) { window.showToast('لم يتم العثور على المعلم', 'error'); return; }
+    const html = generateTeacherPDFHTML(t);
+    const w = window.open('', '_blank', 'width=1100,height=900');
+    if (!w) { window.showToast('❌ يرجى السماح بالنوافذ المنبثقة', 'error'); return; }
+    w.document.write(html);
+    w.document.close();
+};
+
+window.exportAllTeachersAsPDF = function() {
+    const teachers = APP_STATE.filteredTeachers.length > 0 ? APP_STATE.filteredTeachers : APP_STATE.teachers;
+    if (teachers.length === 0) { window.showToast('لا توجد سجلات للتصدير', 'warning'); return; }
+    if (!confirm('سيتم فتح نافذة طباعة لكل معلم على حدة (كل معلم بصفحتين × ٣ أعمدة). هل تريد المتابعة؟')) return;
+    window.showToast('⏳ جاري فتح ملفات الطباعة...', 'info');
+    teachers.forEach((t, i) => {
+        setTimeout(() => {
+            const html = generateTeacherPDFHTML(t);
+            const w = window.open('', '_blank', 'width=1100,height=900');
+            if (w) {
+                w.document.write(html);
+                w.document.close();
+            }
+        }, i * 700);
+    });
+};
+
+window.printAllTeachersSequential = function() {
+    const teachers = APP_STATE.filteredTeachers.length > 0 ? APP_STATE.filteredTeachers : APP_STATE.teachers;
+    if (teachers.length === 0) { window.showToast('لا توجد سجلات', 'warning'); return; }
+    if (!confirm('سيتم فتح جميع ملفات الطباعة للطباعة المباشرة. هل تريد المتابعة؟')) return;
+    teachers.forEach((t, i) => {
+        setTimeout(() => {
+            const html = generateTeacherPDFHTML(t);
+            const w = window.open('', '_blank');
+            if (w) {
+                w.document.write(html);
+                w.document.close();
+            }
+        }, i * 500);
+    });
+};
+
 
 /* ============================================
    الإعدادات العامة
