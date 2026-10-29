@@ -411,6 +411,175 @@ table.data-table td.ltr { direction: ltr; text-align: right; unicode-bidi: embed
   .ps-select, .ps-text { max-width: 55%; }
 }
 
+/* ==================================================
+   تحسينات الاستجابة والاحترافية — 2026
+   (طبقة نهائية تُطبَّق بعد كل الأنماط السابقة)
+================================================== */
+html { -webkit-text-size-adjust: 100%; }
+html, body { overflow-x: hidden; }
+@supports (overflow: clip) {
+    html, body { overflow-x: clip; }
+}
+#appLayout.active { width: 100%; max-width: 100%; }
+.main-content { min-width: 0; max-width: 100%; }
+.content-area { width: 100%; min-width: 0; }
+.card, .table-wrap, .page, .page-header { min-width: 0; max-width: 100%; }
+img { max-width: 100%; height: auto; }
+button { touch-action: manipulation; }
+:focus-visible { outline: 2px solid var(--secondary); outline-offset: 2px; }
+.hidden-desktop { display: none; }
+
+/* ---------- الشريط العلوي ---------- */
+.topbar {
+    height: auto; min-height: var(--topbar-height); gap: 10px;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+}
+.topbar > div:first-child { min-width: 0; flex: 1 1 auto; }
+.topbar-title { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.topbar-title .icon { flex-shrink: 0; }
+.topbar-actions { flex-shrink: 0; min-width: 0; }
+.status-pill, .school-pill {
+    max-width: 45vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.status-pill > span:last-child, .school-pill > span:last-child {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.hamburger {
+    width: 42px; height: 42px; border-radius: 10px; flex-shrink: 0; line-height: 1;
+}
+.hamburger:hover { background: #eef4fb; }
+
+/* ---------- القائمة الجانبية: درج احترافي ---------- */
+.sidebar { padding-bottom: env(safe-area-inset-bottom, 0px); overscroll-behavior: contain; }
+.sidebar-close {
+    display: none; margin-inline-start: auto; width: 34px; height: 34px; flex-shrink: 0;
+    align-items: center; justify-content: center; border-radius: 50%;
+    background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.22);
+    color: #fff; font-size: 1rem; cursor: pointer;
+}
+.nav-item { min-height: 44px; }
+.sidebar-header > div:not(.sidebar-logo) { min-width: 0; }
+.sidebar-title, .sidebar-role { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------- جداول وبطاقات ---------- */
+.table-wrap { overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+.data-table td { vertical-align: middle; }
+.btn-icon { flex-shrink: 0; }
+.stat-card { transition: var(--transition); }
+.stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+
+/* ---------- شاشة الدخول ---------- */
+@media (max-width: 640px) {
+    #loginScreen { padding: 16px; }
+    .login-card { padding: 26px 20px; border-radius: var(--radius-xl); }
+    .login-logo { width: 64px; height: 64px; font-size: 1.8rem; margin-bottom: 14px; }
+    .login-title { font-size: 1.25rem; }
+    .login-subtitle { margin-bottom: 22px; }
+    .login-field input { font-size: 16px; }
+}
+
+/* ---------- تابلت: الدرج والقوائم ---------- */
+@media (max-width: 1024px) {
+    .sidebar {
+        width: min(290px, 86vw); transform: translateX(100%); z-index: 70;
+        box-shadow: -18px 0 45px rgba(0,0,0,.3);
+    }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-overlay { z-index: 60; backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); }
+    .sidebar-close { display: inline-flex; }
+    body.sidebar-open { overflow: hidden; }
+    .main-content { margin-right: 0 !important; margin-inline-start: 0 !important; }
+    .page-header { align-items: stretch; }
+    .page-header > div { min-width: 0; }
+    .export-menu-wrap { width: 100%; max-width: 100%; }
+    .export-menu-wrap > .btn { width: 100%; }
+    .export-menu { inset-inline: 0; min-width: 0; }
+
+    /* جدول الحقول: كل الأعمدة الأساسية تبقى ظاهرة ومصطفة */
+    .field-row { grid-template-columns: 26px minmax(0, 1fr) auto auto; gap: 8px; }
+    .field-row > *:nth-child(4),
+    .field-row > *:nth-child(5),
+    .field-row > *:nth-child(6) { display: none; }
+    .field-row.header > *:nth-child(7) { display: none; }
+    .field-row > div:nth-child(2) { overflow-wrap: anywhere; }
+
+    /* أقسام وتسميات الحقول: تمرير أفقي داخلي بدل كسر الصفحة */
+    #fieldsTab-sections, #fieldsTab-labels { overflow-x: auto; overscroll-behavior-x: contain; }
+    #fieldsTab-sections .sec-row { min-width: 520px; }
+    #fieldsTab-labels .lbl-row { min-width: 460px; }
+}
+
+/* ---------- تابلت صغير ---------- */
+@media (max-width: 768px) {
+    .content-area { padding: 14px; }
+    .page-header { gap: 10px; margin-bottom: 16px; }
+    .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat-card { padding: 14px; gap: 10px; }
+    .stat-icon { width: 42px; height: 42px; font-size: 1.1rem; }
+    .stat-value { font-size: 1.3rem; }
+    .stat-label { font-size: .75rem; }
+    .modal { padding: 10px; }
+    .modal-content { max-height: calc(100dvh - 20px); }
+    .modal-header { padding: 16px; }
+    .modal-body { padding: 16px; }
+    .modal-footer { padding: 12px 16px; }
+}
+
+/* ---------- الجوال ---------- */
+@media (max-width: 640px) {
+    .hidden-mobile { display: none !important; }
+    .topbar { min-height: 58px; padding-left: 12px; padding-right: 12px; }
+    .topbar-title { font-size: .98rem; gap: 6px; }
+    .topbar-title .icon { font-size: 1.1rem; }
+    .status-pill { font-size: .7rem; padding: 5px 9px; gap: 4px; max-width: 34vw; }
+    .status-dot { width: 7px; height: 7px; }
+    .school-pill { font-size: .72rem; padding: 5px 9px; max-width: 38vw; }
+
+    .content-area { padding: 12px; }
+    .page-title { font-size: 1.15rem; }
+    .page-subtitle { font-size: .82rem; }
+    .card { padding: 14px; border-radius: 14px; margin-bottom: 14px; }
+    .card-header { gap: 8px; margin-bottom: 12px; padding-bottom: 10px; }
+    .stats-grid { gap: 8px; }
+    .stat-card { padding: 12px; }
+
+    .data-table { min-width: 560px; }
+    .data-table th, .data-table td { padding: 9px 10px; font-size: .82rem; }
+    .btn { padding: 10px 14px; font-size: .85rem; }
+    .btn-sm { padding: 7px 11px; font-size: .78rem; }
+    .btn-icon { width: 36px; height: 36px; padding: 0; }
+    .table-actions { gap: 5px; }
+
+    /* النوافذ المنبثقة تصبح أوراقاً سفلية */
+    .modal { padding: 0; align-items: flex-end; }
+    .modal-content, .modal-content.lg, .modal-content.xl {
+        max-width: 100%; max-height: 92dvh; margin: 0;
+        border-radius: 18px 18px 0 0;
+    }
+    .modal-footer { justify-content: stretch; }
+    .modal-footer .btn { flex: 1; }
+    .form-row { grid-template-columns: 1fr; }
+    .input-with-btn { flex-direction: column; }
+    .input-with-btn .btn { width: 100%; }
+
+    .toast { min-width: 0; width: calc(100vw - 32px); max-width: calc(100vw - 32px); }
+    #toastContainer { left: 16px; right: 16px; }
+}
+
+/* ---------- شاشات صغيرة جداً ---------- */
+@media (max-width: 420px) {
+    .stats-grid { grid-template-columns: 1fr; }
+    .stat-card { padding: 12px 14px; }
+    .status-pill { max-width: 30vw; }
+    .ps-row { flex-wrap: wrap; }
+    .ps-row > span { flex: 1 1 100%; }
+    .ps-select, .ps-text { max-width: 100%; width: 100%; }
+    .ps-actions .btn { min-width: 100%; }
+    .modal-footer .btn { min-width: 100%; flex: 1 1 100%; }
+}
+
 </style>
 </head>
 <body>
@@ -2257,11 +2426,11 @@ function renderSectionsTab() {
     const sorted = [...APP_STATE.dynamicSections].sort((a, b) => (a.order || 0) - (b.order || 0));
     container.innerHTML = `
         <div class="info-box info"><span>💡</span><div>يمكنك تعديل اسم القسم وترتيبه. لن تتمكن من حذف قسم يحتوي على حقول.</div></div>
-        <div style="display:grid; grid-template-columns: 2fr 1fr 80px 60px; gap:10px; padding:12px; background:var(--primary); color:white; border-radius:8px; font-weight:700;">
+        <div class="sec-row" style="display:grid; grid-template-columns: 2fr 1fr 80px 60px; gap:10px; padding:12px; background:var(--primary); color:white; border-radius:8px; font-weight:700;">
             <div>اسم القسم</div><div>المعرّف</div><div>الترتيب</div><div></div>
         </div>
         ${sorted.map(s => `
-            <div style="display:grid; grid-template-columns: 2fr 1fr 80px 60px; gap:10px; padding:8px 12px; border-bottom:1px solid #eef2f7; align-items:center;">
+            <div class="sec-row" style="display:grid; grid-template-columns: 2fr 1fr 80px 60px; gap:10px; padding:8px 12px; border-bottom:1px solid #eef2f7; align-items:center;">
                 <input type="text" value="${escapeHTML(s.label)}" onchange="updateSectionLabel('${s.id}', this.value)" style="padding:8px 12px; border:1.5px solid var(--border); border-radius:8px;">
                 <input type="text" value="${escapeHTML(s.id)}" disabled style="direction:ltr; background:#f0f0f0; padding:8px 12px; border:1.5px solid var(--border); border-radius:8px;">
                 <input type="number" value="${s.order || 1}" min="1" onchange="updateSectionOrder('${s.id}', this.value)" style="padding:8px; border:1.5px solid var(--border); border-radius:8px;">
@@ -2432,7 +2601,7 @@ function renderLabelsTab() {
     container.innerHTML = `
         <div class="info-box info"><span>💡</span><div>هذه تسميات <strong>معروضة فقط</strong>. لا تغيّر المفاتيح أو البنية. اتركها فارغة لاستخدام الاسم الأصلي.</div></div>
         ${sorted.map(f => `
-            <div style="display:grid; grid-template-columns:1fr 2fr; gap:10px; padding:8px 12px; border-bottom:1px solid #eef2f7; align-items:center;">
+            <div class="lbl-row" style="display:grid; grid-template-columns:1fr 2fr; gap:10px; padding:8px 12px; border-bottom:1px solid #eef2f7; align-items:center;">
                 <div style="font-size:0.85rem; color:#666; font-weight:600;">${escapeHTML(f.label)} <small style="color:#aaa;">(${escapeHTML(f.key)})</small></div>
                 <input type="text" id="lbl_${f.key}" value="${escapeHTML(APP_STATE.columnLabels[f.key] || '')}" placeholder="${escapeHTML(f.label)}" style="padding:8px 12px; border:1.5px solid var(--border); border-radius:8px;">
             </div>
@@ -3201,6 +3370,65 @@ window.resetUserPassword = function (uid) {
 };
 
 console.log('✅ owner.html — تم التحميل بنجاح — النسخة الكاملة');
+/* ============================================================
+   تحسينات القائمة الجانبية وسلوك الصفحة على الجوال
+   ============================================================ */
+(function initMobileShell() {
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebar) return;
+
+    // زر إغلاق داخل القائمة الجانبية
+    const header = sidebar.querySelector('.sidebar-header');
+    if (header && !header.querySelector('.sidebar-close')) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'sidebar-close';
+        btn.setAttribute('aria-label', 'إغلاق القائمة');
+        btn.innerHTML = '✕';
+        btn.addEventListener('click', function () { window.closeSidebar(); });
+        header.appendChild(btn);
+    }
+
+    // قفل تمرير الخلفية عند فتح الدرج + تحديث زر القائمة
+    const syncShell = function () {
+        const open = sidebar.classList.contains('open');
+        document.body.classList.toggle('sidebar-open', open);
+        const burger = document.querySelector('.hamburger');
+        if (burger) burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+    };
+    if (window.MutationObserver) {
+        new MutationObserver(syncShell).observe(sidebar, { attributes: true, attributeFilter: ['class'] });
+    }
+    syncShell();
+
+    // إغلاق بالزر Escape
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && sidebar.classList.contains('open')) window.closeSidebar();
+    });
+
+    // عند العودة إلى مقاس سطح المكتب
+    let resizeTimer = null;
+    window.addEventListener('resize', function () {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function () {
+            if (window.innerWidth > 1024) window.closeSidebar();
+        }, 120);
+    });
+
+    // إغلاق الدرج والعودة لأعلى الصفحة عند التنقل
+    if (typeof window.navigateTo === 'function') {
+        const originalNavigate = window.navigateTo;
+        window.navigateTo = function () {
+            const result = originalNavigate.apply(this, arguments);
+            if (window.innerWidth <= 1024) {
+                window.closeSidebar();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+            return result;
+        };
+    }
+})();
+
 </script>
 
 </body>
