@@ -1027,7 +1027,7 @@ table.data-table td.ltr { direction: ltr; text-align: right; unicode-bidi: embed
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword, updatePassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, where, orderBy, limit, serverTimestamp, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -2680,8 +2680,29 @@ function pdfArabicLabel(key) {
     return String(key).replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').trim();
 }
 
+/* ترتيب الحقول حسب تسلسل النموذج: الأقسام ثم ترتيب الحقل داخلها */
+function pdfFieldOrderMap() {
+    const st = window.APP_STATE || {};
+    const fields = st.dynamicFields || [];
+    const sections = st.dynamicSections || [];
+    const secOrder = {};
+    sections.forEach(function (s) {
+        if (s && s.id) secOrder[s.id] = (typeof s.order === 'number' ? s.order : 999);
+    });
+    const map = {};
+    fields.forEach(function (f, i) {
+        if (!f || !f.key) return;
+        const so = (secOrder[f.section] !== undefined ? secOrder[f.section] : 999);
+        const fo = (typeof f.order === 'number' ? f.order : (i + 1));
+        map[f.key] = so * 10000 + fo;
+    });
+    return map;
+}
+
 function pdfFieldEntries(t) {
-    const out = [];
+    const orderMap = pdfFieldOrderMap();
+    const rows = [];
+    let fallback = Object.keys(orderMap).length;
     Object.keys(t).forEach(function (k) {
         if (PDF_SKIP_KEYS.indexOf(k) !== -1) return;
         let v = t[k];
@@ -2695,9 +2716,11 @@ function pdfFieldEntries(t) {
                 return;
             }
         }
-        out.push({ label: pdfArabicLabel(k), value: String(v) });
+        const ord = (orderMap[k] !== undefined) ? orderMap[k] : (fallback++);
+        rows.push({ ord: ord, label: pdfArabicLabel(k), value: String(v) });
     });
-    return out;
+    rows.sort(function (a, b) { return a.ord - b.ord; });
+    return rows.map(function (r) { return { label: r.label, value: r.value }; });
 }
 
 function buildTeacherPrintHTML(t) {
@@ -2742,7 +2765,7 @@ function buildTeacherPrintHTML(t) {
         + '.p-head-title{font-size:17px;font-weight:800}'
         + '.p-head-sub{font-size:10.5px;opacity:.92;margin-top:2px}'
         + '.p-badge{color:#fff;display:inline-block;padding:3px 12px;border-radius:20px;font-size:10px;font-weight:700;margin-bottom:8px}'
-        + '.p-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;align-items:start;flex:1}'
+        + '.p-grid{display:grid;grid-template-columns:repeat(3,1fr);grid-auto-flow:row;gap:6px;align-items:start;flex:1}'
         + '.p-card{border:1px solid ' + c.cardBorder + ';border-radius:6px;background:' + c.cardBg + ';overflow:hidden;break-inside:avoid;page-break-inside:avoid}'
         + '.p-card-label{background:' + c.labelBg + ';color:' + c.labelText + ';font-size:9px;font-weight:700;padding:5px 7px;border-bottom:1px solid ' + c.cardBorder + ';min-height:26px;display:flex;align-items:center}'
         + '.p-card-value{color:' + c.valueText + ';font-size:9.5px;line-height:1.55;padding:6px 7px;min-height:34px;word-break:break-word;white-space:pre-wrap}'
@@ -2865,6 +2888,133 @@ window.openPrintColors = function () {
         window.showToast('✅ تم حفظ ألوان الطباعة', 'success');
     };
     overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.remove(); });
+};
+
+
+/* ============================================================
+   تغيير كلمة مرور المستخدمين (من لوحة المالك)
+   ============================================================ */
+window.resetUserPassword = function (uid) {
+    const user = (APP_STATE.users || []).find(function (u) { return u.uid === uid; });
+    if (!user) { window.showToast('لم يتم العثور على المستخدم', 'error'); return; }
+    if (user.role === 'owner') { window.showToast('❌ لا يمكن تغيير كلمة مرور المالك', 'error'); return; }
+
+    const internal = (APP_STATE.generalSettings && APP_STATE.generalSettings.internalDomain) || 'school.local';
+    const email = user.email || (user.username ? window.usernameToEmail(user.username) : '');
+    const hasRealEmail = !!email && email.toLowerCase().indexOf('@' + internal.toLowerCase()) === -1;
+
+    const host = document.createElement('div');
+    host.innerHTML =
+        '<div id="pwdOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;">'
+        + '<div style="background:#fff;border-radius:14px;padding:22px;width:100%;max-width:440px;max-height:92vh;overflow:auto;">'
+        + '<h3 style="margin-bottom:4px;color:#1a3a5c;">🔑 تغيير كلمة المرور</h3>'
+        + '<div style="font-size:.85rem;color:#7f8c8d;margin-bottom:16px;">المستخدم: <b>' + escapeHTML(user.fullName || user.username || '') + '</b> — ' + escapeHTML(user.username || '') + '</div>'
+        + '<label style="display:block;font-size:.85rem;font-weight:700;margin-bottom:6px;">كلمة المرور الحالية</label>'
+        + '<input id="pwdCurrent" type="text" autocomplete="off" style="width:100%;padding:10px 12px;border:1px solid #d0d8e0;border-radius:8px;font-family:Tajawal;margin-bottom:12px;" placeholder="كلمة المرور الحالية للمستخدم">'
+        + '<label style="display:block;font-size:.85rem;font-weight:700;margin-bottom:6px;">كلمة المرور الجديدة</label>'
+        + '<input id="pwdNew" type="text" autocomplete="off" style="width:100%;padding:10px 12px;border:1px solid #d0d8e0;border-radius:8px;font-family:Tajawal;margin-bottom:12px;" placeholder="8 أحرف على الأقل">'
+        + '<label style="display:block;font-size:.85rem;font-weight:700;margin-bottom:6px;">تأكيد كلمة المرور</label>'
+        + '<input id="pwdConfirm" type="text" autocomplete="off" style="width:100%;padding:10px 12px;border:1px solid #d0d8e0;border-radius:8px;font-family:Tajawal;margin-bottom:6px;">'
+        + '<div id="pwdMsg" style="display:none;font-size:.82rem;color:#c0392b;margin-top:8px;"></div>'
+        + '<button id="pwdGen" type="button" style="margin-top:10px;padding:8px 14px;border:1px solid #d0d8e0;background:#fff;border-radius:8px;font-family:Tajawal;font-weight:700;cursor:pointer;">🎲 توليد كلمة مرور</button>'
+        + '<div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;">'
+        + '<button id="pwdSave" style="flex:1;min-width:130px;padding:11px;border:0;border-radius:8px;background:#1a3a5c;color:#fff;font-family:Tajawal;font-weight:700;cursor:pointer;">💾 تغيير كلمة المرور</button>'
+        + '<button id="pwdCancel" style="padding:11px 16px;border:1px solid #d0d8e0;border-radius:8px;background:#fff;font-family:Tajawal;font-weight:700;cursor:pointer;">إلغاء</button>'
+        + '</div>'
+        + (hasRealEmail
+            ? '<button id="pwdEmail" style="width:100%;margin-top:10px;padding:10px;border:1px solid #2d7dd2;background:#f4f9ff;color:#1a3a5c;border-radius:8px;font-family:Tajawal;font-weight:700;cursor:pointer;">📧 إرسال رابط إعادة تعيين إلى ' + escapeHTML(email) + '</button>'
+            : '<div style="margin-top:12px;font-size:.78rem;color:#95a5a6;line-height:1.6;">لا يوجد بريد حقيقي لهذا الحساب، لذلك يجب إدخال كلمة المرور الحالية لإتمام التغيير.</div>')
+        + '</div></div>';
+    document.body.appendChild(host);
+
+    const overlay = document.getElementById('pwdOverlay');
+    const msg = document.getElementById('pwdMsg');
+    const showMsg = function (t) { msg.style.display = 'block'; msg.textContent = t; };
+
+    document.getElementById('pwdCancel').onclick = function () { overlay.remove(); };
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.remove(); });
+
+    document.getElementById('pwdGen').onclick = function () {
+        const len = (APP_STATE.generalSettings && APP_STATE.generalSettings.passwordLength) || 12;
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%';
+        let out = '';
+        for (let i = 0; i < len; i++) out += chars.charAt(Math.floor(Math.random() * chars.length));
+        document.getElementById('pwdNew').value = out;
+        document.getElementById('pwdConfirm').value = out;
+    };
+
+    if (hasRealEmail) {
+        document.getElementById('pwdEmail').onclick = async function () {
+            try {
+                await sendPasswordResetEmail(auth, email);
+                window.showToast('📧 تم إرسال رابط إعادة التعيين إلى ' + email, 'success', 7000);
+                overlay.remove();
+            } catch (e) {
+                showMsg('تعذر إرسال البريد: ' + (e.code || e.message));
+            }
+        };
+    }
+
+    document.getElementById('pwdSave').onclick = async function () {
+        const current = document.getElementById('pwdCurrent').value;
+        const pass1 = document.getElementById('pwdNew').value;
+        const pass2 = document.getElementById('pwdConfirm').value;
+        msg.style.display = 'none';
+        if (!current) return showMsg('أدخل كلمة المرور الحالية للمستخدم.');
+        if (!pass1 || pass1.length < 8) return showMsg('كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل.');
+        if (pass1 !== pass2) return showMsg('كلمتا المرور غير متطابقتين.');
+
+        const btn = this;
+        btn.disabled = true; btn.textContent = '⏳ جاري التغيير...';
+        let secondaryApp = null;
+        try {
+            secondaryApp = initializeApp(firebaseConfig, 'PwdChange' + Date.now());
+            const secondaryAuth = getAuth(secondaryApp);
+            await signInWithEmailAndPassword(secondaryAuth, email, current);
+            await updatePassword(secondaryAuth.currentUser, pass1);
+            try { await signOut(secondaryAuth); } catch (e) {}
+
+            try {
+                await updateDoc(doc(db, 'users', user.uid), {
+                    mustChangePassword: false,
+                    passwordChangedAt: serverTimestamp(),
+                    passwordChangedBy: APP_STATE.currentUser?.uid || null,
+                    updatedAt: serverTimestamp()
+                });
+            } catch (e) { console.warn('تعذر تحديث بيانات المستخدم', e); }
+
+            try {
+                await addDoc(collection(db, 'auditLog'), {
+                    action: 'change_password',
+                    userId: APP_STATE.currentUser?.uid || null,
+                    userName: APP_STATE.currentUserData?.fullName || '',
+                    targetId: user.uid,
+                    targetName: user.fullName || user.username,
+                    timestamp: serverTimestamp()
+                });
+            } catch (e) {}
+
+            overlay.remove();
+            document.getElementById('credUsername').value = user.username || '';
+            document.getElementById('credPassword').value = pass1;
+            document.getElementById('credEmail').value = email;
+            openModal('modalCredentials');
+            window.showToast('✅ تم تغيير كلمة المرور', 'success');
+        } catch (e) {
+            const code = (e && e.code) || '';
+            if (code.indexOf('wrong-password') !== -1 || code.indexOf('invalid-credential') !== -1 || code.indexOf('user-not-found') !== -1)
+                showMsg('كلمة المرور الحالية غير صحيحة.');
+            else if (code.indexOf('too-many-requests') !== -1)
+                showMsg('محاولات كثيرة، حاول لاحقًا.');
+            else if (code.indexOf('weak-password') !== -1)
+                showMsg('كلمة المرور الجديدة ضعيفة.');
+            else
+                showMsg('تعذر التغيير: ' + (e.message || code));
+        } finally {
+            if (secondaryApp) { try { await secondaryApp.delete(); } catch (e) {} }
+            btn.disabled = false; btn.textContent = '💾 تغيير كلمة المرور';
+        }
+    };
 };
 
 console.log('✅ owner.html — تم التحميل بنجاح — النسخة الكاملة');
