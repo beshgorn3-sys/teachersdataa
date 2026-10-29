@@ -510,6 +510,46 @@ table.data-table td.ltr {
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: var(--bg-body); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+/* ==================== قائمة الطباعة والتصدير ==================== */
+.export-menu-wrap { position: relative; }
+.export-menu { display: none; position: absolute; inset-inline-end: 0; top: calc(100% + 8px);
+  background: var(--bg-card, #fff); border: 1px solid var(--border, #d0d8e0); border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.15); min-width: 250px; z-index: 60; overflow: hidden; }
+.export-menu.show { display: block; }
+.export-menu button { display: flex; align-items: center; gap: 10px; width: 100%; text-align: start;
+  padding: 12px 16px; background: transparent; border: 0; border-bottom: 1px solid #eef2f7;
+  font-size: .9rem; font-weight: 600; color: #2c3e50; cursor: pointer; font-family: inherit; }
+.export-menu button:last-child { border-bottom: 0; }
+.export-menu button:hover { background: #f1f5fa; }
+
+/* ==================== لوحة إعدادات الطباعة ==================== */
+.ps-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 9999;
+  display: flex; align-items: center; justify-content: center; padding: 16px; overflow: auto; }
+.ps-card { background: #fff; border-radius: 14px; padding: 22px; width: 100%; max-width: 560px;
+  max-height: calc(100vh - 32px); overflow: auto; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+.ps-title { margin: 0 0 4px; color: #1a3a5c; font-size: 1.15rem; font-weight: 800; }
+.ps-sub { font-size: .84rem; color: #7f8c8d; margin-bottom: 14px; line-height: 1.6; }
+.ps-section { background: #f4f7fa; color: #1a3a5c; font-weight: 800; font-size: .85rem;
+  padding: 7px 12px; border-radius: 8px; margin: 16px 0 10px; }
+.ps-row { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  font-size: .87rem; font-weight: 600; padding: 6px 0; }
+.ps-row > span { flex: 1; }
+.ps-row input[type="color"] { width: 56px; height: 34px; border: 1px solid #d0d8e0; border-radius: 8px;
+  background: #fff; padding: 2px; cursor: pointer; }
+.ps-row input[type="number"] { width: 84px; padding: 7px 8px; border: 1px solid #d0d8e0;
+  border-radius: 8px; font-family: inherit; font-size: 15px; text-align: center; }
+.ps-row input[type="checkbox"] { width: 20px; height: 20px; accent-color: #2d7dd2; }
+.ps-select, .ps-text { padding: 8px 10px; border: 1px solid #d0d8e0; border-radius: 8px;
+  font-family: inherit; font-size: 15px; max-width: 60%; }
+.ps-actions { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+.ps-actions .btn { flex: 1; min-width: 110px; }
+@media (max-width: 480px) {
+  .ps-overlay { padding: 0; align-items: flex-end; }
+  .ps-card { max-width: 100%; border-radius: 16px 16px 0 0; max-height: 90vh; padding: 18px 16px 22px; }
+  .ps-actions .btn { min-width: 100%; }
+  .ps-select, .ps-text { max-width: 55%; }
+}
+
 </style>
 </head>
 
@@ -650,9 +690,22 @@ table.data-table td.ltr {
                         <h1 class="page-title">👨‍🏫 معلمو مدرستي</h1>
                         <p class="page-subtitle">قائمة جميع معلمي مدرستك</p>
                     </div>
-                    <button class="btn btn-success" onclick="exportExcel()">
-                        <span>📊</span><span>تصدير Excel</span>
-                    </button>
+                    <div class="export-menu-wrap">
+                        <button class="btn btn-primary" id="exportBtn" onclick="toggleExportMenu(event)">
+                            <span>📥</span><span>طباعة وتصدير</span><span>▾</span>
+                        </button>
+                        <div class="export-menu" id="exportMenu">
+                            <button onclick="exportExcel();closeExportMenu();">
+                                <span>📊</span><span>تصدير معلمي مدرستي إلى Excel</span>
+                            </button>
+                            <button onclick="exportAllTeachersPDF();closeExportMenu();">
+                                <span>📄</span><span>طباعة كل معلم PDF (صفحتان × 3 أعمدة)</span>
+                            </button>
+                            <button onclick="openPrintSettings();closeExportMenu();">
+                                <span>⚙️</span><span>إعدادات الطباعة والتصدير</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="card">
@@ -1763,6 +1816,354 @@ onAuthStateChanged(auth, (user) => {
     if (user) resetInactivityTimer();
     else if (inactivityTimer) clearTimeout(inactivityTimer);
 });
+
+window.toggleExportMenu = function (e) {
+    if (e) e.stopPropagation();
+    const m = document.getElementById('exportMenu');
+    if (m) m.classList.toggle('show');
+};
+window.closeExportMenu = function () {
+    const m = document.getElementById('exportMenu');
+    if (m) m.classList.remove('show');
+};
+document.addEventListener('click', function (e) {
+    const wrap = document.querySelector('.export-menu-wrap');
+    if (wrap && !wrap.contains(e.target)) window.closeExportMenu();
+});
+
+/* ============================================================
+   لوحة إعدادات الطباعة والتصدير + طباعة سجلات المعلمين
+   (صفحتان لكل معلم × 3 أعمدة)
+   ============================================================ */
+const PRINT_IS_ADMIN = true;
+function printScopeKey() {
+    if (!PRINT_IS_ADMIN) return 'teachersPrintSettings';
+    const sid = (window.APP_STATE && window.APP_STATE.schoolId) || 'school';
+    return 'teachersPrintSettings:' + sid;
+}
+
+const PRINT_FONTS = [
+    ['Tajawal', 'Tajawal — تجوال'],
+    ['Cairo', 'Cairo — القاهرة'],
+    ['Almarai', 'Almarai — المراعي'],
+    ['Amiri', 'Amiri — أميري'],
+    ['Noto Naskh Arabic', 'Noto Naskh — نسخ'],
+    ['Arial', 'Arial']
+];
+
+const PRINT_DEFAULTS = {
+    fontFamily: 'Tajawal',
+    headerFontSize: 18,
+    labelFontSize: 9.5,
+    valueFontSize: 10,
+    cardPadding: 7,
+    cardMinHeight: 38,
+    cardRadius: 8,
+    cardGap: 6,
+    headerBg: '#1a3a5c',
+    headerText: '#ffffff',
+    pageBg: '#ffffff',
+    cardBg: '#ffffff',
+    cardBorder: '#d0d8e0',
+    labelBg: '#f4f7fa',
+    labelText: '#1a3a5c',
+    valueText: '#1a1a1a',
+    accent: '#2d7dd2',
+    docTitle: 'السجل الشخصي للمعلم',
+    footerText: 'نظام سجلات المعلمين',
+    showBadge: true,
+    showFooter: true
+};
+
+function getPrintSettings() {
+    try {
+        const raw = localStorage.getItem(printScopeKey());
+        if (raw) return Object.assign({}, PRINT_DEFAULTS, JSON.parse(raw));
+    } catch (e) {}
+    return Object.assign({}, PRINT_DEFAULTS);
+}
+function savePrintSettings(s) {
+    try { localStorage.setItem(printScopeKey(), JSON.stringify(s)); return true; } catch (e) { return false; }
+}
+
+const PRINT_AR_LABELS = {
+    fullName: 'الاسم الكامل', name: 'الاسم', firstName: 'الاسم الأول', lastName: 'اسم العائلة',
+    selfNumber: 'الرقم الذاتي', nationalId: 'الرقم الوطني', phone: 'رقم الهاتف', mobile: 'رقم الجوال',
+    email: 'البريد الإلكتروني', address: 'العنوان', birthDate: 'تاريخ الميلاد', gender: 'الجنس',
+    school: 'المدرسة', schoolName: 'اسم المدرسة', region: 'المنطقة', governorate: 'المحافظة',
+    directorate: 'المديرية', jobStatus: 'الوضع الوظيفي', jobTitle: 'المسمى الوظيفي',
+    specialization: 'التخصص', subject: 'المادة', stage: 'المرحلة', grade: 'الصف',
+    qualification: 'المؤهل العلمي', degree: 'الدرجة العلمية', major: 'التخصص الدقيق',
+    graduationYear: 'سنة التخرج', university: 'الجامعة', experience: 'سنوات الخبرة',
+    hireDate: 'تاريخ التعيين', yearsOfService: 'سنوات الخدمة', courses: 'الدورات التدريبية',
+    skills: 'المهارات', notes: 'ملاحظات', photo: 'الصورة', status: 'الحالة'
+};
+const PRINT_SKIP_KEYS = ['firebaseId', 'createdAt', 'createdAtLocal', 'createdByUid', 'createdByRole', 'updatedAt', 'updatedBy', 'schoolId'];
+
+function printLabel(key) {
+    const st = window.APP_STATE || {};
+    if (st.columnLabels && st.columnLabels[key]) return String(st.columnLabels[key]);
+    const fields = st.dynamicFields || [];
+    for (let i = 0; i < fields.length; i++) {
+        if (fields[i] && fields[i].key === key && fields[i].label) return String(fields[i].label);
+    }
+    if (PRINT_AR_LABELS[key]) return PRINT_AR_LABELS[key];
+    return String(key).replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').trim();
+}
+
+function printFieldOrderMap() {
+    const st = window.APP_STATE || {};
+    const fields = st.dynamicFields || [];
+    const sections = st.dynamicSections || [];
+    const secOrder = {};
+    sections.forEach(function (s) { if (s && s.id) secOrder[s.id] = (typeof s.order === 'number' ? s.order : 999); });
+    const map = {};
+    fields.forEach(function (f, i) {
+        if (!f || !f.key) return;
+        const so = (secOrder[f.section] !== undefined ? secOrder[f.section] : 999);
+        const fo = (typeof f.order === 'number' ? f.order : (i + 1));
+        map[f.key] = so * 10000 + fo;
+    });
+    return map;
+}
+
+function printFieldEntries(t) {
+    const orderMap = printFieldOrderMap();
+    const rows = [];
+    let fallback = Object.keys(orderMap).length;
+    Object.keys(t).forEach(function (k) {
+        if (PRINT_SKIP_KEYS.indexOf(k) !== -1) return;
+        let v = t[k];
+        if (v === null || v === undefined || v === '') return;
+        if (typeof v === 'object') {
+            if (typeof v.toDate === 'function') {
+                try { v = v.toDate().toLocaleString('ar-EG'); } catch (e) { return; }
+            } else if (Array.isArray(v)) {
+                v = v.join('، ');
+            } else {
+                return;
+            }
+        }
+        rows.push({
+            ord: (orderMap[k] !== undefined ? orderMap[k] : (fallback++)),
+            label: printLabel(k),
+            value: String(v)
+        });
+    });
+    rows.sort(function (a, b) { return a.ord - b.ord; });
+    return rows.map(function (r) { return { label: r.label, value: r.value }; });
+}
+
+function buildTeacherPrintHTML(t) {
+    const s = getPrintSettings();
+    const entries = printFieldEntries(t);
+    const perPage = Math.ceil(entries.length / 2) || 1;
+    const pages = [entries.slice(0, perPage), entries.slice(perPage)];
+
+    const card = function (item) {
+        return '<div class="p-card">'
+            + '<div class="p-card-label">' + escapeHTML(item.label) + '</div>'
+            + '<div class="p-card-value">' + escapeHTML(item.value).replace(/\n/g, '<br>') + '</div>'
+            + '</div>';
+    };
+    const grid = function (items) {
+        if (!items.length) return '<div class="p-empty">لا توجد بيانات في هذه الصفحة</div>';
+        return '<div class="p-grid">' + items.map(card).join('') + '</div>';
+    };
+    const head = '<div class="p-head">'
+        + '<div class="p-head-title">' + escapeHTML(s.docTitle || PRINT_DEFAULTS.docTitle) + '</div>'
+        + '<div class="p-head-sub">' + escapeHTML(t.fullName || '')
+        + (t.selfNumber ? ' &nbsp;•&nbsp; الرقم الذاتي: ' + escapeHTML(t.selfNumber) : '')
+        + (t.school ? ' &nbsp;•&nbsp; ' + escapeHTML(t.school) : '')
+        + '</div></div>';
+    const page = function (idx, items) {
+        return '<section class="p-page" style="background:' + s.pageBg + ';">'
+            + head
+            + (s.showBadge ? '<div class="p-badge" style="background:' + s.accent + ';">الصفحة ' + (idx + 1) + ' من 2</div>' : '')
+            + grid(items)
+            + (s.showFooter ? '<div class="p-foot">' + escapeHTML(s.footerText || '') + ' — ' + new Date().toLocaleString('ar-EG') + '</div>' : '')
+            + '</section>';
+    };
+
+    const fonts = PRINT_FONTS.map(function (f) { return f[0].replace(/ /g, '+') + ':wght@400;500;700;800'; }).join('&family=');
+    const style = '<style>'
+        + '*{box-sizing:border-box;margin:0;padding:0;font-family:"' + s.fontFamily + '",Arial,sans-serif}'
+        + '@page{size:A4 portrait;margin:8mm}'
+        + 'body{background:#eef2f7;padding:16px}'
+        + '.p-page{width:194mm;min-height:281mm;padding:6mm;margin:0 auto 14px;display:flex;flex-direction:column;'
+        + 'box-shadow:0 6px 24px rgba(0,0,0,.15);page-break-after:always;break-after:page}'
+        + '.p-page:last-of-type{page-break-after:auto;break-after:auto}'
+        + '.p-head{background:' + s.headerBg + ';color:' + s.headerText + ';padding:10px 14px;border-radius:8px;text-align:center;margin-bottom:10px}'
+        + '.p-head-title{font-size:' + s.headerFontSize + 'px;font-weight:800}'
+        + '.p-head-sub{font-size:' + Math.max(8, s.headerFontSize * 0.62) + 'px;opacity:.94;margin-top:3px}'
+        + '.p-badge{color:#fff;display:inline-block;padding:3px 12px;border-radius:20px;font-size:' + Math.max(7, s.labelFontSize) + 'px;font-weight:700;margin-bottom:8px}'
+        + '.p-grid{display:grid;grid-template-columns:repeat(3,1fr);grid-auto-flow:row;gap:' + s.cardGap + 'px;align-items:start;flex:1}'
+        + '.p-card{border:1px solid ' + s.cardBorder + ';border-radius:' + s.cardRadius + 'px;background:' + s.cardBg + ';overflow:hidden;break-inside:avoid;page-break-inside:avoid}'
+        + '.p-card-label{background:' + s.labelBg + ';color:' + s.labelText + ';font-size:' + s.labelFontSize + 'px;font-weight:700;'
+        + 'padding:' + s.cardPadding + 'px ' + (s.cardPadding + 2) + 'px;border-bottom:1px solid ' + s.cardBorder + ';min-height:26px;display:flex;align-items:center}'
+        + '.p-card-value{color:' + s.valueText + ';font-size:' + s.valueFontSize + 'px;line-height:1.55;'
+        + 'padding:' + s.cardPadding + 'px ' + (s.cardPadding + 2) + 'px;min-height:' + s.cardMinHeight + 'px;word-break:break-word;white-space:pre-wrap}'
+        + '.p-empty{grid-column:1/-1;text-align:center;color:#7f8c8d;font-size:11px;padding:20px}'
+        + '.p-foot{margin-top:8px;text-align:center;font-size:8px;color:#7f8c8d}'
+        + '.p-tools{position:fixed;bottom:18px;inset-inline:0;display:flex;justify-content:center;gap:10px;z-index:99}'
+        + '.p-tools button{padding:11px 26px;border:0;border-radius:8px;color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;background:' + s.headerBg + '}'
+        + '.p-tools button.alt{background:#27ae60}'
+        + '@media print{body{background:#fff;padding:0}.p-page{width:auto;min-height:0;margin:0;box-shadow:none}.p-tools{display:none}}'
+        + '</style>';
+
+    return '<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">'
+        + '<meta name="viewport" content="width=device-width,initial-scale=1">'
+        + '<title>سجل ' + escapeHTML(t.fullName || 'معلم') + '</title>'
+        + '<link href="https://fonts.googleapis.com/css2?family=' + fonts + '&display=swap" rel="stylesheet">'
+        + style + '</head><body>'
+        + page(0, pages[0]) + page(1, pages[1])
+        + '<div class="p-tools"><button onclick="window.print()">🖨️ طباعة / حفظ PDF</button>'
+        + '<button class="alt" onclick="window.close()">إغلاق</button></div>'
+        + '</body></html>';
+}
+
+window.printTeacherPDF = function (id) {
+    const t = (window.APP_STATE ? APP_STATE.teachers : []).find(function (x) { return x.firebaseId === id; });
+    if (!t) { window.showToast('لم يتم العثور على السجل', 'error'); return; }
+    const w = window.open('', '_blank', 'width=1100,height=900');
+    if (!w) { window.showToast('❌ اسمح بالنوافذ المنبثقة', 'error'); return; }
+    w.document.write(buildTeacherPrintHTML(t));
+    w.document.close();
+};
+
+window.exportAllTeachersPDF = function () {
+    const st = window.APP_STATE || {};
+    const list = (st.filteredTeachers && st.filteredTeachers.length) ? st.filteredTeachers : (st.teachers || []);
+    if (!list.length) { window.showToast('لا توجد سجلات', 'warning'); return; }
+    if (!confirm('سيتم فتح نافذة طباعة لكل معلم (صفحتان × 3 أعمدة). عدد السجلات: ' + list.length + '. هل تريد المتابعة؟')) return;
+    list.forEach(function (t, i) {
+        setTimeout(function () {
+            const w = window.open('', '_blank', 'width=1100,height=900');
+            if (w) { w.document.write(buildTeacherPrintHTML(t)); w.document.close(); }
+        }, i * 700);
+    });
+};
+
+/* ---- زر طباعة في جدول المعلمين ---- */
+const __origPrintRender = renderTeachersTable;
+renderTeachersTable = function () {
+    __origPrintRender();
+    const tbody = document.getElementById('teachersTableBody');
+    if (!tbody) return;
+    tbody.querySelectorAll('tr').forEach(function (tr) {
+        const viewBtn = tr.querySelector('button[onclick^="viewTeacher"]');
+        if (!viewBtn) return;
+        const m = viewBtn.getAttribute('onclick').match(/'([^']+)'/);
+        if (!m) return;
+        const actions = viewBtn.closest('.table-actions') || viewBtn.parentElement;
+        if (!actions || actions.querySelector('.pdf-print-btn')) return;
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-icon btn-outline pdf-print-btn';
+        btn.title = 'طباعة / PDF';
+        btn.innerHTML = '🖨️';
+        btn.onclick = function () { window.printTeacherPDF(m[1]); };
+        actions.appendChild(btn);
+    });
+};
+
+/* ---- لوحة إعدادات الطباعة ---- */
+function printColorRow(key, label) {
+    return '<label class="ps-row"><span>' + label + '</span>'
+        + '<input type="color" data-key="' + key + '" value="' + getPrintSettings()[key] + '"></label>';
+}
+function printNumRow(key, label, min, max, step) {
+    return '<label class="ps-row"><span>' + label + '</span>'
+        + '<input type="number" data-key="' + key + '" min="' + min + '" max="' + max + '" step="' + step + '" value="' + getPrintSettings()[key] + '"></label>';
+}
+
+window.openPrintSettings = function () {
+    const s = getPrintSettings();
+    const fontOpts = PRINT_FONTS.map(function (f) {
+        return '<option value="' + f[0] + '"' + (s.fontFamily === f[0] ? ' selected' : '') + '>' + f[1] + '</option>';
+    }).join('');
+
+    const host = document.createElement('div');
+    host.innerHTML =
+        '<div class="ps-overlay" id="psOverlay"><div class="ps-card">'
+        + '<h3 class="ps-title">⚙️ إعدادات الطباعة والتصدير</h3>'
+        + '<div class="ps-sub">' + (PRINT_IS_ADMIN ? 'تُطبق على سجلات معلمي مدرستك فقط.' : 'تُطبق على جميع سجلات المعلمين.') + '</div>'
+
+        + '<div class="ps-section">🔤 الخطوط</div>'
+        + '<label class="ps-row"><span>نوع الخط</span><select data-key="fontFamily" class="ps-select">' + fontOpts + '</select></label>'
+        + printNumRow('headerFontSize', 'حجم عنوان الصفحة', 12, 30, 1)
+        + printNumRow('labelFontSize', 'حجم عنوان البطاقة', 7, 16, 0.5)
+        + printNumRow('valueFontSize', 'حجم نص البيانات', 7, 18, 0.5)
+
+        + '<div class="ps-section">🗂️ البطاقات</div>'
+        + printNumRow('cardPadding', 'الحشو الداخلي', 2, 20, 1)
+        + printNumRow('cardMinHeight', 'أدنى ارتفاع للبطاقة', 20, 120, 2)
+        + printNumRow('cardRadius', 'استدارة الزوايا', 0, 20, 1)
+        + printNumRow('cardGap', 'المسافة بين البطاقات', 0, 20, 1)
+
+        + '<div class="ps-section">🎨 الألوان والخلفيات</div>'
+        + printColorRow('headerBg', 'خلفية رأس الصفحة')
+        + printColorRow('headerText', 'نص رأس الصفحة')
+        + printColorRow('pageBg', 'خلفية الصفحة')
+        + printColorRow('cardBg', 'خلفية البطاقة')
+        + printColorRow('labelBg', 'خلفية عنوان البطاقة')
+        + printColorRow('labelText', 'نص عنوان البطاقة')
+        + printColorRow('valueText', 'لون البيانات')
+        + printColorRow('cardBorder', 'لون الحدود')
+        + printColorRow('accent', 'لون شارة الصفحة')
+
+        + '<div class="ps-section">📝 النصوص</div>'
+        + '<label class="ps-row"><span>عنوان المستند</span><input type="text" data-key="docTitle" class="ps-text" value="' + escapeHTML(s.docTitle) + '"></label>'
+        + '<label class="ps-row"><span>نص التذييل</span><input type="text" data-key="footerText" class="ps-text" value="' + escapeHTML(s.footerText) + '"></label>'
+        + '<label class="ps-row"><span>إظهار شارة الصفحة</span><input type="checkbox" data-key="showBadge"' + (s.showBadge ? ' checked' : '') + '></label>'
+        + '<label class="ps-row"><span>إظهار التذييل</span><input type="checkbox" data-key="showFooter"' + (s.showFooter ? ' checked' : '') + '></label>'
+
+        + '<div class="ps-actions">'
+        + '<button id="psSave" class="btn btn-primary" type="button">💾 حفظ</button>'
+        + '<button id="psPreview" class="btn btn-outline" type="button">👁️ معاينة</button>'
+        + '<button id="psReset" class="btn btn-outline" type="button">↺ افتراضي</button>'
+        + '<button id="psClose" class="btn btn-outline" type="button">إغلاق</button>'
+        + '</div></div></div>';
+    document.body.appendChild(host);
+
+    const overlay = document.getElementById('psOverlay');
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.remove(); });
+    document.getElementById('psClose').onclick = function () { overlay.remove(); };
+
+    const collect = function () {
+        const out = Object.assign({}, PRINT_DEFAULTS);
+        overlay.querySelectorAll('[data-key]').forEach(function (el) {
+            const k = el.dataset.key;
+            if (el.type === 'checkbox') out[k] = el.checked;
+            else if (el.type === 'number') out[k] = parseFloat(el.value) || PRINT_DEFAULTS[k];
+            else out[k] = el.value;
+        });
+        return out;
+    };
+
+    document.getElementById('psSave').onclick = function () {
+        if (savePrintSettings(collect())) window.showToast('✅ تم حفظ إعدادات الطباعة', 'success');
+        else window.showToast('❌ تعذر الحفظ', 'error');
+    };
+    document.getElementById('psReset').onclick = function () {
+        savePrintSettings(Object.assign({}, PRINT_DEFAULTS));
+        overlay.remove();
+        window.openPrintSettings();
+        window.showToast('↺ تمت استعادة الإعدادات الافتراضية', 'info');
+    };
+    document.getElementById('psPreview').onclick = function () {
+        savePrintSettings(collect());
+        const st = window.APP_STATE || {};
+        const sample = (st.teachers && st.teachers[0]) || {
+            fullName: 'معلم تجريبي', selfNumber: '000000', school: (st.schoolName || 'المدرسة'),
+            jobStatus: 'على رأس العمل', region: 'المنطقة', specialization: 'عام', qualification: 'بكالوريوس'
+        };
+        const w = window.open('', '_blank', 'width=1100,height=900');
+        if (!w) { window.showToast('❌ اسمح بالنوافذ المنبثقة', 'error'); return; }
+        w.document.write(buildTeacherPrintHTML(sample));
+        w.document.close();
+    };
+};
+
 
 console.log('✅ admin.html — تم التحميل بنجاح');
 </script>

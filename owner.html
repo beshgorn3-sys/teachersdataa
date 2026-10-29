@@ -383,6 +383,34 @@ table.data-table td.ltr { direction: ltr; text-align: right; unicode-bidi: embed
   .btn { padding: 10px 16px; font-size: 0.9rem; }
 }
 
+/* ==================== لوحة إعدادات الطباعة ==================== */
+.ps-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 9999;
+  display: flex; align-items: center; justify-content: center; padding: 16px; overflow: auto; }
+.ps-card { background: #fff; border-radius: 14px; padding: 22px; width: 100%; max-width: 560px;
+  max-height: calc(100vh - 32px); overflow: auto; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+.ps-title { margin: 0 0 4px; color: #1a3a5c; font-size: 1.15rem; font-weight: 800; }
+.ps-sub { font-size: .84rem; color: #7f8c8d; margin-bottom: 14px; line-height: 1.6; }
+.ps-section { background: #f4f7fa; color: #1a3a5c; font-weight: 800; font-size: .85rem;
+  padding: 7px 12px; border-radius: 8px; margin: 16px 0 10px; }
+.ps-row { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  font-size: .87rem; font-weight: 600; padding: 6px 0; }
+.ps-row > span { flex: 1; }
+.ps-row input[type="color"] { width: 56px; height: 34px; border: 1px solid #d0d8e0; border-radius: 8px;
+  background: #fff; padding: 2px; cursor: pointer; }
+.ps-row input[type="number"] { width: 84px; padding: 7px 8px; border: 1px solid #d0d8e0;
+  border-radius: 8px; font-family: inherit; font-size: 15px; text-align: center; }
+.ps-row input[type="checkbox"] { width: 20px; height: 20px; accent-color: #2d7dd2; }
+.ps-select, .ps-text { padding: 8px 10px; border: 1px solid #d0d8e0; border-radius: 8px;
+  font-family: inherit; font-size: 15px; max-width: 60%; }
+.ps-actions { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+.ps-actions .btn { flex: 1; min-width: 110px; }
+@media (max-width: 480px) {
+  .ps-overlay { padding: 0; align-items: flex-end; }
+  .ps-card { max-width: 100%; border-radius: 16px 16px 0 0; max-height: 90vh; padding: 18px 16px 22px; }
+  .ps-actions .btn { min-width: 100%; }
+  .ps-select, .ps-text { max-width: 55%; }
+}
+
 </style>
 </head>
 <body>
@@ -692,8 +720,8 @@ table.data-table td.ltr { direction: ltr; text-align: right; unicode-bidi: embed
                             <button onclick="exportAllTeachersPDF();closeExportMenu();">
                                 <span>📄</span><span>طباعة كل معلم PDF (صفحتان × 3 أعمدة)</span>
                             </button>
-                            <button onclick="openPrintColors();closeExportMenu();">
-                                <span>🎨</span><span>تخصيص ألوان الطباعة</span>
+                            <button onclick="openPrintSettings();closeExportMenu();">
+                                <span>⚙️</span><span>إعدادات الطباعة والتصدير</span>
                             </button>
                         </div>
                     </div>
@@ -2650,36 +2678,76 @@ onAuthStateChanged(auth, (user) => { if (user) resetInactivityTimer(); else if (
 ============================================ */
 
 
-/* ============================================================
-   طباعة وتصدير سجلات المعلمين (صفحتان × 3 أعمدة)
-   ============================================================ */
-const PDF_SKIP_KEYS = ['firebaseId','createdAt','createdAtLocal','createdByUid','createdByRole','updatedAt','updatedBy','schoolId'];
-const PDF_COLORS_DEFAULT = {
-    headerBg: '#1a3a5c', headerText: '#ffffff',
-    pageBg: '#ffffff', cardBg: '#ffffff', cardBorder: '#d0d8e0',
-    labelBg: '#f4f7fa', labelText: '#1a3a5c', valueText: '#1a1a1a',
-    accent: '#2d7dd2'
-};
-function getPdfColors() {
-    try {
-        const raw = localStorage.getItem('teachersPdfColors');
-        if (raw) return Object.assign({}, PDF_COLORS_DEFAULT, JSON.parse(raw));
-    } catch (e) {}
-    return Object.assign({}, PDF_COLORS_DEFAULT);
-}
 window.toggleExportMenu = function (e) {
     if (e) e.stopPropagation();
-    document.getElementById('exportMenu')?.classList.toggle('show');
+    const m = document.getElementById('exportMenu');
+    if (m) m.classList.toggle('show');
 };
 window.closeExportMenu = function () {
-    document.getElementById('exportMenu')?.classList.remove('show');
+    const m = document.getElementById('exportMenu');
+    if (m) m.classList.remove('show');
 };
 document.addEventListener('click', function (e) {
     const wrap = document.querySelector('.export-menu-wrap');
     if (wrap && !wrap.contains(e.target)) window.closeExportMenu();
 });
 
-const PDF_AR_LABELS = {
+/* ============================================================
+   لوحة إعدادات الطباعة والتصدير + طباعة سجلات المعلمين
+   (صفحتان لكل معلم × 3 أعمدة)
+   ============================================================ */
+const PRINT_IS_ADMIN = false;
+function printScopeKey() {
+    if (!PRINT_IS_ADMIN) return 'teachersPrintSettings';
+    const sid = (window.APP_STATE && window.APP_STATE.schoolId) || 'school';
+    return 'teachersPrintSettings:' + sid;
+}
+
+const PRINT_FONTS = [
+    ['Tajawal', 'Tajawal — تجوال'],
+    ['Cairo', 'Cairo — القاهرة'],
+    ['Almarai', 'Almarai — المراعي'],
+    ['Amiri', 'Amiri — أميري'],
+    ['Noto Naskh Arabic', 'Noto Naskh — نسخ'],
+    ['Arial', 'Arial']
+];
+
+const PRINT_DEFAULTS = {
+    fontFamily: 'Tajawal',
+    headerFontSize: 18,
+    labelFontSize: 9.5,
+    valueFontSize: 10,
+    cardPadding: 7,
+    cardMinHeight: 38,
+    cardRadius: 8,
+    cardGap: 6,
+    headerBg: '#1a3a5c',
+    headerText: '#ffffff',
+    pageBg: '#ffffff',
+    cardBg: '#ffffff',
+    cardBorder: '#d0d8e0',
+    labelBg: '#f4f7fa',
+    labelText: '#1a3a5c',
+    valueText: '#1a1a1a',
+    accent: '#2d7dd2',
+    docTitle: 'السجل الشخصي للمعلم',
+    footerText: 'نظام سجلات المعلمين',
+    showBadge: true,
+    showFooter: true
+};
+
+function getPrintSettings() {
+    try {
+        const raw = localStorage.getItem(printScopeKey());
+        if (raw) return Object.assign({}, PRINT_DEFAULTS, JSON.parse(raw));
+    } catch (e) {}
+    return Object.assign({}, PRINT_DEFAULTS);
+}
+function savePrintSettings(s) {
+    try { localStorage.setItem(printScopeKey(), JSON.stringify(s)); return true; } catch (e) { return false; }
+}
+
+const PRINT_AR_LABELS = {
     fullName: 'الاسم الكامل', name: 'الاسم', firstName: 'الاسم الأول', lastName: 'اسم العائلة',
     selfNumber: 'الرقم الذاتي', nationalId: 'الرقم الوطني', phone: 'رقم الهاتف', mobile: 'رقم الجوال',
     email: 'البريد الإلكتروني', address: 'العنوان', birthDate: 'تاريخ الميلاد', gender: 'الجنس',
@@ -2689,30 +2757,27 @@ const PDF_AR_LABELS = {
     qualification: 'المؤهل العلمي', degree: 'الدرجة العلمية', major: 'التخصص الدقيق',
     graduationYear: 'سنة التخرج', university: 'الجامعة', experience: 'سنوات الخبرة',
     hireDate: 'تاريخ التعيين', yearsOfService: 'سنوات الخدمة', courses: 'الدورات التدريبية',
-    skills: 'المهارات', notes: 'ملاحظات', photo: 'الصورة', status: 'الحالة',
-    createdAtLocal: 'تاريخ الإضافة'
+    skills: 'المهارات', notes: 'ملاحظات', photo: 'الصورة', status: 'الحالة'
 };
+const PRINT_SKIP_KEYS = ['firebaseId', 'createdAt', 'createdAtLocal', 'createdByUid', 'createdByRole', 'updatedAt', 'updatedBy', 'schoolId'];
 
-function pdfArabicLabel(key) {
+function printLabel(key) {
     const st = window.APP_STATE || {};
     if (st.columnLabels && st.columnLabels[key]) return String(st.columnLabels[key]);
     const fields = st.dynamicFields || [];
     for (let i = 0; i < fields.length; i++) {
         if (fields[i] && fields[i].key === key && fields[i].label) return String(fields[i].label);
     }
-    if (PDF_AR_LABELS[key]) return PDF_AR_LABELS[key];
+    if (PRINT_AR_LABELS[key]) return PRINT_AR_LABELS[key];
     return String(key).replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').trim();
 }
 
-/* ترتيب الحقول حسب تسلسل النموذج: الأقسام ثم ترتيب الحقل داخلها */
-function pdfFieldOrderMap() {
+function printFieldOrderMap() {
     const st = window.APP_STATE || {};
     const fields = st.dynamicFields || [];
     const sections = st.dynamicSections || [];
     const secOrder = {};
-    sections.forEach(function (s) {
-        if (s && s.id) secOrder[s.id] = (typeof s.order === 'number' ? s.order : 999);
-    });
+    sections.forEach(function (s) { if (s && s.id) secOrder[s.id] = (typeof s.order === 'number' ? s.order : 999); });
     const map = {};
     fields.forEach(function (f, i) {
         if (!f || !f.key) return;
@@ -2723,12 +2788,12 @@ function pdfFieldOrderMap() {
     return map;
 }
 
-function pdfFieldEntries(t) {
-    const orderMap = pdfFieldOrderMap();
+function printFieldEntries(t) {
+    const orderMap = printFieldOrderMap();
     const rows = [];
     let fallback = Object.keys(orderMap).length;
     Object.keys(t).forEach(function (k) {
-        if (PDF_SKIP_KEYS.indexOf(k) !== -1) return;
+        if (PRINT_SKIP_KEYS.indexOf(k) !== -1) return;
         let v = t[k];
         if (v === null || v === undefined || v === '') return;
         if (typeof v === 'object') {
@@ -2740,16 +2805,19 @@ function pdfFieldEntries(t) {
                 return;
             }
         }
-        const ord = (orderMap[k] !== undefined) ? orderMap[k] : (fallback++);
-        rows.push({ ord: ord, label: pdfArabicLabel(k), value: String(v) });
+        rows.push({
+            ord: (orderMap[k] !== undefined ? orderMap[k] : (fallback++)),
+            label: printLabel(k),
+            value: String(v)
+        });
     });
     rows.sort(function (a, b) { return a.ord - b.ord; });
     return rows.map(function (r) { return { label: r.label, value: r.value }; });
 }
 
 function buildTeacherPrintHTML(t) {
-    const c = getPdfColors();
-    const entries = pdfFieldEntries(t);
+    const s = getPrintSettings();
+    const entries = printFieldEntries(t);
     const perPage = Math.ceil(entries.length / 2) || 1;
     const pages = [entries.slice(0, perPage), entries.slice(perPage)];
 
@@ -2764,39 +2832,42 @@ function buildTeacherPrintHTML(t) {
         return '<div class="p-grid">' + items.map(card).join('') + '</div>';
     };
     const head = '<div class="p-head">'
-        + '<div class="p-head-title">' + escapeHTML(t.fullName || 'سجل معلم') + '</div>'
-        + '<div class="p-head-sub">'
-        + (t.selfNumber ? 'الرقم الذاتي: ' + escapeHTML(t.selfNumber) : '')
+        + '<div class="p-head-title">' + escapeHTML(s.docTitle || PRINT_DEFAULTS.docTitle) + '</div>'
+        + '<div class="p-head-sub">' + escapeHTML(t.fullName || '')
+        + (t.selfNumber ? ' &nbsp;•&nbsp; الرقم الذاتي: ' + escapeHTML(t.selfNumber) : '')
         + (t.school ? ' &nbsp;•&nbsp; ' + escapeHTML(t.school) : '')
         + '</div></div>';
     const page = function (idx, items) {
-        return '<section class="p-page" style="background:' + c.pageBg + ';">'
+        return '<section class="p-page" style="background:' + s.pageBg + ';">'
             + head
-            + '<div class="p-badge" style="background:' + c.accent + ';">الصفحة ' + (idx + 1) + ' من 2</div>'
+            + (s.showBadge ? '<div class="p-badge" style="background:' + s.accent + ';">الصفحة ' + (idx + 1) + ' من 2</div>' : '')
             + grid(items)
-            + '<div class="p-foot">تاريخ الطباعة: ' + new Date().toLocaleString('ar-EG') + ' — نظام سجلات المعلمين</div>'
+            + (s.showFooter ? '<div class="p-foot">' + escapeHTML(s.footerText || '') + ' — ' + new Date().toLocaleString('ar-EG') + '</div>' : '')
             + '</section>';
     };
 
+    const fonts = PRINT_FONTS.map(function (f) { return f[0].replace(/ /g, '+') + ':wght@400;500;700;800'; }).join('&family=');
     const style = '<style>'
-        + '*{box-sizing:border-box;margin:0;padding:0;font-family:Tajawal,Arial,sans-serif}'
+        + '*{box-sizing:border-box;margin:0;padding:0;font-family:"' + s.fontFamily + '",Arial,sans-serif}'
         + '@page{size:A4 portrait;margin:8mm}'
         + 'body{background:#eef2f7;padding:16px}'
-        + '.p-page{width:194mm;min-height:281mm;padding:6mm;margin:0 auto 14px;position:relative;'
-        + 'box-shadow:0 6px 24px rgba(0,0,0,.15);page-break-after:always;break-after:page;display:flex;flex-direction:column}'
+        + '.p-page{width:194mm;min-height:281mm;padding:6mm;margin:0 auto 14px;display:flex;flex-direction:column;'
+        + 'box-shadow:0 6px 24px rgba(0,0,0,.15);page-break-after:always;break-after:page}'
         + '.p-page:last-of-type{page-break-after:auto;break-after:auto}'
-        + '.p-head{background:' + c.headerBg + ';color:' + c.headerText + ';padding:10px 14px;border-radius:8px;text-align:center;margin-bottom:10px}'
-        + '.p-head-title{font-size:17px;font-weight:800}'
-        + '.p-head-sub{font-size:10.5px;opacity:.92;margin-top:2px}'
-        + '.p-badge{color:#fff;display:inline-block;padding:3px 12px;border-radius:20px;font-size:10px;font-weight:700;margin-bottom:8px}'
-        + '.p-grid{display:grid;grid-template-columns:repeat(3,1fr);grid-auto-flow:row;gap:6px;align-items:start;flex:1}'
-        + '.p-card{border:1px solid ' + c.cardBorder + ';border-radius:6px;background:' + c.cardBg + ';overflow:hidden;break-inside:avoid;page-break-inside:avoid}'
-        + '.p-card-label{background:' + c.labelBg + ';color:' + c.labelText + ';font-size:9px;font-weight:700;padding:5px 7px;border-bottom:1px solid ' + c.cardBorder + ';min-height:26px;display:flex;align-items:center}'
-        + '.p-card-value{color:' + c.valueText + ';font-size:9.5px;line-height:1.55;padding:6px 7px;min-height:34px;word-break:break-word;white-space:pre-wrap}'
+        + '.p-head{background:' + s.headerBg + ';color:' + s.headerText + ';padding:10px 14px;border-radius:8px;text-align:center;margin-bottom:10px}'
+        + '.p-head-title{font-size:' + s.headerFontSize + 'px;font-weight:800}'
+        + '.p-head-sub{font-size:' + Math.max(8, s.headerFontSize * 0.62) + 'px;opacity:.94;margin-top:3px}'
+        + '.p-badge{color:#fff;display:inline-block;padding:3px 12px;border-radius:20px;font-size:' + Math.max(7, s.labelFontSize) + 'px;font-weight:700;margin-bottom:8px}'
+        + '.p-grid{display:grid;grid-template-columns:repeat(3,1fr);grid-auto-flow:row;gap:' + s.cardGap + 'px;align-items:start;flex:1}'
+        + '.p-card{border:1px solid ' + s.cardBorder + ';border-radius:' + s.cardRadius + 'px;background:' + s.cardBg + ';overflow:hidden;break-inside:avoid;page-break-inside:avoid}'
+        + '.p-card-label{background:' + s.labelBg + ';color:' + s.labelText + ';font-size:' + s.labelFontSize + 'px;font-weight:700;'
+        + 'padding:' + s.cardPadding + 'px ' + (s.cardPadding + 2) + 'px;border-bottom:1px solid ' + s.cardBorder + ';min-height:26px;display:flex;align-items:center}'
+        + '.p-card-value{color:' + s.valueText + ';font-size:' + s.valueFontSize + 'px;line-height:1.55;'
+        + 'padding:' + s.cardPadding + 'px ' + (s.cardPadding + 2) + 'px;min-height:' + s.cardMinHeight + 'px;word-break:break-word;white-space:pre-wrap}'
         + '.p-empty{grid-column:1/-1;text-align:center;color:#7f8c8d;font-size:11px;padding:20px}'
         + '.p-foot{margin-top:8px;text-align:center;font-size:8px;color:#7f8c8d}'
         + '.p-tools{position:fixed;bottom:18px;inset-inline:0;display:flex;justify-content:center;gap:10px;z-index:99}'
-        + '.p-tools button{padding:11px 26px;border:0;border-radius:8px;color:#fff;font-family:Tajawal;font-size:13px;font-weight:700;cursor:pointer;background:' + c.headerBg + '}'
+        + '.p-tools button{padding:11px 26px;border:0;border-radius:8px;color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;background:' + s.headerBg + '}'
         + '.p-tools button.alt{background:#27ae60}'
         + '@media print{body{background:#fff;padding:0}.p-page{width:auto;min-height:0;margin:0;box-shadow:none}.p-tools{display:none}}'
         + '</style>';
@@ -2804,7 +2875,7 @@ function buildTeacherPrintHTML(t) {
     return '<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">'
         + '<meta name="viewport" content="width=device-width,initial-scale=1">'
         + '<title>سجل ' + escapeHTML(t.fullName || 'معلم') + '</title>'
-        + '<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">'
+        + '<link href="https://fonts.googleapis.com/css2?family=' + fonts + '&display=swap" rel="stylesheet">'
         + style + '</head><body>'
         + page(0, pages[0]) + page(1, pages[1])
         + '<div class="p-tools"><button onclick="window.print()">🖨️ طباعة / حفظ PDF</button>'
@@ -2822,10 +2893,10 @@ window.printTeacherPDF = function (id) {
 };
 
 window.exportAllTeachersPDF = function () {
-    const list = (window.APP_STATE && APP_STATE.filteredTeachers.length) ? APP_STATE.filteredTeachers : (window.APP_STATE ? APP_STATE.teachers : []);
-    if (!list || list.length === 0) { window.showToast('لا توجد سجلات', 'warning'); return; }
+    const st = window.APP_STATE || {};
+    const list = (st.filteredTeachers && st.filteredTeachers.length) ? st.filteredTeachers : (st.teachers || []);
+    if (!list.length) { window.showToast('لا توجد سجلات', 'warning'); return; }
     if (!confirm('سيتم فتح نافذة طباعة لكل معلم (صفحتان × 3 أعمدة). عدد السجلات: ' + list.length + '. هل تريد المتابعة؟')) return;
-    window.showToast('⏳ جاري تجهيز نوافذ الطباعة...', 'info');
     list.forEach(function (t, i) {
         setTimeout(function () {
             const w = window.open('', '_blank', 'width=1100,height=900');
@@ -2834,31 +2905,21 @@ window.exportAllTeachersPDF = function () {
     });
 };
 
-/* ---- تحميل تسميات الحقول بالعربية قبل العرض/الطباعة ---- */
-const __origLoadTeachersPage = window.loadTeachersPage;
-window.loadTeachersPage = async function () {
-    try {
-        if (!(APP_STATE.dynamicFields || []).length) await loadDynamicFields();
-        if (!Object.keys(APP_STATE.columnLabels || {}).length) await loadColumnLabels();
-    } catch (e) { console.error(e); }
-    return __origLoadTeachersPage();
-};
-
-/* ---- إضافة زر طباعة في جدول المعلمين ---- */
-const __origRenderTeachersTable = renderTeachersTable;
+/* ---- زر طباعة في جدول المعلمين ---- */
+const __origPrintRender = renderTeachersTable;
 renderTeachersTable = function () {
-    __origRenderTeachersTable();
+    __origPrintRender();
     const tbody = document.getElementById('teachersTableBody');
     if (!tbody) return;
     tbody.querySelectorAll('tr').forEach(function (tr) {
-        const viewBtn = tr.querySelector('button[onclick^="viewTeacherDetails"]');
+        const viewBtn = tr.querySelector('button[onclick^="viewTeacher"]');
         if (!viewBtn) return;
         const m = viewBtn.getAttribute('onclick').match(/'([^']+)'/);
         if (!m) return;
-        const actions = viewBtn.parentElement;
-        if (actions.querySelector('.pdf-print-btn')) return;
+        const actions = viewBtn.closest('.table-actions') || viewBtn.parentElement;
+        if (!actions || actions.querySelector('.pdf-print-btn')) return;
         const btn = document.createElement('button');
-        btn.className = 'btn btn-icon btn-primary pdf-print-btn';
+        btn.className = 'btn btn-icon btn-outline pdf-print-btn';
         btn.title = 'طباعة / PDF';
         btn.innerHTML = '🖨️';
         btn.onclick = function () { window.printTeacherPDF(m[1]); };
@@ -2866,52 +2927,102 @@ renderTeachersTable = function () {
     });
 };
 
-/* ---- تخصيص ألوان الطباعة ---- */
-window.openPrintColors = function () {
-    const c = getPdfColors();
-    const rows = [
-        ['headerBg', 'خلفية رأس الصفحة'],
-        ['headerText', 'نص رأس الصفحة'],
-        ['pageBg', 'خلفية الصفحة'],
-        ['cardBg', 'خلفية البطاقة'],
-        ['cardBorder', 'لون الحدود'],
-        ['labelBg', 'خلفية عنوان البطاقة'],
-        ['labelText', 'نص عنوان البطاقة'],
-        ['valueText', 'نص قيمة الحقل']
-    ];
-    let html = '<div style="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;" id="printColorsOverlay">'
-        + '<div style="background:#fff;border-radius:14px;padding:22px;width:100%;max-width:460px;max-height:90vh;overflow:auto;">'
-        + '<h3 style="margin-bottom:14px;color:#1a3a5c;">🎨 ألوان الطباعة</h3>'
-        + '<div style="display:grid;gap:10px;">';
-    rows.forEach(function (r) {
-        html += '<label style="display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:.9rem;font-weight:600;">'
-            + '<span>' + r[1] + '</span>'
-            + '<input type="color" data-key="' + r[0] + '" value="' + c[r[0]] + '" style="width:64px;height:36px;border:1px solid #d0d8e0;border-radius:8px;background:#fff;">'
-            + '</label>';
-    });
-    html += '</div><div style="display:flex;gap:10px;margin-top:18px;">'
-        + '<button id="pcSave" style="flex:1;padding:11px;border:0;border-radius:8px;background:#1a3a5c;color:#fff;font-family:Tajawal;font-weight:700;cursor:pointer;">حفظ</button>'
-        + '<button id="pcReset" style="padding:11px 16px;border:1px solid #d0d8e0;border-radius:8px;background:#fff;font-family:Tajawal;font-weight:700;cursor:pointer;">افتراضي</button>'
-        + '<button id="pcCancel" style="padding:11px 16px;border:1px solid #d0d8e0;border-radius:8px;background:#fff;font-family:Tajawal;font-weight:700;cursor:pointer;">إلغاء</button>'
-        + '</div></div></div>';
+/* ---- لوحة إعدادات الطباعة ---- */
+function printColorRow(key, label) {
+    return '<label class="ps-row"><span>' + label + '</span>'
+        + '<input type="color" data-key="' + key + '" value="' + getPrintSettings()[key] + '"></label>';
+}
+function printNumRow(key, label, min, max, step) {
+    return '<label class="ps-row"><span>' + label + '</span>'
+        + '<input type="number" data-key="' + key + '" min="' + min + '" max="' + max + '" step="' + step + '" value="' + getPrintSettings()[key] + '"></label>';
+}
+
+window.openPrintSettings = function () {
+    const s = getPrintSettings();
+    const fontOpts = PRINT_FONTS.map(function (f) {
+        return '<option value="' + f[0] + '"' + (s.fontFamily === f[0] ? ' selected' : '') + '>' + f[1] + '</option>';
+    }).join('');
+
     const host = document.createElement('div');
-    host.innerHTML = html;
+    host.innerHTML =
+        '<div class="ps-overlay" id="psOverlay"><div class="ps-card">'
+        + '<h3 class="ps-title">⚙️ إعدادات الطباعة والتصدير</h3>'
+        + '<div class="ps-sub">' + (PRINT_IS_ADMIN ? 'تُطبق على سجلات معلمي مدرستك فقط.' : 'تُطبق على جميع سجلات المعلمين.') + '</div>'
+
+        + '<div class="ps-section">🔤 الخطوط</div>'
+        + '<label class="ps-row"><span>نوع الخط</span><select data-key="fontFamily" class="ps-select">' + fontOpts + '</select></label>'
+        + printNumRow('headerFontSize', 'حجم عنوان الصفحة', 12, 30, 1)
+        + printNumRow('labelFontSize', 'حجم عنوان البطاقة', 7, 16, 0.5)
+        + printNumRow('valueFontSize', 'حجم نص البيانات', 7, 18, 0.5)
+
+        + '<div class="ps-section">🗂️ البطاقات</div>'
+        + printNumRow('cardPadding', 'الحشو الداخلي', 2, 20, 1)
+        + printNumRow('cardMinHeight', 'أدنى ارتفاع للبطاقة', 20, 120, 2)
+        + printNumRow('cardRadius', 'استدارة الزوايا', 0, 20, 1)
+        + printNumRow('cardGap', 'المسافة بين البطاقات', 0, 20, 1)
+
+        + '<div class="ps-section">🎨 الألوان والخلفيات</div>'
+        + printColorRow('headerBg', 'خلفية رأس الصفحة')
+        + printColorRow('headerText', 'نص رأس الصفحة')
+        + printColorRow('pageBg', 'خلفية الصفحة')
+        + printColorRow('cardBg', 'خلفية البطاقة')
+        + printColorRow('labelBg', 'خلفية عنوان البطاقة')
+        + printColorRow('labelText', 'نص عنوان البطاقة')
+        + printColorRow('valueText', 'لون البيانات')
+        + printColorRow('cardBorder', 'لون الحدود')
+        + printColorRow('accent', 'لون شارة الصفحة')
+
+        + '<div class="ps-section">📝 النصوص</div>'
+        + '<label class="ps-row"><span>عنوان المستند</span><input type="text" data-key="docTitle" class="ps-text" value="' + escapeHTML(s.docTitle) + '"></label>'
+        + '<label class="ps-row"><span>نص التذييل</span><input type="text" data-key="footerText" class="ps-text" value="' + escapeHTML(s.footerText) + '"></label>'
+        + '<label class="ps-row"><span>إظهار شارة الصفحة</span><input type="checkbox" data-key="showBadge"' + (s.showBadge ? ' checked' : '') + '></label>'
+        + '<label class="ps-row"><span>إظهار التذييل</span><input type="checkbox" data-key="showFooter"' + (s.showFooter ? ' checked' : '') + '></label>'
+
+        + '<div class="ps-actions">'
+        + '<button id="psSave" class="btn btn-primary" type="button">💾 حفظ</button>'
+        + '<button id="psPreview" class="btn btn-outline" type="button">👁️ معاينة</button>'
+        + '<button id="psReset" class="btn btn-outline" type="button">↺ افتراضي</button>'
+        + '<button id="psClose" class="btn btn-outline" type="button">إغلاق</button>'
+        + '</div></div></div>';
     document.body.appendChild(host);
-    const overlay = document.getElementById('printColorsOverlay');
-    document.getElementById('pcCancel').onclick = function () { overlay.remove(); };
-    document.getElementById('pcReset').onclick = function () {
-        localStorage.removeItem('teachersPdfColors');
-        overlay.remove();
-        window.showToast('✅ تمت استعادة الألوان الافتراضية', 'success');
-    };
-    document.getElementById('pcSave').onclick = function () {
-        const out = {};
-        overlay.querySelectorAll('input[data-key]').forEach(function (inp) { out[inp.dataset.key] = inp.value; });
-        localStorage.setItem('teachersPdfColors', JSON.stringify(out));
-        overlay.remove();
-        window.showToast('✅ تم حفظ ألوان الطباعة', 'success');
-    };
+
+    const overlay = document.getElementById('psOverlay');
     overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.remove(); });
+    document.getElementById('psClose').onclick = function () { overlay.remove(); };
+
+    const collect = function () {
+        const out = Object.assign({}, PRINT_DEFAULTS);
+        overlay.querySelectorAll('[data-key]').forEach(function (el) {
+            const k = el.dataset.key;
+            if (el.type === 'checkbox') out[k] = el.checked;
+            else if (el.type === 'number') out[k] = parseFloat(el.value) || PRINT_DEFAULTS[k];
+            else out[k] = el.value;
+        });
+        return out;
+    };
+
+    document.getElementById('psSave').onclick = function () {
+        if (savePrintSettings(collect())) window.showToast('✅ تم حفظ إعدادات الطباعة', 'success');
+        else window.showToast('❌ تعذر الحفظ', 'error');
+    };
+    document.getElementById('psReset').onclick = function () {
+        savePrintSettings(Object.assign({}, PRINT_DEFAULTS));
+        overlay.remove();
+        window.openPrintSettings();
+        window.showToast('↺ تمت استعادة الإعدادات الافتراضية', 'info');
+    };
+    document.getElementById('psPreview').onclick = function () {
+        savePrintSettings(collect());
+        const st = window.APP_STATE || {};
+        const sample = (st.teachers && st.teachers[0]) || {
+            fullName: 'معلم تجريبي', selfNumber: '000000', school: (st.schoolName || 'المدرسة'),
+            jobStatus: 'على رأس العمل', region: 'المنطقة', specialization: 'عام', qualification: 'بكالوريوس'
+        };
+        const w = window.open('', '_blank', 'width=1100,height=900');
+        if (!w) { window.showToast('❌ اسمح بالنوافذ المنبثقة', 'error'); return; }
+        w.document.write(buildTeacherPrintHTML(sample));
+        w.document.close();
+    };
 };
 
 
