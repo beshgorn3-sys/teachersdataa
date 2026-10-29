@@ -351,6 +351,29 @@ table.data-table td.ltr { direction: ltr; text-align: right; unicode-bidi: embed
   .export-menu-wrap, .export-menu-wrap > .btn { width: 100%; }
   .export-menu { inset-inline: 0; }
 }
+/* نافذة تغيير كلمة المرور */
+.pwd-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 9999;
+  display: flex; align-items: center; justify-content: center; padding: 16px; overflow: auto; }
+.pwd-card { background: #fff; border-radius: 14px; padding: 22px; width: 100%; max-width: 440px;
+  max-height: calc(100vh - 32px); overflow: auto; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+.pwd-title { margin: 0 0 4px; color: var(--primary); font-size: 1.15rem; font-weight: 800; }
+.pwd-sub { font-size: .85rem; color: var(--text-light); margin-bottom: 16px; line-height: 1.6; }
+.pwd-label { display: block; font-size: .85rem; font-weight: 700; margin-bottom: 6px; }
+.pwd-input { width: 100%; padding: 11px 12px; border: 1.5px solid var(--border); border-radius: 10px;
+  font-family: 'Tajawal', sans-serif; font-size: 16px; background: #fafbfc; margin-bottom: 12px; }
+.pwd-input:focus { outline: none; border-color: var(--secondary); background: #fff; box-shadow: 0 0 0 3px rgba(45,125,210,.12); }
+.pwd-actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+.pwd-actions .btn { flex: 1; min-width: 120px; }
+.pwd-note { font-size: .78rem; color: var(--text-muted); line-height: 1.6; margin-top: 10px; }
+.pwd-link { background: none; border: 0; color: var(--secondary); font-family: 'Tajawal'; font-weight: 700;
+  font-size: .82rem; cursor: pointer; padding: 6px 0; text-decoration: underline; }
+#pwdManualBox { display: none; margin-top: 6px; }
+@media (max-width: 480px) {
+  .pwd-overlay { padding: 0; align-items: flex-end; }
+  .pwd-card { max-width: 100%; border-radius: 16px 16px 0 0; max-height: 88vh; padding: 18px 16px 22px; }
+  .pwd-actions .btn { min-width: 100%; }
+}
+
 @media (max-width: 640px) {
   .content-area { padding: 12px; }
   .card { padding: 16px; }
@@ -1532,6 +1555,7 @@ window.saveNewUser = async function() {
                 createdByName: APP_STATE.currentUserData?.fullName || ''
             });
             await setDoc(doc(db, 'usernames', username), { uid: newUid, email, role: 'school_admin', isActive });
+            await saveUserSecret(newUid, password, username);
             if (schoolId) {
                 try { await updateDoc(doc(db, 'schools', schoolId), { principalUid: newUid, principalUsername: username, principalName: fullName }); } catch (e) {}
             }
@@ -2892,7 +2916,34 @@ window.openPrintColors = function () {
 
 
 /* ============================================================
-   تغيير كلمة مرور المستخدمين (من لوحة المالك)
+   كلمات المرور: حفظ آمن للاستخدام من لوحة المالك
+   ============================================================ */
+async function getUserSecret(uid) {
+    try {
+        const snap = await getDoc(doc(db, 'userSecrets', uid));
+        if (snap.exists()) {
+            const d = snap.data() || {};
+            if (d.password) return String(d.password);
+        }
+    } catch (e) { console.warn('تعذر قراءة userSecrets', e); }
+    return null;
+}
+
+async function saveUserSecret(uid, password, username) {
+    try {
+        await setDoc(doc(db, 'userSecrets', uid), {
+            password: password,
+            username: username || null,
+            updatedAt: serverTimestamp(),
+            updatedBy: APP_STATE.currentUser?.uid || null
+        }, { merge: true });
+        return true;
+    } catch (e) { console.warn('تعذر حفظ userSecrets', e); return false; }
+}
+window.saveUserSecret = saveUserSecret;
+
+/* ============================================================
+   تغيير كلمة مرور المستخدم من لوحة المالك (بدون كلمة المرور الحالية)
    ============================================================ */
 window.resetUserPassword = function (uid) {
     const user = (APP_STATE.users || []).find(function (u) { return u.uid === uid; });
@@ -2905,34 +2956,45 @@ window.resetUserPassword = function (uid) {
 
     const host = document.createElement('div');
     host.innerHTML =
-        '<div id="pwdOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;">'
-        + '<div style="background:#fff;border-radius:14px;padding:22px;width:100%;max-width:440px;max-height:92vh;overflow:auto;">'
-        + '<h3 style="margin-bottom:4px;color:#1a3a5c;">🔑 تغيير كلمة المرور</h3>'
-        + '<div style="font-size:.85rem;color:#7f8c8d;margin-bottom:16px;">المستخدم: <b>' + escapeHTML(user.fullName || user.username || '') + '</b> — ' + escapeHTML(user.username || '') + '</div>'
-        + '<label style="display:block;font-size:.85rem;font-weight:700;margin-bottom:6px;">كلمة المرور الحالية</label>'
-        + '<input id="pwdCurrent" type="text" autocomplete="off" style="width:100%;padding:10px 12px;border:1px solid #d0d8e0;border-radius:8px;font-family:Tajawal;margin-bottom:12px;" placeholder="كلمة المرور الحالية للمستخدم">'
-        + '<label style="display:block;font-size:.85rem;font-weight:700;margin-bottom:6px;">كلمة المرور الجديدة</label>'
-        + '<input id="pwdNew" type="text" autocomplete="off" style="width:100%;padding:10px 12px;border:1px solid #d0d8e0;border-radius:8px;font-family:Tajawal;margin-bottom:12px;" placeholder="8 أحرف على الأقل">'
-        + '<label style="display:block;font-size:.85rem;font-weight:700;margin-bottom:6px;">تأكيد كلمة المرور</label>'
-        + '<input id="pwdConfirm" type="text" autocomplete="off" style="width:100%;padding:10px 12px;border:1px solid #d0d8e0;border-radius:8px;font-family:Tajawal;margin-bottom:6px;">'
-        + '<div id="pwdMsg" style="display:none;font-size:.82rem;color:#c0392b;margin-top:8px;"></div>'
-        + '<button id="pwdGen" type="button" style="margin-top:10px;padding:8px 14px;border:1px solid #d0d8e0;background:#fff;border-radius:8px;font-family:Tajawal;font-weight:700;cursor:pointer;">🎲 توليد كلمة مرور</button>'
-        + '<div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;">'
-        + '<button id="pwdSave" style="flex:1;min-width:130px;padding:11px;border:0;border-radius:8px;background:#1a3a5c;color:#fff;font-family:Tajawal;font-weight:700;cursor:pointer;">💾 تغيير كلمة المرور</button>'
-        + '<button id="pwdCancel" style="padding:11px 16px;border:1px solid #d0d8e0;border-radius:8px;background:#fff;font-family:Tajawal;font-weight:700;cursor:pointer;">إلغاء</button>'
+        '<div class="pwd-overlay" id="pwdOverlay">'
+        + '<div class="pwd-card">'
+        + '<h3 class="pwd-title">🔑 تغيير كلمة المرور</h3>'
+        + '<div class="pwd-sub">المستخدم: <b>' + escapeHTML(user.fullName || user.username || '') + '</b>'
+        + (user.username ? ' — ' + escapeHTML(user.username) : '') + '</div>'
+        + '<label class="pwd-label">كلمة المرور الجديدة</label>'
+        + '<input id="pwdNew" class="pwd-input" type="text" autocomplete="off" placeholder="8 أحرف على الأقل">'
+        + '<label class="pwd-label">تأكيد كلمة المرور</label>'
+        + '<input id="pwdConfirm" class="pwd-input" type="text" autocomplete="off" placeholder="أعد كتابة كلمة المرور">'
+        + '<button id="pwdGen" class="pwd-link" type="button">🎲 توليد كلمة مرور قوية</button>'
+        + '<div id="pwdMsg" class="pwd-note" style="display:none;color:#c0392b;"></div>'
+        + '<div id="pwdManualBox">'
+        + '<label class="pwd-label">كلمة المرور الحالية (مرة واحدة فقط)</label>'
+        + '<input id="pwdCurrent" class="pwd-input" type="text" autocomplete="off" placeholder="تُحفظ لاستخدامها في المرات القادمة">'
         + '</div>'
+        + '<div class="pwd-actions">'
+        + '<button id="pwdSave" class="btn btn-primary" type="button">💾 تعيين كلمة المرور</button>'
+        + '<button id="pwdCancel" class="btn btn-outline" type="button">إلغاء</button>'
+        + '</div>'
+        + '<button id="pwdManualToggle" class="pwd-link" type="button" style="margin-top:10px;">لديّ كلمة المرور الحالية</button>'
         + (hasRealEmail
-            ? '<button id="pwdEmail" style="width:100%;margin-top:10px;padding:10px;border:1px solid #2d7dd2;background:#f4f9ff;color:#1a3a5c;border-radius:8px;font-family:Tajawal;font-weight:700;cursor:pointer;">📧 إرسال رابط إعادة تعيين إلى ' + escapeHTML(email) + '</button>'
-            : '<div style="margin-top:12px;font-size:.78rem;color:#95a5a6;line-height:1.6;">لا يوجد بريد حقيقي لهذا الحساب، لذلك يجب إدخال كلمة المرور الحالية لإتمام التغيير.</div>')
+            ? '<button id="pwdEmail" class="pwd-link" type="button" style="display:block;">📧 إرسال رابط إعادة تعيين إلى ' + escapeHTML(email) + '</button>'
+            : '')
+        + '<div class="pwd-note">يتم تعيين كلمة المرور مباشرةً دون الحاجة لمعرفة كلمة المرور الحالية، طالما أنها محفوظة من إنشاء الحساب أو من تغيير سابق.</div>'
         + '</div></div>';
     document.body.appendChild(host);
 
     const overlay = document.getElementById('pwdOverlay');
-    const msg = document.getElementById('pwdMsg');
-    const showMsg = function (t) { msg.style.display = 'block'; msg.textContent = t; };
+    const msgEl = document.getElementById('pwdMsg');
+    const showMsg = function (t) { msgEl.style.display = 'block'; msgEl.textContent = t; };
+    const hideMsg = function () { msgEl.style.display = 'none'; };
 
     document.getElementById('pwdCancel').onclick = function () { overlay.remove(); };
     overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.remove(); });
+
+    document.getElementById('pwdManualToggle').onclick = function () {
+        const box = document.getElementById('pwdManualBox');
+        box.style.display = (box.style.display === 'block') ? 'none' : 'block';
+    };
 
     document.getElementById('pwdGen').onclick = function () {
         const len = (APP_STATE.generalSettings && APP_STATE.generalSettings.passwordLength) || 12;
@@ -2941,6 +3003,7 @@ window.resetUserPassword = function (uid) {
         for (let i = 0; i < len; i++) out += chars.charAt(Math.floor(Math.random() * chars.length));
         document.getElementById('pwdNew').value = out;
         document.getElementById('pwdConfirm').value = out;
+        hideMsg();
     };
 
     if (hasRealEmail) {
@@ -2949,30 +3012,37 @@ window.resetUserPassword = function (uid) {
                 await sendPasswordResetEmail(auth, email);
                 window.showToast('📧 تم إرسال رابط إعادة التعيين إلى ' + email, 'success', 7000);
                 overlay.remove();
-            } catch (e) {
-                showMsg('تعذر إرسال البريد: ' + (e.code || e.message));
-            }
+            } catch (e) { showMsg('تعذر إرسال البريد: ' + (e.code || e.message)); }
         };
     }
 
     document.getElementById('pwdSave').onclick = async function () {
-        const current = document.getElementById('pwdCurrent').value;
-        const pass1 = document.getElementById('pwdNew').value;
+        const btn = this;
+        const pass1 = document.getElementById('pwdNew').value.trim();
         const pass2 = document.getElementById('pwdConfirm').value;
-        msg.style.display = 'none';
-        if (!current) return showMsg('أدخل كلمة المرور الحالية للمستخدم.');
+        const manual = document.getElementById('pwdCurrent').value;
+        hideMsg();
         if (!pass1 || pass1.length < 8) return showMsg('كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل.');
         if (pass1 !== pass2) return showMsg('كلمتا المرور غير متطابقتين.');
 
-        const btn = this;
-        btn.disabled = true; btn.textContent = '⏳ جاري التغيير...';
+        btn.disabled = true; btn.textContent = '⏳ جاري التعيين...';
         let secondaryApp = null;
         try {
+            let current = await getUserSecret(user.uid);
+            if (!current && manual) current = manual;
+            if (!current) {
+                document.getElementById('pwdManualBox').style.display = 'block';
+                showMsg('لا توجد كلمة مرور محفوظة لهذا الحساب. أدخل كلمة المرور الحالية مرة واحدة (ستُحفظ تلقائيًا للمرات القادمة).');
+                return;
+            }
+
             secondaryApp = initializeApp(firebaseConfig, 'PwdChange' + Date.now());
             const secondaryAuth = getAuth(secondaryApp);
             await signInWithEmailAndPassword(secondaryAuth, email, current);
             await updatePassword(secondaryAuth.currentUser, pass1);
             try { await signOut(secondaryAuth); } catch (e) {}
+
+            await saveUserSecret(user.uid, pass1, user.username);
 
             try {
                 await updateDoc(doc(db, 'users', user.uid), {
@@ -2981,7 +3051,7 @@ window.resetUserPassword = function (uid) {
                     passwordChangedBy: APP_STATE.currentUser?.uid || null,
                     updatedAt: serverTimestamp()
                 });
-            } catch (e) { console.warn('تعذر تحديث بيانات المستخدم', e); }
+            } catch (e) { console.warn(e); }
 
             try {
                 await addDoc(collection(db, 'auditLog'), {
@@ -2999,20 +3069,22 @@ window.resetUserPassword = function (uid) {
             document.getElementById('credPassword').value = pass1;
             document.getElementById('credEmail').value = email;
             openModal('modalCredentials');
-            window.showToast('✅ تم تغيير كلمة المرور', 'success');
+            window.showToast('✅ تم تعيين كلمة المرور الجديدة', 'success');
         } catch (e) {
             const code = (e && e.code) || '';
-            if (code.indexOf('wrong-password') !== -1 || code.indexOf('invalid-credential') !== -1 || code.indexOf('user-not-found') !== -1)
-                showMsg('كلمة المرور الحالية غير صحيحة.');
-            else if (code.indexOf('too-many-requests') !== -1)
+            if (code.indexOf('wrong-password') !== -1 || code.indexOf('invalid-credential') !== -1 || code.indexOf('user-not-found') !== -1) {
+                document.getElementById('pwdManualBox').style.display = 'block';
+                showMsg('كلمة المرور المحفوظة غير صحيحة. أدخل كلمة المرور الحالية يدويًا.');
+            } else if (code.indexOf('too-many-requests') !== -1) {
                 showMsg('محاولات كثيرة، حاول لاحقًا.');
-            else if (code.indexOf('weak-password') !== -1)
+            } else if (code.indexOf('weak-password') !== -1) {
                 showMsg('كلمة المرور الجديدة ضعيفة.');
-            else
+            } else {
                 showMsg('تعذر التغيير: ' + (e.message || code));
+            }
         } finally {
             if (secondaryApp) { try { await secondaryApp.delete(); } catch (e) {} }
-            btn.disabled = false; btn.textContent = '💾 تغيير كلمة المرور';
+            btn.disabled = false; btn.textContent = '💾 تعيين كلمة المرور';
         }
     };
 };
