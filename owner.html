@@ -489,7 +489,7 @@ button { touch-action: manipulation; }
     .sidebar.open { transform: translateX(0); }
     .sidebar-overlay { z-index: 60; backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); }
     .sidebar-close { display: inline-flex; }
-    body.sidebar-open { overflow: hidden; }
+    html.sidebar-open, body.sidebar-open { overflow: hidden; }
     .main-content { margin-right: 0 !important; margin-inline-start: 0 !important; }
     .page-header { align-items: stretch; }
     .page-header > div { min-width: 0; }
@@ -3393,6 +3393,7 @@ console.log('✅ owner.html — تم التحميل بنجاح — النسخة 
     const syncShell = function () {
         const open = sidebar.classList.contains('open');
         document.body.classList.toggle('sidebar-open', open);
+        document.documentElement.classList.toggle('sidebar-open', open);
         const burger = document.querySelector('.hamburger');
         if (burger) burger.setAttribute('aria-expanded', open ? 'true' : 'false');
     };
